@@ -1,0 +1,24 @@
+BLOGI:
+  TEMPLATE: "/usr/share/blogi/template/tuxist"
+  LANGUAGE: "DE"
+  STARTPAGE: "/blog/content/index"
+  PLUGINDIR:
+    - "/usr/local/lib/blogi/plugins"
+    - "/var/lib/blog/plugins"
+  HTTP:
+    URL: "https://mydomain.local"
+    DOMAIN: "mydomain.local"
+    PREFIX: "/blog"
+    PORT: 8080
+    BIND: "0.0.0.0"
+    MAXCON: 1024
+  DATABASE:
+    DRIVER: pgsql
+    CONNECTION: "host=mydbhost dbname=blog user=blog password=mypass sslmode=require"
+  LDAP:
+    HOST: "ldap://ldaphost:389"
+    DOMAIN: "mydomain.local"
+    BASEDN: "CN=Users,DC=mydomain,DC=local"
+    LOGINFILTER: "(&(&(|(objectclass=person))(|(|(memberof=CN=blogi-users,CN=Users,DC=mydomain,DC=local))))(samaccountname=%s))"
+
+

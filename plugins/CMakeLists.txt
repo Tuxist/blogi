@@ -1,0 +1,5 @@
+add_subdirectory(staticpage)
+add_subdirectory(gameinfo)
+add_subdirectory(content)
+add_subdirectory(nodeinfo)
+add_subdirectory(youtube)
