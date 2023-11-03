@@ -25,6 +25,8 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *******************************************************************************/
 
+#include<iostream>
+
 #include <htmlpp/html.h>
 #include <httppp/http.h>
 #include <httppp/exception.h>
@@ -33,6 +35,8 @@
 #include <auth.h>
 #include <conf.h>
 #include <plugin.h>
+
+#define SITELIMIT 10
 
 namespace blogi {
     class Content : public PluginApi{
@@ -43,7 +47,7 @@ namespace blogi {
         ~Content(){
         };
 
-        void contentIdxPage(netplus::con *curcon,libhttppp::HttpRequest *curreq,const char *tag){
+        void contentIdxPage(netplus::con *curcon,libhttppp::HttpRequest *curreq,const char *tag,int start,int end){
             libhttppp::HTTPException excep;
             libhtmlpp::HtmlString condat;
 
@@ -63,11 +67,12 @@ namespace blogi {
                     sql = "select content.id,content.title,content.descrition,users.username,content.created from content ";
                     sql <<"LEFT JOIN users ON content.author=users.id LEFT JOIN tags_content ON tags_content.content_id=content.id where tags_content.tag_id='"
                     << res[0][0]
-                    <<"' ORDER BY id DESC";
+                    <<"' ORDER BY id DESC OFFSET " << start << " LIMIT " << end;
                     ncount=Args->database->exec(&sql,res);
                 }
             } else {
                 sql="select content.id,content.title,content.descrition,users.username,content.created from content LEFT JOIN users ON content.author=users.id ORDER BY id DESC";
+                sql << " OFFSET " << start << " LIMIT " << end;
                 ncount=Args->database->exec(&sql,res);
             }
 
@@ -98,7 +103,15 @@ namespace blogi {
                 meta.append(" ");
             }
 
-            condat << "</div>";
+            condat << "<div id=\"pager\">";
+
+            if((start - end) >= 0)
+                condat << "<a href=\"" << curreq->getRequestURL() << "?start=" << (start- end) <<"\" > Zur&uuml;ck </a>";
+
+            if((ncount -10) >= 0 )
+                condat << "<a href=\"" << curreq->getRequestURL() << "?start=" << start+10 <<"\" > Weiter </a>";
+
+            condat << " </div> </div>";
 
             sql="SELECT name,id FROM tags";
 
@@ -574,6 +587,8 @@ namespace blogi {
 
             std::string curl=req->getRequestURL();
 
+            std::cerr << curl << std::endl;
+
             if(curl.find('?')>=0){
                 curl=curl.substr(0,curl.find('?'));
             }
@@ -595,11 +610,20 @@ namespace blogi {
                resp.send(curcon,robot,strlen(robot));
                return true;
             }else{
+                int startpos = 0;
+                libhttppp::HttpForm start;
+                start.parse(req);
+                for (libhttppp::HttpForm::UrlcodedFormData* cururlform = start.getUrlcodedFormData(); cururlform;
+                    cururlform = cururlform->nextUrlcodedFormData()){
+                    if(strcmp(cururlform->getKey(),"start")==0)
+                        startpos=atoi(cururlform->getValue());
+                }
+                std::cerr << startpos << std::endl;
                 if (strcmp(curl.c_str(),Args->config->buildurl("content/tag",url,512))>0){
                     size_t len = strlen(Args->config->buildurl("content/tag/",url,512));
-                    contentIdxPage(curcon,req,curl.substr(len,curl.length()-len).c_str());
+                    contentIdxPage(curcon,req,curl.substr(len,curl.length()-len).c_str(),startpos,SITELIMIT);
                  }else{
-                    contentIdxPage(curcon,req,nullptr);
+                    contentIdxPage(curcon,req,nullptr,startpos,SITELIMIT);
                  }
             }
             return true;
