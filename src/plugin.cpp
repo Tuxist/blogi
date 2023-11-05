@@ -110,9 +110,9 @@ void blogi::Plugin::loadPlugins(const char *path,PluginArgs *args){
             }catch(libhttppp::HTTPException &e){
                 std::cerr << e.what() << std::endl;
             }
+            closedir(directory);
         }
     }
-    closedir(directory);
 }
 
 blogi::Plugin::~Plugin(){
