@@ -137,12 +137,18 @@ void blogi::StaticPage::editPage(libhttppp::HttpRequest* req, libhtmlpp::HtmlStr
         if(id>=0){
             for (libhttppp::HttpForm::MultipartFormData* curformdat = form.getMultipartFormData(); curformdat; curformdat = curformdat->nextMultipartFormData()) {
                 libhttppp::HttpForm::MultipartFormData::ContentDisposition* curctdisp = curformdat->getContentDisposition();
+
+                std::string data;
+
+                std::copy(curformdat->getData(),curformdat->getData()+curformdat->getDataSize(),
+                         std::inserter<std::string>(data,data.begin()));
+
                 if(strcmp(curctdisp->getName(),"url")==0){
-                    sql<< "update static_content set url='"; sql << curformdat->getData(); sql << "' where id='" << id <<"'; ";
+                    sql<< "update static_content set url='" << data.c_str() << "' where id='" << id <<"'; ";
                 }else if(strcmp(curctdisp->getName(),"meta")==0){
-                    sql<< "update static_content set meta='"; sql << curformdat->getData(); sql << "' where id='" << id <<"'; ";
+                    sql<< "update static_content set meta='" << data.c_str() << "' where id='" << id <<"'; ";
                 }else if(strcmp(curctdisp->getName(),"text")==0){
-                    sql<< "update static_content set text='"; sql << curformdat->getData(); sql << "' where id='" << id <<"'; ";
+                    sql<< "update static_content set text='" << data.c_str() << "' where id='" << id <<"'; ";
                 }
             }
 
