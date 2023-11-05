@@ -142,7 +142,7 @@ void blogi::StaticPage::editPage(libhttppp::HttpRequest* req, libhtmlpp::HtmlStr
                 }else if(strcmp(curctdisp->getName(),"meta")==0){
                     sql<< "update static_content set meta='"; sql << curformdat->getData(); sql << "' where id='" << id <<"'; ";
                 }else if(strcmp(curctdisp->getName(),"text")==0){
-                    sql<< "update static_content set text='"; sql << curformdat->getData(); sql << "' where id='" << id <<"': ";
+                    sql<< "update static_content set text='"; sql << curformdat->getData(); sql << "' where id='" << id <<"'; ";
                 }
             }
 
@@ -175,6 +175,7 @@ void blogi::StaticPage::editPage(libhttppp::HttpRequest* req, libhtmlpp::HtmlStr
     << "<span>Statische Seiten</span>"
     << "<span>Seite Editieren</span>"
     << "<form method=\"post\" enctype=\"multipart/form-data\">"
+    << "<input name=\"id\" type=\"text\" value=\"" << res[0][0] << "\" style=\"display:hidden;\" />"
     << "<span>Url:</span><br>"
     << "<input name=\"url\" type=\"text\" value=\"" << res[0][1] << "\" /><br>"
     << "<span>Meta:</span><br>"
