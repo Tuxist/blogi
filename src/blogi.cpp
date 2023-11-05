@@ -172,6 +172,48 @@ void blogi::Blogi::logoutPage(netplus::con *curcon,libhttppp::HttpRequest *curre
     curres.send(curcon,nullptr,0);
 }
 
+void blogi::Blogi::settingsPage(netplus::con* curcon, libhttppp::HttpRequest* curreq){
+    libhttppp::HttpCookie cookie;
+    cookie.parse(curreq);
+    std::string sessid;
+
+    if(!PlgArgs->auth->isLoggedIn(curreq,sessid)){
+        libhttppp::HTTPException err;
+        err[libhttppp::HTTPException::Error] << "you are not logged in permission denied";
+        throw err;
+    }
+
+    std::string out;
+    libhtmlpp::HtmlString setgui;
+    char url[512];
+
+    setgui << "<div id=\"settings\"><table><tr><td id=\"setnav\" ><ul>";
+    for(blogi::Plugin::PluginData *curplg=BlogiPlg->getFirstPlugin(); curplg; curplg=curplg->getNextPlg()){
+        if(curplg->getInstace()->haveSettings())
+            setgui << "<li><a href=\"" << PlgArgs->config->buildurl("settings/",url,512) << curplg->getInstace()->getName()  << "\">"  << curplg->getInstace()->getName() << "</a></li>";
+    }
+    setgui << "</ul></td><td id=\"setcontent\">";
+
+    int relen=strlen(PlgArgs->config->buildurl("settings/",url,512))-strlen(curreq->getRequestURL());
+    if( relen < 0){
+        for(blogi::Plugin::PluginData *curplg=BlogiPlg->getFirstPlugin(); curplg; curplg=curplg->getNextPlg()){
+            if(strncmp(curreq->getRequestURL()+strlen(PlgArgs->config->buildurl("settings/",url,512)), curplg->getInstace()->getName(),
+                strlen(curplg->getInstace()->getName()))==0)
+                curplg->getInstace()->Settings(curreq,setgui);
+        }
+    }
+
+    setgui << "</td></tr></table></div>";
+
+    PlgArgs->theme->RenderSite(out,curreq->getRequestURL(),setgui,false);
+    libhttppp::HttpResponse curres;
+    curres.setState(HTTP200);
+    curres.setVersion(HTTPVERSION(1.1));
+    curres.setContentType("text/html");
+    curres.send(curcon,out.c_str(),out.length());
+}
+
+
 void blogi::Blogi::RequestEvent(netplus::con *curcon){
     libhttppp::HttpRequest req;
     char url[512];
@@ -202,6 +244,9 @@ void blogi::Blogi::RequestEvent(netplus::con *curcon){
             return;
         }else if(strncmp(req.getRequestURL(),PlgArgs->config->buildurl("login",url,512),strlen(PlgArgs->config->buildurl("login",url,512)))==0){
             loginPage(curcon,&req);
+            return;
+        }else if(strncmp(req.getRequestURL(),PlgArgs->config->buildurl("settings",url,512),strlen(PlgArgs->config->buildurl("settings",url,512)))==0){
+            settingsPage(curcon,&req);
             return;
         }
 

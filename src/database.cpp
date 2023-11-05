@@ -65,6 +65,14 @@ const char * blogi::SQL::c_str(){
     return _SQL.c_str();
 }
 
+void blogi::SQL::clear(){
+    _SQL.clear();
+}
+
+bool blogi::SQL::empty(){
+    return _SQL.empty();
+}
+
 
 blogi::DBResult::DBResult(){
     firstRow=nullptr;

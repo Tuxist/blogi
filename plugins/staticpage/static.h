@@ -40,8 +40,16 @@ namespace blogi {
         const char* getAuthor();
 
         void initPlugin();
+        bool haveSettings();
 
         bool Controller(netplus::con *curcon,libhttppp::HttpRequest *req);
+        void Settings(libhttppp::HttpRequest * req, libhtmlpp::HtmlString & setdiv);
+    private:
+        void newPage(libhttppp::HttpRequest * req, libhtmlpp::HtmlString & setdiv);
+        void delPage(libhttppp::HttpRequest * req, libhtmlpp::HtmlString & setdiv);
+        void editPage(libhttppp::HttpRequest * req, libhtmlpp::HtmlString & setdiv);
+
+        void uploadPage(libhttppp::HttpRequest * req, libhtmlpp::HtmlString & setdiv);
     };
 };
 

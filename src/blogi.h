@@ -39,6 +39,7 @@ namespace blogi {
         ~Blogi();
         void loginPage(netplus::con*curcon,libhttppp::HttpRequest *curreq);
         void logoutPage(netplus::con *curcon,libhttppp::HttpRequest *curreq);
+        void settingsPage(netplus::con *curcon,libhttppp::HttpRequest *curreq);
         void RequestEvent(netplus::con *curcon);
     private:
         Plugin         *BlogiPlg;

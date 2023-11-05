@@ -146,10 +146,10 @@ void blogi::Template::RenderSite(std::string& output, const char* crrurl, libhtm
 
         libhtmlpp::HtmlString buf;
         buf << "<div id=\"navbar\">"
-        << "<ul style=\"display:inline; list-style-type: none;\">";
+        << "<ul>";
 
         for (int i = 0; i < n; i++) {
-            buf << "<li style=\"padding:0 10px; float:left; border-right:solid 1px rgb(35, 38, 39);\" ";
+            buf << "<li ";
             if( turl.compare(0,strlen(res[i][0]),res[i][0]) == 0 )
                 buf << "class=\"active\"";
             else

@@ -51,12 +51,15 @@ namespace blogi {
         virtual const char* getName()=0;
         virtual const char* getVersion()=0;
         virtual const char* getAuthor()=0;
+        virtual bool        haveSettings();
 
         void setArgs(PluginArgs *args);
 
         virtual void initPlugin()=0;
 
-       virtual bool Controller(netplus::con *curcon,libhttppp::HttpRequest *req)=0;
+        virtual bool Controller(netplus::con *curcon,libhttppp::HttpRequest *req);
+
+        virtual void Settings(libhttppp::HttpRequest *req,libhtmlpp::HtmlString &setdiv);
     protected:
         PluginArgs *Args;
     };

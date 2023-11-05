@@ -41,6 +41,8 @@ namespace blogi {
         SQL& operator<<(int sql);
         SQL& operator=(const char *sql);
         const char *c_str();
+        void clear();
+        bool empty();
     private:
         std::string _SQL;
         friend class Database;

@@ -37,6 +37,17 @@
 blogi::PluginApi::~PluginApi(){
 }
 
+bool blogi::PluginApi::haveSettings(){
+    return false;
+}
+
+void blogi::PluginApi::Settings(libhttppp::HttpRequest *req,libhtmlpp::HtmlString &setdiv){
+   return;
+};
+
+bool blogi::PluginApi::Controller(netplus::con *curcon,libhttppp::HttpRequest *req){
+    return false;
+}
 
 void blogi::PluginApi::setArgs(blogi::PluginArgs* args){
     Args=args;
@@ -53,46 +64,55 @@ void blogi::Plugin::loadPlugins(const char *path,PluginArgs *args){
 
     if (directory != nullptr) {
         while((direntStruct = readdir(directory))) {
-            std::string ppath = path;
-            ppath.append("/");
-            ppath.append(direntStruct->d_name);
-
-            if(ppath.rfind(".so")!=ppath.length()-3)
+            if((direntStruct->d_name[0]=='.' && strlen(direntStruct->d_name)==1) ||
+              ((direntStruct->d_name[0]=='.') &&  (direntStruct->d_name[1]=='.') &&
+              strlen(direntStruct->d_name)==2))
                 continue;
+            try{
+                std::string ppath = path;
+                ppath.append("/");
+                ppath.append(direntStruct->d_name);
 
-            if(_firstPlugin){
-                _lastPluging->next=new PluginData();
-                _lastPluging=_lastPluging->next;
-            }else{
-                _firstPlugin=new PluginData();
-                _lastPluging=_firstPlugin;
+                PluginData *ldplg=new PluginData();
+
+                ldplg->pldata = dlopen(ppath.c_str(),RTLD_LAZY);
+                if (!ldplg->pldata) {
+                    delete ldplg;
+                    libhttppp::HTTPException err;
+                    err[libhttppp::HTTPException::Error] << "Cannot load library";
+                    throw err;
+                }
+                // load the symbols
+                create_t* create_plugin= (create_t*) dlsym(ldplg->pldata, "create");
+                const char* dlsym_error = dlerror();
+                if (dlsym_error) {
+                    delete ldplg;
+                    libhttppp::HTTPException err;
+                    err[libhttppp::HTTPException::Error]  << "Cannot load symbol create: " << dlsym_error << '\n';
+                    throw err;
+                }
+
+
+                dlerror();
+
+                PluginApi *plg=create_plugin();
+                plg->setArgs(args);
+                plg->initPlugin();
+                ldplg->ins=plg;
+
+                if(_firstPlugin){
+                    _lastPluging->next=ldplg;
+                    _lastPluging=_lastPluging->next;
+                }else{
+                    _firstPlugin=ldplg;
+                    _lastPluging=_firstPlugin;
+                }
+            }catch(libhttppp::HTTPException &e){
+                std::cerr << e.what() << std::endl;
             }
-
-            _lastPluging->pldata = dlopen(ppath.c_str(),RTLD_LAZY);
-            if (!_lastPluging->pldata) {
-                libhttppp::HTTPException err;
-                err[libhttppp::HTTPException::Critical] << "Cannot load library: " << dlerror();
-                throw err;
-            }
-            // load the symbols
-            create_t* create_plugin= (create_t*) dlsym(_lastPluging->pldata, "create");
-            const char* dlsym_error = dlerror();
-            if (dlsym_error) {
-                libhttppp::HTTPException err;
-                err << "Cannot load symbol create: " << dlsym_error << '\n';
-                throw err;
-            }
-
-
-            dlerror();
-
-            PluginApi *plg=create_plugin();
-            plg->setArgs(args);
-            plg->initPlugin();
-            _lastPluging->ins=plg;
         }
-        closedir(directory);
     }
+    closedir(directory);
 }
 
 blogi::Plugin::~Plugin(){
@@ -109,12 +129,10 @@ blogi::Plugin::PluginData::~PluginData(){
         dlsym_error = dlerror();
         if (dlsym_error) {
             std::cerr << "Cannot load symbol destroy: " << dlsym_error << '\n';;
+        }else{
+            destroy_plugin(ins);
+            dlclose(pldata);
         }
-
-        destroy_plugin(ins);
-
-        dlclose(pldata);
-
         delete next;
 }
 
