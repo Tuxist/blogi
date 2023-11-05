@@ -122,35 +122,48 @@ void blogi::StaticPage::editPage(libhttppp::HttpRequest* req, libhtmlpp::HtmlStr
     libhttppp::HttpForm form;
     form.parse(req);
 
-    for(libhttppp::HttpForm::UrlcodedFormData *cdat=form.getUrlcodedFormData(); cdat; cdat=cdat->nextUrlcodedFormData()){
-        if(strcmp(cdat->getKey(),"id")==0)
-            id=atoi(cdat->getValue());
-    }
-
-    if(id<0){
-        return;
-    }
-
     try {
         sql.clear();
 
         for (libhttppp::HttpForm::MultipartFormData* curformdat = form.getMultipartFormData(); curformdat; curformdat = curformdat->nextMultipartFormData()) {
-            libhttppp::HttpForm::MultipartFormData::ContentDisposition* curctdisp = curformdat->getContentDisposition();
-            if(strcmp(curctdisp->getName(),"url")==0){
-                sql<< "update static_content set url='"; sql << curformdat->getData(); sql << "' where id='" << id <<"'; ";
-            }else if(strcmp(curctdisp->getName(),"meta")==0){
-                sql<< "update static_content set meta='"; sql << curformdat->getData(); sql << "' where id='" << id <<"'; ";
-            }else if(strcmp(curctdisp->getName(),"text")==0){
-                sql<< "update static_content set text='"; sql << curformdat->getData(); sql << "' where id='" << id <<"': ";
+            libhttppp::HttpForm::MultipartFormData::ContentDisposition* curctdisp = curformdat->getContentDisposition();{
+                if(strcmp(curctdisp->getName(),"id")==0){
+                    id=atoi(curformdat->getData());
+                }
             }
         }
 
-        if(!sql.empty()){
-            Args->database->exec(&sql,res);
-            sql.clear();
-        }
 
+        if(id>=0){
+            for (libhttppp::HttpForm::MultipartFormData* curformdat = form.getMultipartFormData(); curformdat; curformdat = curformdat->nextMultipartFormData()) {
+                libhttppp::HttpForm::MultipartFormData::ContentDisposition* curctdisp = curformdat->getContentDisposition();
+                if(strcmp(curctdisp->getName(),"url")==0){
+                    sql<< "update static_content set url='"; sql << curformdat->getData(); sql << "' where id='" << id <<"'; ";
+                }else if(strcmp(curctdisp->getName(),"meta")==0){
+                    sql<< "update static_content set meta='"; sql << curformdat->getData(); sql << "' where id='" << id <<"'; ";
+                }else if(strcmp(curctdisp->getName(),"text")==0){
+                    sql<< "update static_content set text='"; sql << curformdat->getData(); sql << "' where id='" << id <<"': ";
+                }
+            }
+
+            if(!sql.empty()){
+                Args->database->exec(&sql,res);
+                sql.clear();
+            }
+        }
     }catch(...){};
+
+    if(id<0){
+        for(libhttppp::HttpForm::UrlcodedFormData *cdat=form.getUrlcodedFormData(); cdat; cdat=cdat->nextUrlcodedFormData()){
+            if(strcmp(cdat->getKey(),"id")==0)
+                id=atoi(cdat->getValue());
+        }
+        if(id<0){
+            libhttppp::HTTPException excep;
+            excep[libhttppp::HTTPException::Error] << "Staticpage with this id not found!";
+            throw excep;
+        }
+    }
 
     sql << "select id,url,meta,text from static_content where id='"; sql << id << "' LIMIT 1";
 
@@ -159,18 +172,18 @@ void blogi::StaticPage::editPage(libhttppp::HttpRequest* req, libhtmlpp::HtmlStr
     }
 
     setdiv << "<div id=\"staticsettings\">"
-           << "<span>Statische Seiten</span>"
-           << "<span>Seite Editieren</span>"
-           << "<form method=\"post\" enctype=\"multipart/form-data\">"
-           << "<span>Url:</span><br>"
-           << "<input name=\"url\" type=\"text\" value=\"" << res[0][1] << "\" /><br>"
-           << "<span>Meta:</span><br>"
-           << "<textarea name=\"meta\" style=\"width:95%; height:200px;\">"<< res[0][2] <<"</textarea><br>"
-           << "<span>Content:</span><br>"
-           << "<textarea name=\"text\" style=\"width:95%; min-height:800px;\">"<< res[0][3] <<"</textarea><br>"
-           << "<button type=\"submit\" formaction=\"" << Args->config->buildurl("settings/staticpage",url,512) << "\">Back</button>"
-           << "<input type=\"submit\" value=\"Save\">"
-           << "</form></div>";
+    << "<span>Statische Seiten</span>"
+    << "<span>Seite Editieren</span>"
+    << "<form method=\"post\" enctype=\"multipart/form-data\">"
+    << "<span>Url:</span><br>"
+    << "<input name=\"url\" type=\"text\" value=\"" << res[0][1] << "\" /><br>"
+    << "<span>Meta:</span><br>"
+    << "<textarea name=\"meta\" style=\"width:95%; height:200px;\">"<< res[0][2] <<"</textarea><br>"
+    << "<span>Content:</span><br>"
+    << "<textarea name=\"text\" style=\"width:95%; min-height:800px;\">"<< res[0][3] <<"</textarea><br>"
+    << "<button type=\"submit\" formaction=\"" << Args->config->buildurl("settings/staticpage",url,512) << "\">Back</button>"
+    << "<input type=\"submit\" value=\"Save\">"
+    << "</form></div>";
 }
 
 void blogi::StaticPage::uploadPage(libhttppp::HttpRequest* req, libhtmlpp::HtmlString& setdiv){
