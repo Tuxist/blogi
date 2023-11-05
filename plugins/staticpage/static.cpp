@@ -131,25 +131,28 @@ void blogi::StaticPage::editPage(libhttppp::HttpRequest* req, libhtmlpp::HtmlStr
         return;
     }
 
-    libhttppp::HttpForm::MultipartFormData *cdat=form.getMultipartFormData();
+    try {
+        libhttppp::HttpForm::MultipartFormData *cdat=form.getMultipartFormData();
 
-    sql.clear();
-
-    for (libhttppp::HttpForm::MultipartFormData* curformdat = form.getMultipartFormData(); curformdat; curformdat = curformdat->nextMultipartFormData()) {
-        libhttppp::HttpForm::MultipartFormData::ContentDisposition* curctdisp = curformdat->getContentDisposition();
-        if(strcmp(curctdisp->getName(),"url")==0){
-            sql<< "update static_content set url='"; sql << curformdat->getData(); sql << "' where id='" << id <<"'; ";
-        }else if(strcmp(curctdisp->getName(),"meta")==0){
-            sql<< "update static_content set meta='"; sql << curformdat->getData(); sql << "' where id='" << id <<"'; ";
-        }else if(strcmp(curctdisp->getName(),"text")==0){
-            sql<< "update static_content set text='"; sql << curformdat->getData(); sql << "' where id='" << id <<"': ";
-        }
-    }
-
-    if(!sql.empty()){
-        Args->database->exec(&sql,res);
         sql.clear();
-    }
+
+        for (libhttppp::HttpForm::MultipartFormData* curformdat = form.getMultipartFormData(); curformdat; curformdat = curformdat->nextMultipartFormData()) {
+            libhttppp::HttpForm::MultipartFormData::ContentDisposition* curctdisp = curformdat->getContentDisposition();
+            if(strcmp(curctdisp->getName(),"url")==0){
+                sql<< "update static_content set url='"; sql << curformdat->getData(); sql << "' where id='" << id <<"'; ";
+            }else if(strcmp(curctdisp->getName(),"meta")==0){
+                sql<< "update static_content set meta='"; sql << curformdat->getData(); sql << "' where id='" << id <<"'; ";
+            }else if(strcmp(curctdisp->getName(),"text")==0){
+                sql<< "update static_content set text='"; sql << curformdat->getData(); sql << "' where id='" << id <<"': ";
+            }
+        }
+
+        if(!sql.empty()){
+            Args->database->exec(&sql,res);
+            sql.clear();
+        }
+
+    }catch(...){};
 
     sql << "select id,url,meta,text from static_content where id='"; sql << id << "' LIMIT 1";
 
@@ -160,7 +163,7 @@ void blogi::StaticPage::editPage(libhttppp::HttpRequest* req, libhtmlpp::HtmlStr
     setdiv << "<div id=\"staticsettings\">"
            << "<span>Statische Seiten</span>"
            << "<span>Seite Editieren</span>"
-           << "<form>"
+           << "<form method=\"post\" enctype=\"multipart/form-data\">"
            << "<span>Url:</span><br>"
            << "<input name=\"url\" type=\"text\" value=\"" << res[0][1] << "\" /><br>"
            << "<span>Meta:</span><br>"
