@@ -97,8 +97,8 @@ SETTINGSINDEX:
     setdiv << "<tr><th>ID</th><th>URL</th><th>Options</th></tr>";
     for(int i=0; i<scount; ++i){
         setdiv << "<tr><td>" << res[i][0] << "</td><td>"<< Args->config->buildurl("staticpage/",url,512) << res[i][1]
-               << "</td>" << "<td><a href=\"" << Args->config->buildurl("settings/staticpage/editpage?id=",url,512) << res[i][0] << "\">Edit</a></td>"
-               << "<td><a href=\"" << Args->config->buildurl("settings/staticpage/delpage?id=",url,512) << res[i][0] << "\">Remove</a></td>" <<"</tr>";
+               << "</td>" << "<td><a href=\"" << Args->config->buildurl("settings/staticpage/editpage?pageid=",url,512) << res[i][0] << "\">Edit</a></td>"
+               << "<td><a href=\"" << Args->config->buildurl("settings/staticpage/delpage?pageid=",url,512) << res[i][0] << "\">Remove</a></td>" <<"</tr>";
     }
     setdiv << "</table><a href=\"" << Args->config->buildurl("settings/staticpage/newpage",url,512) << "\" >Neue Seite Erstellen</a></div>";
 }
@@ -127,7 +127,7 @@ void blogi::StaticPage::editPage(libhttppp::HttpRequest* req, libhtmlpp::HtmlStr
 
         for (libhttppp::HttpForm::MultipartFormData* curformdat = form.getMultipartFormData(); curformdat; curformdat = curformdat->nextMultipartFormData()) {
             libhttppp::HttpForm::MultipartFormData::ContentDisposition* curctdisp = curformdat->getContentDisposition();{
-                if(strcmp(curctdisp->getName(),"id")==0){
+                if(strcmp(curctdisp->getName(),"pageid")==0){
                     id=atoi(curformdat->getData());
                 }
             }
@@ -155,7 +155,7 @@ void blogi::StaticPage::editPage(libhttppp::HttpRequest* req, libhtmlpp::HtmlStr
 
     if(id<0){
         for(libhttppp::HttpForm::UrlcodedFormData *cdat=form.getUrlcodedFormData(); cdat; cdat=cdat->nextUrlcodedFormData()){
-            if(strcmp(cdat->getKey(),"id")==0)
+            if(strcmp(cdat->getKey(),"pageid")==0)
                 id=atoi(cdat->getValue());
         }
         if(id<0){
@@ -175,7 +175,7 @@ void blogi::StaticPage::editPage(libhttppp::HttpRequest* req, libhtmlpp::HtmlStr
     << "<span>Statische Seiten</span>"
     << "<span>Seite Editieren</span>"
     << "<form method=\"post\" enctype=\"multipart/form-data\">"
-    << "<input name=\"id\" type=\"text\" value=\"" << res[0][0] << "\" style=\"display:hidden;\" />"
+    << "<input name=\"pageid\" type=\"text\" value=\"" << res[0][0] << "\" style=\"display:none;\" />"
     << "<span>Url:</span><br>"
     << "<input name=\"url\" type=\"text\" value=\"" << res[0][1] << "\" /><br>"
     << "<span>Meta:</span><br>"
