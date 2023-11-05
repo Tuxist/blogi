@@ -132,8 +132,6 @@ void blogi::StaticPage::editPage(libhttppp::HttpRequest* req, libhtmlpp::HtmlStr
     }
 
     try {
-        libhttppp::HttpForm::MultipartFormData *cdat=form.getMultipartFormData();
-
         sql.clear();
 
         for (libhttppp::HttpForm::MultipartFormData* curformdat = form.getMultipartFormData(); curformdat; curformdat = curformdat->nextMultipartFormData()) {
