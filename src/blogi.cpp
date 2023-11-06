@@ -270,7 +270,7 @@ void blogi::Blogi::RequestEvent(netplus::con *curcon){
             << "Seite oder Inhalt nicht gefudnen"
             << "</span><br/><a style=\"text-decoration: none; color: rgb(58,212, 58);\" href=\""
             <<  PlgArgs->config->getstartpage()
-            << "\" >Zur&uuml;ck zur Startseite</a></html></body>";
+            << "\" >Zur&uuml;ck zur Startseite</a></body></html>";
             libhtmlpp::print(err.parse(),nullptr,output);
             libhttppp::HttpResponse resp;
             resp.setVersion(HTTPVERSION(1.1));
@@ -281,12 +281,13 @@ void blogi::Blogi::RequestEvent(netplus::con *curcon){
         }
     }catch(libhttppp::HTTPException &e){
         std::string output;
-        libhtmlpp::HtmlString err;
+        libhtmlpp::HtmlString err,hreason;
+        libhtmlpp::HtmlEncode(e.what(),hreason);
         err << "<!DOCTYPE html><html><body style=\"color:rgb(238, 238, 238); background:rgb(35, 38, 39);\"><span>"
-        << e.what()
+        << hreason
         << "</span><br/><a style=\"text-decoration: none; color: rgb(58,212, 58);\" href=\""
         <<  PlgArgs->config->getstartpage()
-        << "\" >Zur&uuml;ck zur Startseite</a></html></body>";
+        << "\" >Zur&uuml;ck zur Startseite</a></body></html>";
         libhtmlpp::print(err.parse(),nullptr,output);
         libhttppp::HttpResponse resp;
         resp.setVersion(HTTPVERSION(1.1));
