@@ -158,7 +158,7 @@ void blogi::StaticPage::editPage(libhttppp::HttpRequest* req, libhtmlpp::HtmlStr
                     libhtmlpp::HtmlEncode(data.c_str(),result);
                     sql<< "update static_content set meta='" << result.c_str() << "' where id='" << id <<"'; ";
                 }else if(strcmp(curctdisp->getName(),"text")==0){
-                    sql<< "update static_content set text='" << data.c_str() << "' where id='" << id <<"'; ";
+                    sql<< "update static_content set text='"; sql.escaped(data.c_str()) << "' where id='" << id <<"'; ";
                 }
             }
 
