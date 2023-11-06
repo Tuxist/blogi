@@ -144,14 +144,14 @@ void blogi::StaticPage::editPage(libhttppp::HttpRequest* req, libhtmlpp::HtmlStr
                 std::copy(curformdat->getData(),curformdat->getData()+curformdat->getDataSize(),
                          std::inserter<std::string>(data,data.begin()));
 
-                libhtmlpp::HtmlEncode(data.c_str(),result);
-
                 if(strcmp(curctdisp->getName(),"url")==0){
+                    libhtmlpp::HtmlEncode(data.c_str(),result);
                     sql<< "update static_content set url='" << result.c_str() << "' where id='" << id <<"'; ";
                 }else if(strcmp(curctdisp->getName(),"meta")==0){
+                    libhtmlpp::HtmlEncode(data.c_str(),result);
                     sql<< "update static_content set meta='" << result.c_str() << "' where id='" << id <<"'; ";
                 }else if(strcmp(curctdisp->getName(),"text")==0){
-                    sql<< "update static_content set text='" << result.c_str() << "' where id='" << id <<"'; ";
+                    sql<< "update static_content set text='" << data.c_str() << "' where id='" << id <<"'; ";
                 }
             }
 
