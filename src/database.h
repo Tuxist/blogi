@@ -40,6 +40,9 @@ namespace blogi {
         SQL& operator<<(const char *sql);
         SQL& operator<<(int sql);
         SQL& operator=(const char *sql);
+
+        SQL& escaped(const char *text);
+
         const char *c_str();
         void clear();
         bool empty();

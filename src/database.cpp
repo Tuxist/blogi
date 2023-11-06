@@ -60,6 +60,18 @@ blogi::SQL & blogi::SQL::operator=(const char* sql){
     return *this;
 }
 
+blogi::SQL & blogi::SQL::escaped(const char* text){
+    size_t tlen=strlen(text);
+    for(size_t i = 0; i < tlen; ++i){
+        if(text[i]=='\''){
+            _SQL.append("''");
+        }else{
+            _SQL.push_back(text[i]);
+        }
+    }
+    return *this;
+}
+
 
 const char * blogi::SQL::c_str(){
     return _SQL.c_str();

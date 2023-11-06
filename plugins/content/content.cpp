@@ -59,7 +59,7 @@ namespace blogi {
             int ncount=0;
 
             if (tag) {
-                sql = "select id from tags where name='"; sql << tag << "' LIMIT 1";
+                sql = "select id from tags where name='"; sql.escaped(tag) << "' LIMIT 1";
                 if(Args->database->exec(&sql,res)<1){
                     excep[libhttppp::HTTPException::Critical] << "no tag data found for this name!";
                     throw excep;

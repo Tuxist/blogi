@@ -128,6 +128,13 @@ void blogi::StaticPage::editPage(libhttppp::HttpRequest* req, libhtmlpp::HtmlStr
         for (libhttppp::HttpForm::MultipartFormData* curformdat = form.getMultipartFormData(); curformdat; curformdat = curformdat->nextMultipartFormData()) {
             libhttppp::HttpForm::MultipartFormData::ContentDisposition* curctdisp = curformdat->getContentDisposition();{
                 if(strcmp(curctdisp->getName(),"pageid")==0){
+                    for(size_t i =0; i<curformdat->getDataSize(); ++i){
+                        if(!isdigit(curformdat->getData()[i])){
+                            libhttppp::HTTPException excep;
+                            excep[libhttppp::HTTPException::Error] << "Wrong formted Pageid!";
+                            throw excep;
+                        }
+                    }
                     id=atoi(curformdat->getData());
                 }
             }
@@ -163,10 +170,21 @@ void blogi::StaticPage::editPage(libhttppp::HttpRequest* req, libhtmlpp::HtmlStr
     }catch(...){};
 
     if(id<0){
+
         for(libhttppp::HttpForm::UrlcodedFormData *cdat=form.getUrlcodedFormData(); cdat; cdat=cdat->nextUrlcodedFormData()){
-            if(strcmp(cdat->getKey(),"pageid")==0)
+            if(strcmp(cdat->getKey(),"pageid")==0){
+                size_t pgidlen=strlen(cdat->getValue());
+                for(size_t i =0; i<pgidlen; ++i){
+                        if(!isdigit(cdat->getValue()[i])){
+                            libhttppp::HTTPException excep;
+                            excep[libhttppp::HTTPException::Error] << "Wrong formted Pageid!";
+                            throw excep;
+                        }
+                }
                 id=atoi(cdat->getValue());
+            }
         }
+
         if(id<0){
             libhttppp::HTTPException excep;
             excep[libhttppp::HTTPException::Error] << "Staticpage with this id not found!";
@@ -221,7 +239,7 @@ bool blogi::StaticPage::Controller(netplus::con *curcon,libhttppp::HttpRequest *
         blogi::SQL sql;
         blogi::DBResult res;
 
-        sql << "select url,text,meta from static_content where url='" << surl.c_str() << "' LIMIT 1";
+        sql << "select url,text,meta from static_content where url='"; sql.escaped(surl.c_str()) << "' LIMIT 1";
 
         if (Args->database->exec(&sql,res)<1) {
             excep[libhttppp::HTTPException::Error] << "Staticpage with this url not found!";
