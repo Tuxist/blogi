@@ -142,7 +142,7 @@ void blogi::StaticPage::newPage(libhttppp::HttpRequest* req, libhtmlpp::HtmlStri
         sql.escaped(text.c_str()) <<"')";
         Args->database->exec(&sql,res);
         sql.clear();
-        setdiv << "<div id=\"staticsettings\"><span>Added succesfully! </span><br><button type=\"submit\" formaction=\"" << Args->config->buildurl("settings/staticpage",url,512) << "\">Back</button></div>";
+        setdiv << "<div id=\"staticsettings\"><span>Added succesfully! </span></div>";
     }else{
         setdiv << "<div id=\"staticsettings\">"
         << "<span>Statische Seiten</span>"
@@ -197,9 +197,7 @@ void blogi::StaticPage::delPage(libhttppp::HttpRequest* req, libhtmlpp::HtmlStri
     if(confirmed){
         sql << "DELETE FROM static_content WHERE id='" << id << "'";
         Args->database->exec(&sql,res);
-        setdiv << "<div id=\"staticsettings\"><span>page with id " << id << " is removed !</span><br>"
-               << "<button type=\"submit\" formaction=\"" << Args->config->buildurl("settings/staticpage",url,512) << "\">Back</button>"
-               << "</div>";
+        setdiv << "<div id=\"staticsettings\"><span>page with id " << id << " is removed !</span></div>";
     }else{
         setdiv << "<div id=\"staticsettings\"><span>You wan't remove the page with id " << id << "?</span><br>"
                << "<a href=\"" << Args->config->buildurl("settings/staticpage/delpage?",url,512) << "pageid=" << id << "&confirmed=true\">Yes</a><a href=\"" << Args->config->buildurl("settings/staticpage",url,512) << "\"> NO </a>"
