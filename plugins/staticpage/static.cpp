@@ -104,13 +104,107 @@ SETTINGSINDEX:
 }
 
 void blogi::StaticPage::newPage(libhttppp::HttpRequest* req, libhtmlpp::HtmlString& setdiv){
-    setdiv << "<div id=\"staticsettings\">"
-           << "<span>Statische Seiten</span>"
-           << "<span>Neue Seite</span>"
-           << "</div>";
+    char url[512];
+    blogi::SQL sql;
+    blogi::DBResult res;
+
+    libhttppp::HttpForm form;
+    form.parse(req);
+    std::string surl,meta,text;
+
+    try {
+
+        for (libhttppp::HttpForm::MultipartFormData* curformdat = form.getMultipartFormData(); curformdat; curformdat = curformdat->nextMultipartFormData()) {
+            libhttppp::HttpForm::MultipartFormData::ContentDisposition* curctdisp = curformdat->getContentDisposition();
+
+            std::string data;
+            libhtmlpp::HtmlString result;
+
+            std::copy(curformdat->getData(),curformdat->getData()+curformdat->getDataSize(),
+                      std::inserter<std::string>(data,data.begin()));
+
+            if(strcmp(curctdisp->getName(),"url")==0){
+                libhtmlpp::HtmlEncode(data.c_str(),result);
+                surl=result.c_str();
+            }else if(strcmp(curctdisp->getName(),"meta")==0){
+                libhtmlpp::HtmlEncode(data.c_str(),result);
+                meta=result.c_str();
+            }else if(strcmp(curctdisp->getName(),"text")==0){
+                text=data;
+            }
+        }
+    }catch(...){};
+
+    if(!surl.empty() && !text.empty()){
+        sql << "INSERT INTO static_content (url,meta,text) VALUES('";
+        sql.escaped(surl.c_str()) << "','";
+        sql.escaped(meta.c_str()) << "','";
+        sql.escaped(text.c_str()) <<"')";
+        Args->database->exec(&sql,res);
+        sql.clear();
+        setdiv << "<div id=\"staticsettings\"><span>Added succesfully! </span><br><button type=\"submit\" formaction=\"" << Args->config->buildurl("settings/staticpage",url,512) << "\">Back</button></div>";
+    }else{
+        setdiv << "<div id=\"staticsettings\">"
+        << "<span>Statische Seiten</span>"
+        << "<span>Neue Seite</span>"
+        << "<form method=\"post\" enctype=\"multipart/form-data\">"
+        << "<span>Url:</span><br>";
+        if(surl.empty())
+            setdiv << "<input name=\"url\" type=\"text\" style=\"color:red;\" value=\"newurl\" /><br>";
+        else
+            setdiv << "<input name=\"url\" type=\"text\" value=\""<< surl <<"\" /><br>";
+        setdiv << "<span>Meta:</span><br>"
+        << "<textarea name=\"meta\" style=\"width:95%; height:200px;\"> Schlagwörter für Google </textarea><br>"
+        << "<span>Content:</span><br>";
+        if(text.empty())
+            setdiv<< "<textarea name=\"text\" style=\"width:95%; min-height:800px; color:red;\"> <span>Mein HtmlText</span> </textarea><br>";
+        else
+            setdiv<< "<textarea name=\"text\" style=\"width:95%; min-height:800px;\">" << text <<"</textarea><br>";
+        setdiv<< "<button type=\"submit\" formaction=\"" << Args->config->buildurl("settings/staticpage",url,512) << "\">Back</button>"
+        << "<input type=\"submit\" value=\"Save\">"
+        << "</form></div>";
+    }
+
 }
 
 void blogi::StaticPage::delPage(libhttppp::HttpRequest* req, libhtmlpp::HtmlString& setdiv){
+    char url[512];
+    int id=-1;
+    blogi::SQL sql;
+    blogi::DBResult res;
+    bool confirmed=false;
+
+    libhttppp::HttpForm form;
+    form.parse(req);
+
+    for(libhttppp::HttpForm::UrlcodedFormData *cdat=form.getUrlcodedFormData(); cdat; cdat=cdat->nextUrlcodedFormData()){
+        if(strcmp(cdat->getKey(),"pageid")==0){
+            size_t pgidlen=strlen(cdat->getValue());
+            for(size_t i =0; i<pgidlen; ++i){
+                if(!isdigit(cdat->getValue()[i])){
+                    libhttppp::HTTPException excep;
+                    excep[libhttppp::HTTPException::Error] << "Wrong formted Pageid!";
+                    throw excep;
+                }
+            }
+            id=atoi(cdat->getValue());
+        }else if(strcmp(cdat->getKey(),"confirmed")==0){
+            if(strcmp(cdat->getValue(),"true")==0)
+                confirmed=true;
+        }
+    }
+
+    if(confirmed){
+        sql << "DELETE FROM static_content WHERE id='" << id << "'";
+        Args->database->exec(&sql,res);
+        setdiv << "<div id=\"staticsettings\"><span>page with id " << id << " is removed !</span><br>"
+               << "<button type=\"submit\" formaction=\"" << Args->config->buildurl("settings/staticpage",url,512) << "\">Back</button>"
+               << "</div>";
+    }else{
+        setdiv << "<div id=\"staticsettings\"><span>You wan't remove the page with id " << id << "?</span><br>"
+               << "<a href=\"" << Args->config->buildurl("settings/staticpage/delpage?",url,512) << "pageid=" << id << "&confirmed=true\">Yes</a><a href=\"" << Args->config->buildurl("settings/staticpage",url,512) << "\"> NO </a>"
+               << "</div>";
+    }
 }
 
 void blogi::StaticPage::editPage(libhttppp::HttpRequest* req, libhtmlpp::HtmlString& setdiv){
