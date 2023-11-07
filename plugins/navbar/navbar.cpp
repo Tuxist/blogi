@@ -37,11 +37,9 @@ namespace blogi {
     class Navbar : public PluginApi {
     public:
         Navbar(){
-            Navigation = new libhtmlpp::HtmlElement();
         }
 
         ~Navbar(){
-            delete Navigation;
         }
 
         const char* getName(){
@@ -60,11 +58,15 @@ namespace blogi {
             return;
         }
 
-        void Rendering(libhtmlpp::HtmlElement* curpage){
+        void Rendering(libhttppp::HttpRequest *req,libhtmlpp::HtmlElement& curpage){
             blogi::SQL sql;
             blogi::DBResult res;
-
             sql << "select url,name from navbar ORDER BY id";
+
+            std::string turl=req->getRequestURL();
+            if(turl.rfind('?')>0){
+                turl=turl.substr(0,turl.rfind('?'));
+            }
 
             int n = Args->database->exec(&sql,res);
             if(n<1){
@@ -76,13 +78,16 @@ namespace blogi {
             buf << "<div id=\"navbar\">" << "<ul>";
             for (int i = 0; i < n; i++) {
                 buf << "<li ";
-                buf << "class=\"inactive\"";
+                if(turl.compare(0,strlen(res[i][0]),res[i][0]) == 0 )
+                    buf << "class=\"active\"";
+                else
+                    buf << "class=\"inactive\"";
                 buf << "><a href=\"" << res[i][0] << "\">" << res[i][1] << "</a></li>";
             }
             //<li class=\"active\" style=\"padding:1px 10px; float:left\"><a href=\"" << _Config.config->buildurl(index,url,512) <<"\">Blog</a></li>
             buf << "</ul></div>";
-            Navigation->appendChild(buf.parse());
-            Args->theme->Rendering(curpage,"header",Navigation);
+
+            curpage.getElementbyID("header")->appendChild(buf.parse());
         }
 
         bool haveSettings(){
@@ -93,20 +98,9 @@ namespace blogi {
             setdiv << "<div id=\"navsettings\"><span>Navbar Settings</span></div>";
         }
 
-        bool Controller(netplus::con *curcon,libhttppp::HttpRequest *req){
-            std::string turl=req->getRequestURL();
-            if(turl.rfind('?')>0){
-                turl=turl.substr(0,turl.rfind('?'));
-            }
-
-            // if(turl.compare(0,strlen(res[i][0]),res[i][0]) == 0 )
-            // //        buf << "class=\"active\"";
-            //     else
-            //
+        bool Controller(netplus::con *curcon,libhttppp::HttpRequest *req,libhtmlpp::HtmlElement page){
             return false;
         }
-    private:
-        libhtmlpp::HtmlElement *Navigation;
     };
 };
 

@@ -127,10 +127,10 @@ void blogi::Blogi::loginPage(netplus::con*curcon,libhttppp::HttpRequest *curreq)
                << "</form>"
                << "</div>";
 
-        index.getElementbyID("main")->insertAfter(condat.parse());
+        index.getElementbyID("main")->insertChild(condat.parse());
 
         for(blogi::Plugin::PluginData *curplg=BlogiPlg->getFirstPlugin(); curplg; curplg=curplg->getNextPlg()){
-            curplg->getInstace()->Rendering(&index);
+            curplg->getInstace()->Rendering(curreq,index);
         }
 
         PlgArgs->theme->printSite(out,index,curreq->getRequestURL(),false);
@@ -217,7 +217,7 @@ void blogi::Blogi::settingsPage(netplus::con* curcon, libhttppp::HttpRequest* cu
     index.getElementbyID("main")->insertAfter(setgui.parse());
 
     for(blogi::Plugin::PluginData *curplg=BlogiPlg->getFirstPlugin(); curplg; curplg=curplg->getNextPlg()){
-        curplg->getInstace()->Rendering(&index);
+        curplg->getInstace()->Rendering(curreq,index);
     }
 
     PlgArgs->theme->printSite(out,index,curreq->getRequestURL(),false);
@@ -270,7 +270,7 @@ void blogi::Blogi::RequestEvent(netplus::con *curcon){
         if(!PlgArgs->theme->Controller(curcon,&req)){
 
             for(blogi::Plugin::PluginData *curplg=BlogiPlg->getFirstPlugin(); curplg; curplg=curplg->getNextPlg()){
-                curplg->getInstace()->Rendering(&index);
+                curplg->getInstace()->Rendering(&req,index);
             }
 
             for(blogi::Plugin::PluginData *curplg=BlogiPlg->getFirstPlugin(); curplg; curplg=curplg->getNextPlg()){

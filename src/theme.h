@@ -52,8 +52,6 @@ namespace blogi {
         Template(TemplateConfig &config,libhtmlpp::HtmlElement &page);
         ~Template();
 
-        void Rendering(libhtmlpp::HtmlElement *index,const char *id,libhtmlpp::HtmlElement *addElement);
-
         bool Controller(netplus::con *curcon,libhttppp::HttpRequest *req);
 
         void printSite(std::string &output,libhtmlpp::HtmlElement index,const char *crrurl,bool login,const char *meta=nullptr);

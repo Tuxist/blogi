@@ -41,7 +41,7 @@ bool blogi::PluginApi::haveSettings(){
     return false;
 }
 
-void blogi::PluginApi::Rendering(libhtmlpp::HtmlElement* curpage){
+void blogi::PluginApi::Rendering(libhttppp::HttpRequest *req,libhtmlpp::HtmlElement &curpage){
     return;
 }
 
@@ -49,7 +49,7 @@ void blogi::PluginApi::Settings(libhttppp::HttpRequest *req,libhtmlpp::HtmlStrin
     return;
 };
 
-bool blogi::PluginApi::Controller(netplus::con *curcon,libhttppp::HttpRequest *req,libhtmlpp::HtmlElement &page){
+bool blogi::PluginApi::Controller(netplus::con *curcon,libhttppp::HttpRequest *req,libhtmlpp::HtmlElement page){
     return false;
 }
 

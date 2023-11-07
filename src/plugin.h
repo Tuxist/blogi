@@ -57,11 +57,11 @@ namespace blogi {
 
         virtual void initPlugin()=0;
 
-        virtual bool Controller(netplus::con *curcon,libhttppp::HttpRequest *req,libhtmlpp::HtmlElement &page);
+        virtual bool Controller(netplus::con *curcon,libhttppp::HttpRequest *req,libhtmlpp::HtmlElement page);
 
         virtual void Settings(libhttppp::HttpRequest *req,libhtmlpp::HtmlString &setdiv);
 
-        virtual void Rendering(libhtmlpp::HtmlElement *curpage);
+        virtual void Rendering(libhttppp::HttpRequest *req,libhtmlpp::HtmlElement &curpage);
     protected:
         PluginArgs *Args;
     };

@@ -46,7 +46,7 @@ blogi::Template::Template(blogi::TemplateConfig& config,libhtmlpp::HtmlElement &
     std::string htmlfile=_Config.Theme;
     htmlfile.append("/index.html");
 
-    page=_Page.loadFile(htmlfile.c_str());
+    page=*_Page.loadFile(htmlfile.c_str());
 
     DIR *directory = opendir(std::string(_Config.Theme).append("/public").c_str());
 
@@ -87,14 +87,6 @@ blogi::Template::Template(blogi::TemplateConfig& config,libhtmlpp::HtmlElement &
 blogi::Template::~Template(){
 
 }
-
-void blogi::Template::Rendering(libhtmlpp::HtmlElement *index,const char *id,libhtmlpp::HtmlElement* addElement){
-    libhtmlpp::HtmlElement *find=index->getElementbyID(id);
-    if(find){
-        find->insertAfter(addElement);
-    }
-}
-
 
 bool blogi::Template::Controller(netplus::con *curcon,libhttppp::HttpRequest *req){
     std::string publicf = req->getRequestURL();
@@ -159,7 +151,6 @@ void blogi::Template::printSite(std::string &output,libhtmlpp::HtmlElement index
 
 
         }
-        header = index.getElementbyID("header");
         footernav = index.getElementbyID("footernav");
         libhtmlpp::HtmlElement contentd("div");
         libhtmlpp::HtmlString footerancor;
@@ -170,7 +161,8 @@ void blogi::Template::printSite(std::string &output,libhtmlpp::HtmlElement index
             footerancor << "<a class=\"footer\" href=\"" << _Config.config->buildurl("logout",url,512) << "\">Logout</a>"
             << "<a class=\"footer\" href=\"" << _Config.config->buildurl("settings",url,512) << "\">Settings</a>";
         }
-        footernav->appendChild(footerancor.parse());
+        if(footernav)
+            footernav->appendChild(footerancor.parse());
 
         libhtmlpp::print(&index,nullptr,output);
     }catch(libhtmlpp::HTMLException &e){

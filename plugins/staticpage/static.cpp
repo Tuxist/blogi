@@ -314,7 +314,7 @@ void blogi::StaticPage::uploadPage(libhttppp::HttpRequest* req, libhtmlpp::HtmlS
 
 
 
-bool blogi::StaticPage::Controller(netplus::con *curcon,libhttppp::HttpRequest *req,libhtmlpp::HtmlElement &page){
+bool blogi::StaticPage::Controller(netplus::con *curcon,libhttppp::HttpRequest *req,libhtmlpp::HtmlElement page){
     char url[512];
     if (strncmp(req->getRequestURL(),Args->config->buildurl("staticpage",url,512),strlen(Args->config->buildurl("staticpage",url,512)))==0){
         std::string surl=req->getRequestURL()+strlen(Args->config->buildurl("staticpage/",url,512));

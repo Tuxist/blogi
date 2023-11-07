@@ -594,9 +594,9 @@ namespace blogi {
             return;
         }
 
-        bool Controller(netplus::con * curcon, libhttppp::HttpRequest * req,libhtmlpp::HtmlElement &page){
+        bool Controller(netplus::con * curcon, libhttppp::HttpRequest * req,libhtmlpp::HtmlElement page){
             char url[512];
-            if(strncmp(req->getRequestURL(),Args->config->buildurl("content",url,512),strlen(Args->config->buildurl("content",url,125)))!=0){
+            if(strncmp(req->getRequestURL(),Args->config->buildurl("content",url,512),strlen(Args->config->buildurl("content",url,512)))!=0){
                 return false;
             }
 
