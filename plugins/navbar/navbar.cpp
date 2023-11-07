@@ -61,7 +61,7 @@ namespace blogi {
         void Rendering(libhttppp::HttpRequest *req,libhtmlpp::HtmlElement& curpage){
             blogi::SQL sql;
             blogi::DBResult res;
-            sql << "select url,name from navbar ORDER BY id";
+            sql << "select url,name from navbar_items ORDER BY id";
 
             std::string turl=req->getRequestURL();
             if(turl.rfind('?')>0){
@@ -84,7 +84,6 @@ namespace blogi {
                     buf << "class=\"inactive\"";
                 buf << "><a href=\"" << res[i][0] << "\">" << res[i][1] << "</a></li>";
             }
-            //<li class=\"active\" style=\"padding:1px 10px; float:left\"><a href=\"" << _Config.config->buildurl(index,url,512) <<"\">Blog</a></li>
             buf << "</ul></div>";
 
             curpage.getElementbyID("header")->appendChild(buf.parse());
