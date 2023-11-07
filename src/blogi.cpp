@@ -214,7 +214,7 @@ void blogi::Blogi::settingsPage(netplus::con* curcon, libhttppp::HttpRequest* cu
     setgui << "</td></tr></table></div>";
 
     libhtmlpp::HtmlElement index=Page;
-    index.getElementbyID("main")->insertAfter(setgui.parse());
+    index.getElementbyID("main")->appendChild(setgui.parse());
 
     for(blogi::Plugin::PluginData *curplg=BlogiPlg->getFirstPlugin(); curplg; curplg=curplg->getNextPlg()){
         curplg->getInstace()->Rendering(curreq,index);
