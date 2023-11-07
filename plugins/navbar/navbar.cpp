@@ -59,9 +59,9 @@ namespace blogi {
         }
 
         void Rendering(libhttppp::HttpRequest *req,libhtmlpp::HtmlElement& curpage){
-            blogi::SQL sql;
-            blogi::DBResult res;
-            sql << "select url,name from navbar_items ORDER BY id";
+            blogi::SQL sql,sql2;
+            blogi::DBResult res,res2;
+            sql << "select id,name,container_id from navbar";
 
             std::string turl=req->getRequestURL();
             if(turl.rfind('?')>0){
@@ -75,18 +75,23 @@ namespace blogi {
                 throw excep;
             }
             libhtmlpp::HtmlString buf;
-            buf << "<div id=\"navbar\">" << "<ul>";
             for (int i = 0; i < n; i++) {
-                buf << "<li ";
-                if(turl.compare(0,strlen(res[i][0]),res[i][0]) == 0 )
-                    buf << "class=\"active\"";
-                else
-                    buf << "class=\"inactive\"";
-                buf << "><a href=\"" << res[i][0] << "\">" << res[i][1] << "</a></li>";
-            }
-            buf << "</ul></div>";
+                buf << "<div id=\"" << res[0][1] << "\">" << "<ul>";
 
-            curpage.getElementbyID("header")->appendChild(buf.parse());
+                sql2 << "select url,name from navbar_items WHERE navbar_id='" << res[i][0] << "' ORDER BY id";
+
+                int n2 = Args->database->exec(&sql2,res2);
+                for (int ii = 0; ii < n2; ii++) {
+                    buf << "<li ";
+                    if(turl.compare(0,strlen(res2[ii][0]),res2[ii][0]) == 0 )
+                        buf << "class=\"active\"";
+                    else
+                        buf << "class=\"inactive\"";
+                    buf << "><a href=\"" << res2[ii][0] << "\">" << res2[ii][1] << "</a></li>";
+                }
+                buf << "</ul></div>";
+            }
+            curpage.getElementbyID(res[0][2])->appendChild(buf.parse());
         }
 
         bool haveSettings(){
