@@ -42,7 +42,7 @@ namespace blogi {
         void initPlugin();
         bool haveSettings();
 
-        bool Controller(netplus::con *curcon,libhttppp::HttpRequest *req);
+        bool Controller(netplus::con *curcon,libhttppp::HttpRequest *req,libhtmlpp::HtmlElement &page);
         void Settings(libhttppp::HttpRequest * req, libhtmlpp::HtmlString & setdiv);
     private:
         void newPage(libhttppp::HttpRequest * req, libhtmlpp::HtmlString & setdiv);

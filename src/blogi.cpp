@@ -68,7 +68,7 @@ blogi::Blogi::Blogi(netplus::socket *serversocket) : event(serversocket){
     tplcfg.Theme=tplcfg.config->gettemplate();
     tplcfg.TDatabase=PlgArgs->database;
 
-    PlgArgs->theme=new Template(tplcfg);
+    PlgArgs->theme=new Template(tplcfg,Page);
 
     BlogiPlg = new Plugin();
 
@@ -94,15 +94,6 @@ void blogi::Blogi::loginPage(netplus::con*curcon,libhttppp::HttpRequest *curreq)
         err[libhttppp::HTTPException::Error] << "you already authenticated please logoff before you login again!";
         throw err;
     }
-    libhtmlpp::HtmlString condat;
-    condat << "<div id=\"content\">"
-    << "<span>Login</span>"
-    << "<form action=\""<< PlgArgs->config->buildurl("login",url,512) << "\" method=\"post\">"
-    << "username:<br> <input type=\"text\" name=\"username\" value=\"\"><br>"
-    << "password:<br> <input type=\"password\" name=\"password\" value=\"\"><br>"
-    << "<button type=\"submit\">Submit</button>"
-    << "</form>"
-    << "</div>";
 
     libhttppp::HttpForm curform;
     curform.parse(curreq);
@@ -119,13 +110,30 @@ void blogi::Blogi::loginPage(netplus::con*curcon,libhttppp::HttpRequest *curreq)
             else if (strcmp(cururlform->getKey(), "password") == 0) {
                 password = cururlform->getValue();
             }
-        }
+             }
     }
 
     std::string out;
+    libhtmlpp::HtmlElement index=Page;
 
     if (!username || !password) {
-        PlgArgs->theme->RenderSite(out,curreq->getRequestURL(),condat,false);
+        libhtmlpp::HtmlString condat;
+        condat << "<div id=\"content\">"
+               << "<span>Login</span>"
+               << "<form action=\""<< PlgArgs->config->buildurl("login",url,512) << "\" method=\"post\">"
+               << "username:<br> <input type=\"text\" name=\"username\" value=\"\"><br>"
+               << "password:<br> <input type=\"password\" name=\"password\" value=\"\"><br>"
+               << "<button type=\"submit\">Submit</button>"
+               << "</form>"
+               << "</div>";
+
+        index.getElementbyID("main")->insertAfter(condat.parse());
+
+        for(blogi::Plugin::PluginData *curplg=BlogiPlg->getFirstPlugin(); curplg; curplg=curplg->getNextPlg()){
+            curplg->getInstace()->Rendering(&index);
+        }
+
+        PlgArgs->theme->printSite(out,index,curreq->getRequestURL(),false);
         libhttppp::HttpResponse curres;
         curres.setState(HTTP200);
         curres.setVersion(HTTPVERSION(1.1));
@@ -205,7 +213,14 @@ void blogi::Blogi::settingsPage(netplus::con* curcon, libhttppp::HttpRequest* cu
 
     setgui << "</td></tr></table></div>";
 
-    PlgArgs->theme->RenderSite(out,curreq->getRequestURL(),setgui,false);
+    libhtmlpp::HtmlElement index=Page;
+    index.getElementbyID("main")->insertAfter(setgui.parse());
+
+    for(blogi::Plugin::PluginData *curplg=BlogiPlg->getFirstPlugin(); curplg; curplg=curplg->getNextPlg()){
+        curplg->getInstace()->Rendering(&index);
+    }
+
+    PlgArgs->theme->printSite(out,index,curreq->getRequestURL(),false);
     libhttppp::HttpResponse curres;
     curres.setState(HTTP200);
     curres.setVersion(HTTPVERSION(1.1));
@@ -250,15 +265,21 @@ void blogi::Blogi::RequestEvent(netplus::con *curcon){
             return;
         }
 
+        libhtmlpp::HtmlElement index=Page;
 
         if(!PlgArgs->theme->Controller(curcon,&req)){
+
+            for(blogi::Plugin::PluginData *curplg=BlogiPlg->getFirstPlugin(); curplg; curplg=curplg->getNextPlg()){
+                curplg->getInstace()->Rendering(&index);
+            }
+
             for(blogi::Plugin::PluginData *curplg=BlogiPlg->getFirstPlugin(); curplg; curplg=curplg->getNextPlg()){
                 PluginApi *api=curplg->getInstace();
                 std::string url=PlgArgs->config->getprefix();
                 url+="/";
                 url+=api->getName();
                 if(strncmp(req.getRequestURL(),url.c_str(),url.length())==0){
-                    if(api->Controller(curcon,&req))
+                    if(api->Controller(curcon,&req,index))
                         return;
                 }
             }

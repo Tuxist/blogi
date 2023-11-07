@@ -74,7 +74,7 @@ namespace blogi {
             }
         }
 
-        bool Controller(netplus::con *curcon,libhttppp::HttpRequest *req){
+        bool Controller(netplus::con *curcon,libhttppp::HttpRequest *req,libhtmlpp::HtmlElement &page){
             char url[512];
             if(strncmp(req->getRequestURL(),Args->config->buildurl("gamestatus",url,512),strlen(Args->config->buildurl("gamestatus",url,512)))!=0){
                 return false;
@@ -114,8 +114,9 @@ namespace blogi {
             condat << "</div>";
 
             std::string out,sid;
+            page.getElementbyID("main")->insertChild(condat.parse());
 
-            Args->theme->RenderSite(out,req->getRequestURL(),condat,
+            Args->theme->printSite(out,page,req->getRequestURL(),
                                     Args->auth->isLoggedIn(req,sid));
 
             libhttppp::HttpResponse resp;

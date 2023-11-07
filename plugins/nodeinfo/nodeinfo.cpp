@@ -57,7 +57,7 @@ namespace blogi {
 
         }
 
-        bool Controller(netplus::con *curcon,libhttppp::HttpRequest *req){
+        bool Controller(netplus::con *curcon,libhttppp::HttpRequest *req,libhtmlpp::HtmlElement &page){
             char url[512];
             if(strncmp(req->getRequestURL(),Args->config->buildurl("nodeinfo",url,512),strlen(Args->config->buildurl("nodeinfo",url,512)))!=0){
                 return false;
@@ -101,7 +101,9 @@ namespace blogi {
             libhtmlpp::HtmlString condat;
             condat << systable;
 
-            Args->theme->RenderSite(out,req->getRequestURL(),condat,
+            page.getElementbyID("main")->insertChild(condat.parse());
+
+            Args->theme->printSite(out,page,req->getRequestURL(),
                                     Args->auth->isLoggedIn(req,sid));
 
             #endif

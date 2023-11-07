@@ -41,12 +41,12 @@
 #include "theme.h"
 #include "conf.h"
 
-blogi::Template::Template(blogi::TemplateConfig& config){
+blogi::Template::Template(blogi::TemplateConfig& config,libhtmlpp::HtmlElement &page){
     _Config=config;
     std::string htmlfile=_Config.Theme;
     htmlfile.append("/index.html");
 
-    _BlogIndex=_BlogPage.loadFile(htmlfile.c_str());
+    page=_Page.loadFile(htmlfile.c_str());
 
     DIR *directory = opendir(std::string(_Config.Theme).append("/public").c_str());
 
@@ -88,6 +88,14 @@ blogi::Template::~Template(){
 
 }
 
+void blogi::Template::Rendering(libhtmlpp::HtmlElement *index,const char *id,libhtmlpp::HtmlElement* addElement){
+    libhtmlpp::HtmlElement *find=index->getElementbyID(id);
+    if(find){
+        find->insertAfter(addElement);
+    }
+}
+
+
 bool blogi::Template::Controller(netplus::con *curcon,libhttppp::HttpRequest *req){
     std::string publicf = req->getRequestURL();
     if(publicf.length() >strlen(_Config.config->getprefix()) && publicf.compare(strlen(_Config.config->getprefix()),13,"/theme/public/",13)==0){
@@ -122,45 +130,12 @@ bool blogi::Template::Controller(netplus::con *curcon,libhttppp::HttpRequest *re
     return false;
 }
 
-void blogi::Template::RenderSite(std::string& output, const char* crrurl, libhtmlpp::HtmlString input,bool login,const char *meta){
+void blogi::Template::printSite(std::string &output,libhtmlpp::HtmlElement index,const char *crrurl,bool login,const char *meta){
     try{
         char url[512];
 
-        std::string turl=crrurl;
-
-        if(turl.rfind('?')>0){
-           turl=turl.substr(0,turl.rfind('?'));
-        }
-
-        blogi::SQL sql;
-        blogi::DBResult res;
-
-        sql << "select url,name from navbar ORDER BY id";
-
-        int n = _Config.TDatabase->exec(&sql,res);
-        if(n<1){
-            libhttppp::HTTPException excep;
-            excep[libhttppp::HTTPException::Critical] << "No entries found for navbar";
-            throw excep;
-        }
-
-        libhtmlpp::HtmlString buf;
-        buf << "<div id=\"navbar\">"
-        << "<ul>";
-
-        for (int i = 0; i < n; i++) {
-            buf << "<li ";
-            if( turl.compare(0,strlen(res[i][0]),res[i][0]) == 0 )
-                buf << "class=\"active\"";
-            else
-                buf << "class=\"inactive\"";
-            buf << "><a href=\"" << res[i][0] << "\">" << res[i][1] << "</a></li>";
-        }
-        //<li class=\"active\" style=\"padding:1px 10px; float:left\"><a href=\"" << _Config.config->buildurl(index,url,512) <<"\">Blog</a></li>
-        buf << "</ul></div>";
         std::string sessid;
-        libhtmlpp::HtmlElement index;
-        index = _BlogIndex;
+
         libhtmlpp::HtmlElement *head,*header,*main, *footernav;
         head=index.getElementbyTag("head");
 
@@ -185,12 +160,8 @@ void blogi::Template::RenderSite(std::string& output, const char* crrurl, libhtm
 
         }
         header = index.getElementbyID("header");
-        main =  index.getElementbyID("main");
         footernav = index.getElementbyID("footernav");
-        header->appendChild(buf.parse());
         libhtmlpp::HtmlElement contentd("div");
-        main->insertChild(input.parse());
-
         libhtmlpp::HtmlString footerancor;
         footerancor << "<a class=\"footer\" href=\"" << _Config.config->buildurl("staticpage/impressum",url,512) << "\" >Impressum</a>";
         if(!login){
@@ -200,6 +171,7 @@ void blogi::Template::RenderSite(std::string& output, const char* crrurl, libhtm
             << "<a class=\"footer\" href=\"" << _Config.config->buildurl("settings",url,512) << "\">Settings</a>";
         }
         footernav->appendChild(footerancor.parse());
+
         libhtmlpp::print(&index,nullptr,output);
     }catch(libhtmlpp::HTMLException &e){
         libhttppp::HTTPException excep;

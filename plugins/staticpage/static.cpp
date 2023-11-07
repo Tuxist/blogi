@@ -110,7 +110,8 @@ void blogi::StaticPage::newPage(libhttppp::HttpRequest* req, libhtmlpp::HtmlStri
 
     libhttppp::HttpForm form;
     form.parse(req);
-    std::string surl,meta,text;
+    std::string surl,meta,err;
+    libhtmlpp::HtmlString text;
 
     try {
 
@@ -135,7 +136,7 @@ void blogi::StaticPage::newPage(libhttppp::HttpRequest* req, libhtmlpp::HtmlStri
         }
     }catch(...){};
 
-    if(!surl.empty() && !text.empty()){
+    if(!surl.empty() && ( !text.empty() && text.validate(err) ) ){
         sql << "INSERT INTO static_content (url,meta,text) VALUES('";
         sql.escaped(surl.c_str()) << "','";
         sql.escaped(meta.c_str()) << "','";
@@ -144,8 +145,11 @@ void blogi::StaticPage::newPage(libhttppp::HttpRequest* req, libhtmlpp::HtmlStri
         sql.clear();
         setdiv << "<div id=\"staticsettings\"><span>Added succesfully! </span></div>";
     }else{
-        setdiv << "<div id=\"staticsettings\">"
-        << "<span>Statische Seiten</span>"
+        setdiv << "<div id=\"staticsettings\">";
+        if(!err.empty()){
+           setdiv<<"<span style=\"color:red;\" >Invalid Html: " << err << "</span>";
+        }
+        setdiv << "<span>Statische Seiten</span>"
         << "<span>Neue Seite</span>"
         << "<form method=\"post\" enctype=\"multipart/form-data\">"
         << "<span>Url:</span><br>";
@@ -164,7 +168,6 @@ void blogi::StaticPage::newPage(libhttppp::HttpRequest* req, libhtmlpp::HtmlStri
         << "<input type=\"submit\" value=\"Save\">"
         << "</form></div>";
     }
-
 }
 
 void blogi::StaticPage::delPage(libhttppp::HttpRequest* req, libhtmlpp::HtmlString& setdiv){
@@ -311,7 +314,7 @@ void blogi::StaticPage::uploadPage(libhttppp::HttpRequest* req, libhtmlpp::HtmlS
 
 
 
-bool blogi::StaticPage::Controller(netplus::con *curcon,libhttppp::HttpRequest *req){
+bool blogi::StaticPage::Controller(netplus::con *curcon,libhttppp::HttpRequest *req,libhtmlpp::HtmlElement &page){
     char url[512];
     if (strncmp(req->getRequestURL(),Args->config->buildurl("staticpage",url,512),strlen(Args->config->buildurl("staticpage",url,512)))==0){
         std::string surl=req->getRequestURL()+strlen(Args->config->buildurl("staticpage/",url,512));
@@ -343,7 +346,9 @@ bool blogi::StaticPage::Controller(netplus::con *curcon,libhttppp::HttpRequest *
                << res[0][1]
                << "</div>";
         std::string sid;
-        Args->theme->RenderSite(out,req->getRequestURL(),condat,Args->auth->isLoggedIn(req,sid),res[0][2]);
+        page.getElementbyID("main")->insertChild(condat.parse());;
+
+        Args->theme->printSite(out,page,req->getRequestURL(),Args->auth->isLoggedIn(req,sid),res[0][2]);
         libhttppp::HttpResponse resp;
         resp.setVersion(HTTPVERSION(1.1));
         resp.setState(HTTP200);

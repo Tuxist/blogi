@@ -42,7 +42,8 @@ namespace blogi {
         void settingsPage(netplus::con *curcon,libhttppp::HttpRequest *curreq);
         void RequestEvent(netplus::con *curcon);
     private:
-        Plugin         *BlogiPlg;
-        PluginArgs     *PlgArgs;
+        Plugin                 *BlogiPlg;
+        PluginArgs             *PlgArgs;
+        libhtmlpp::HtmlElement  Page;
     };
 };

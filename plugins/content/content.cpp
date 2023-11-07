@@ -47,7 +47,7 @@ namespace blogi {
         ~Content(){
         };
 
-        void contentIdxPage(netplus::con *curcon,libhttppp::HttpRequest *curreq,const char *tag,int start,int end){
+        void contentIdxPage(netplus::con *curcon,libhttppp::HttpRequest *curreq,libhtmlpp::HtmlElement &page,const char *tag,int start,int end){
             libhttppp::HTTPException excep;
             libhtmlpp::HtmlString condat;
 
@@ -133,7 +133,10 @@ namespace blogi {
                 condat << "</ul></div>";
             }
             std::string out;
-            Args->theme->RenderSite(out,curreq->getRequestURL(),condat,Args->auth->isLoggedIn(curreq,sid),meta.c_str());
+
+            page.getElementbyID("main")->insertChild(condat.parse());;
+
+            Args->theme->printSite(out,page,curreq->getRequestURL(),Args->auth->isLoggedIn(curreq,sid),meta.c_str());
 
             libhttppp::HttpResponse resp;
             resp.setVersion(HTTPVERSION(1.1));
@@ -142,7 +145,7 @@ namespace blogi {
             resp.send(curcon,out.c_str(),out.length());
         };
 
-        void contentPage(netplus::con* curcon, libhttppp::HttpRequest* curreq) {
+        void contentPage(netplus::con* curcon, libhttppp::HttpRequest* curreq,libhtmlpp::HtmlElement &page) {
             libhttppp::HTTPException excep;
             libhtmlpp::HtmlString condat;
 
@@ -180,7 +183,10 @@ namespace blogi {
             << "</div></div>";
 
             std::string out;
-            Args->theme->RenderSite(out,curreq->getRequestURL(),condat,Args->auth->isLoggedIn(curreq,sid));
+
+            page.getElementbyID("main")->insertChild(condat.parse());
+
+            Args->theme->printSite(out,page,curreq->getRequestURL(),Args->auth->isLoggedIn(curreq,sid));
 
             libhttppp::HttpResponse resp;
             resp.setVersion(HTTPVERSION(1.1));
@@ -189,7 +195,7 @@ namespace blogi {
             resp.send(curcon,out.c_str(),out.length());
         };
 
-        void addPostPage(netplus::con *curcon,libhttppp::HttpRequest *curreq){
+        void addPostPage(netplus::con *curcon,libhttppp::HttpRequest *curreq,libhtmlpp::HtmlElement &page){
             std::string sid;
             char url[512];
 
@@ -321,7 +327,10 @@ namespace blogi {
             << "</div>";
 
             std::string out;
-            Args->theme->RenderSite(out,curreq->getRequestURL(),condat,Args->auth->isLoggedIn(curreq,sid));
+
+            page.getElementbyID("main")->insertChild(condat.parse());
+
+            Args->theme->printSite(out,page,curreq->getRequestURL(),Args->auth->isLoggedIn(curreq,sid));
 
             libhttppp::HttpResponse resp;
             resp.setVersion(HTTPVERSION(1.1));
@@ -330,7 +339,7 @@ namespace blogi {
             resp.send(curcon,out.c_str(),out.length());
         }
 
-        void delPostPage(netplus::con* curcon, libhttppp::HttpRequest* curreq) {
+        void delPostPage(netplus::con* curcon, libhttppp::HttpRequest* curreq,libhtmlpp::HtmlElement &page) {
             std::string sid;
             char url[512];
 
@@ -365,7 +374,10 @@ namespace blogi {
             condat << "<span>Beitrag geloescht</span>";
 
             std::string out;
-            Args->theme->RenderSite(out,curreq->getRequestURL(),condat,Args->auth->isLoggedIn(curreq,sid));
+
+            page.getElementbyID("main")->insertChild(condat.parse());
+
+            Args->theme->printSite(out,page,curreq->getRequestURL(),Args->auth->isLoggedIn(curreq,sid));
 
             libhttppp::HttpResponse resp;
             resp.setVersion(HTTPVERSION(1.1));
@@ -413,7 +425,7 @@ namespace blogi {
             }
         }
 
-        void editPostPage(netplus::con* curcon, libhttppp::HttpRequest* curreq) {
+        void editPostPage(netplus::con* curcon, libhttppp::HttpRequest* curreq,libhtmlpp::HtmlElement &page) {
             std::string sid;
             char url[512];
             if (!Args->auth->isLoggedIn(curreq,sid)) {
@@ -554,7 +566,10 @@ namespace blogi {
                 << "</div>";
             };
             std::string out;
-            Args->theme->RenderSite(out,curreq->getRequestURL(),condat,Args->auth->isLoggedIn(curreq,sid));
+
+            page.getElementbyID("main")->insertChild(condat.parse());
+
+            Args->theme->printSite(out,page,curreq->getRequestURL(),Args->auth->isLoggedIn(curreq,sid));
 
             libhttppp::HttpResponse resp;
             resp.setVersion(HTTPVERSION(1.1));
@@ -579,7 +594,7 @@ namespace blogi {
             return;
         }
 
-        bool Controller(netplus::con * curcon, libhttppp::HttpRequest * req){
+        bool Controller(netplus::con * curcon, libhttppp::HttpRequest * req,libhtmlpp::HtmlElement &page){
             char url[512];
             if(strncmp(req->getRequestURL(),Args->config->buildurl("content",url,512),strlen(Args->config->buildurl("content",url,125)))!=0){
                 return false;
@@ -594,13 +609,13 @@ namespace blogi {
             }
 
             if (strncmp(curl.c_str(),Args->config->buildurl("content/addpost",url,512),strlen(Args->config->buildurl("content/addpost",url,512)))==0){
-                    addPostPage(curcon,req);
+                    addPostPage(curcon,req,page);
             }else if (strncmp(curl.c_str(), Args->config->buildurl("content/read",url,512), strlen(Args->config->buildurl("content/read",url,512))) == 0) {
-                    contentPage(curcon,req);
+                    contentPage(curcon,req,page);
             }else if (strncmp(curl.c_str(), Args->config->buildurl("content/edit",url,512), strlen(Args->config->buildurl("content/edit",url,512))) == 0) {
-                    editPostPage(curcon,req);
+                    editPostPage(curcon,req,page);
             }else if (strncmp(curl.c_str(), Args->config->buildurl("content/del",url,512), strlen(Args->config->buildurl("content/del",url,512))) == 0) {
-                    delPostPage(curcon, req);
+                    delPostPage(curcon, req,page);
             }else if (strstr(req->getRequestURL(),"robots.txt")){
                const char *robot = "User-agent: Googlebot\r\n\r\nUser-agent: *\r\nAllow: /";
                libhttppp::HttpResponse resp;
@@ -621,9 +636,9 @@ namespace blogi {
                 std::cerr << startpos << std::endl;
                 if (strcmp(curl.c_str(),Args->config->buildurl("content/tag",url,512))>0){
                     size_t len = strlen(Args->config->buildurl("content/tag/",url,512));
-                    contentIdxPage(curcon,req,curl.substr(len,curl.length()-len).c_str(),startpos,SITELIMIT);
+                    contentIdxPage(curcon,req,page,curl.substr(len,curl.length()-len).c_str(),startpos,SITELIMIT);
                  }else{
-                    contentIdxPage(curcon,req,nullptr,startpos,SITELIMIT);
+                    contentIdxPage(curcon,req,page,nullptr,startpos,SITELIMIT);
                  }
             }
             return true;
