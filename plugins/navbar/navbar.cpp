@@ -71,12 +71,13 @@ namespace blogi {
             int n = Args->database->exec(&sql,res);
             if(n<1){
                 libhttppp::HTTPException excep;
-                excep[libhttppp::HTTPException::Critical] << "No entries found for navbar";
+                excep[libhttppp::HTTPException::Critical] << "No navbar found";
                 throw excep;
             }
-            libhtmlpp::HtmlString buf;
+
             for (int i = 0; i < n; i++) {
-                buf << "<div id=\"" << res[0][1] << "\">" << "<ul>";
+                libhtmlpp::HtmlString buf;
+                buf << "<div id=\"" << res[i][1] << "\">" << "<ul>";
 
                 sql2 << "select url,name from navbar_items WHERE navbar_id='" << res[i][0] << "' ORDER BY id";
 
@@ -90,16 +91,130 @@ namespace blogi {
                     buf << "><a href=\"" << res2[ii][0] << "\">" << res2[ii][1] << "</a></li>";
                 }
                 buf << "</ul></div>";
+
+                sql2.clear();
+                if(curpage.getElementbyID(res[i][2]))
+                    curpage.getElementbyID(res[i][2])->appendChild(buf.parse());
             }
-            curpage.getElementbyID(res[0][2])->appendChild(buf.parse());
+
         }
 
         bool haveSettings(){
             return true;
         }
 
+        void delNavigation(libhttppp::HttpRequest *req,libhtmlpp::HtmlString &setdiv){
+            setdiv << "<div id=\"navsettings\"><span>Remove Navigation</span></div>";
+        }
+
+        void editNavigation(libhttppp::HttpRequest *req,libhtmlpp::HtmlString &setdiv){
+            setdiv << "<div id=\"navsettings\"><span>Edit Navigation</span></div>";
+
+        }
+
+        void newNaviagtion(libhttppp::HttpRequest *req,libhtmlpp::HtmlString &setdiv){
+            std::string navname,navcontainer;
+            libhttppp::HttpForm form;
+            form.parse(req);
+
+            for(libhttppp::HttpForm::UrlcodedFormData *cdat=form.getUrlcodedFormData(); cdat; cdat=cdat->nextUrlcodedFormData()){
+                if(strcmp(cdat->getKey(),"navname")==0)
+                    navname=cdat->getValue();
+                else if(strcmp(cdat->getKey(),"navcontainer")==0)
+                    navcontainer=cdat->getValue();
+            }
+
+            if(!navname.empty() && !navcontainer.empty()){
+                blogi::SQL sql;
+                blogi::DBResult res;
+
+                sql << "INSERT INTO navbar (name,container_id) VALUES ('"; sql.escaped(navname.c_str()) <<"','";  sql.escaped(navcontainer.c_str()) << "')";
+
+                Args->database->exec(&sql,res);
+
+                setdiv << "<div id=\"navsettings\"><span> Navigation " << navname <<" created </span></div>";
+
+                return;
+            }
+
+            setdiv << "<div id=\"navsettings\"><span>New Navigation</span>"
+                   << "<form method=\"post\">"
+                   << "<span>Navigation name:</span><br>"
+                   << "<input name=\"navname\" type=\"text\" /><br>"
+                   << "<span>Html Containername:</span><br>"
+                   << "<input name=\"navcontainer\" type=\"text\" /><br>"
+                   << "<input value=\"create\" type=\"submit\" /><br>"
+                   << "</form>"
+                   << "</div>";
+        }
+
         void Settings(libhttppp::HttpRequest *req,libhtmlpp::HtmlString &setdiv){
-            setdiv << "<div id=\"navsettings\"><span>Navbar Settings</span></div>";
+
+            char url[512];
+            std::string surl,curl=req->getRequestURL();
+            size_t urlen = curl.length();
+            size_t prelen = strlen(Args->config->buildurl("settings/navbar/",url,512));
+            if(prelen < urlen){
+                size_t send=0,sublen=urlen-prelen;
+
+                for(size_t i =0; i<=sublen; ++i){
+                    switch(curl[prelen+i]){
+                        case '\0':
+                            send=i;
+                            goto SENDFIND;
+                        case '/':
+                            send=i;
+                            goto SENDFIND;
+                        default:
+                            continue;
+                    }
+                }
+                goto SETTINGSINDEX;
+SENDFIND:
+                surl=curl.substr(prelen,send);
+
+                if(surl=="newnav"){
+                    newNaviagtion(req,setdiv);
+                    return;
+                }else if(surl=="delnav"){
+                    delNavigation(req,setdiv);
+                    return;
+                }else if(surl=="editnav"){
+                    editNavigation(req,setdiv);
+                    return;
+                }
+
+            }
+SETTINGSINDEX:
+
+            setdiv << "<div id=\"navsettings\"><span>Navbar Settings</span>"
+                   << "";
+            blogi::SQL sql,sql2;
+            blogi::DBResult res,res2;
+            sql << "select id,name,container_id from navbar";
+
+            std::string turl=req->getRequestURL();
+            if(turl.rfind('?')>0){
+                turl=turl.substr(0,turl.rfind('?'));
+            }
+
+            int n = Args->database->exec(&sql,res);
+            if(n<1){
+                libhttppp::HTTPException excep;
+                excep[libhttppp::HTTPException::Critical] << "No entries found for navbar";
+                throw excep;
+            }
+
+            setdiv << "<table>";
+            setdiv << "<tr><th>Name</th><th>Actions</th></tr>";
+            for (int i = 0; i < n; ++i) {
+                setdiv << "<tr><td>" << res[i][1] <<"</td><td><a href=\""<< Args->config->buildurl("settings/navbar/editnav?pageid=",url,512) << res[i][0]
+                       << "\">edit</a></td><td><a href=\""<< Args->config->buildurl("settings/navbar/delnav?pageid=",url,512) << res[i][0] << "\">remove</a></td></tr>";
+            }
+            setdiv << "</table>"
+                   << "<a href=\"" << Args->config->buildurl("settings/navbar/newnav",url,512) <<"\">New Navigation</a>"
+                   << "</div>";
+
         }
 
         bool Controller(netplus::con *curcon,libhttppp::HttpRequest *req,libhtmlpp::HtmlElement page){
