@@ -104,11 +104,169 @@ namespace blogi {
         }
 
         void delNavigation(libhttppp::HttpRequest *req,libhtmlpp::HtmlString &setdiv){
+            char url[512];
+            int navid=-1;
+            bool confirmed=false;
             setdiv << "<div id=\"navsettings\"><span>Remove Navigation</span></div>";
+            libhttppp::HttpForm form;
+            form.parse(req);
+
+            for(libhttppp::HttpForm::UrlcodedFormData *cdat=form.getUrlcodedFormData(); cdat; cdat=cdat->nextUrlcodedFormData()){
+                if(strcmp(cdat->getKey(),"navid")==0)
+                    navid=atoi(cdat->getValue());
+
+                if(strcmp(cdat->getKey(),"confirmed")==0)
+                    if(strcmp(cdat->getValue(),"true")==0)
+                        confirmed=true;
+            }
+
+            if(navid<0){
+                libhttppp::HTTPException excep;
+                excep[libhttppp::HTTPException::Critical] << "No navbar selectet for remove";
+                throw excep;
+            }
+
+            if(!confirmed){
+                setdiv << "<div id=\"navsettings\"><span>You want remove this Navbar ?</span><a href=\"" <<Args->config->buildurl("settings/navbar/delnav?navid=",url,512)
+                       << navid<<"&confirmed=true\">Yes</a></div>";
+                return;
+            }
+
+            blogi::SQL sql;
+            blogi::DBResult res;
+
+            sql << "delete from navbar_items WHERE navbar_id='" << navid <<"'; ";
+            sql << "delete from navbar WHERE id='" << navid <<"';";
+
+            Args->database->exec(&sql,res);
+
+            setdiv << "<div id=\"navsettings\"><span>Successfully removed Navigation</span></div>";
+
         }
 
         void editNavigation(libhttppp::HttpRequest *req,libhtmlpp::HtmlString &setdiv){
-            setdiv << "<div id=\"navsettings\"><span>Edit Navigation</span></div>";
+            char url[512];
+            int navid=-1,rem_itemid=-1;
+            blogi::SQL sql;
+            blogi::DBResult res;
+
+            std::string navname,container_id,newitem_name,newitem_url;
+
+            setdiv << "<div id=\"navsettings\"><span>Edit Navigation</span><br>";
+
+            libhttppp::HttpForm form;
+            form.parse(req);
+
+            libhttppp::HttpForm::UrlcodedFormData *formdat= form.getUrlcodedFormData();
+
+            for(libhttppp::HttpForm::UrlcodedFormData *cdat=formdat; cdat; cdat=cdat->nextUrlcodedFormData()){
+                if(strcmp(cdat->getKey(),"navid")==0)
+                    navid=atoi(cdat->getValue());
+                else if(strcmp(cdat->getKey(),"navname")==0)
+                    navname=cdat->getValue();
+                else if(strcmp(cdat->getKey(),"navcontainer")==0)
+                    container_id=cdat->getValue();
+                else if(strcmp(cdat->getKey(),"navitem_name_new")==0)
+                    newitem_name=cdat->getValue();
+                else if(strcmp(cdat->getKey(),"navitem_url_new")==0)
+                    newitem_url=cdat->getValue();
+                else if(strcmp(cdat->getKey(),"navitem_remove")==0)
+                    rem_itemid=atoi(cdat->getValue());
+            }
+
+            if(navid<0){
+                libhttppp::HTTPException excep;
+                excep[libhttppp::HTTPException::Critical] << "No navbar selectet for edit";
+                throw excep;
+            }
+
+            auto changeItemName = [this,navid](const char *key,const char *value){
+                int iid;
+                sscanf(key,"navitem_name_%d",&iid);
+                blogi::SQL sql;
+                blogi::DBResult res;
+                sql << "UPDATE navbar_items SET name='"; sql.escaped(value) << "' WHERE navbar_id='" << navid << "' AND id='" << iid << "'";
+                Args->database->exec(&sql,res);
+                sql.clear();
+            };
+
+            auto changeItemUrl = [this,navid](const char *key,const char *value){
+                int iid;
+                sscanf(key,"navitem_url_%d",&iid);
+                blogi::SQL sql;
+                blogi::DBResult res;
+                sql << "UPDATE navbar_items SET url='"; sql.escaped(value) << "' WHERE navbar_id='" << navid << "' AND id='" << iid << "'";
+                Args->database->exec(&sql,res);
+                sql.clear();
+
+            };
+
+            for(libhttppp::HttpForm::UrlcodedFormData *cdat=formdat; cdat; cdat=cdat->nextUrlcodedFormData()){
+                if(strncmp(cdat->getKey(),"navitem_name_",13)==0)
+                    changeItemName(cdat->getKey(),cdat->getValue());
+                else if(strncmp(cdat->getKey(),"navitem_url_",12)==0)
+                    changeItemUrl(cdat->getKey(),cdat->getValue());
+            }
+
+            if(rem_itemid>=0){
+                sql << "DELETE FROM navbar_items WHERE navbar_id='" << navid << "'AND id='" << rem_itemid << "'";
+                Args->database->exec(&sql,res);
+                sql.clear();
+            }
+
+            if(!navname.empty()){
+                sql << "UPDATE navbar SET name='"; sql.escaped(navname.c_str()) << "' WHERE id='" << navid << "'";
+                Args->database->exec(&sql,res);
+                sql.clear();
+            }
+
+            if(!container_id.empty()){
+                sql << "UPDATE navbar SET container_id='"; sql.escaped(container_id.c_str()) << "' WHERE id='" << navid << "'";
+                Args->database->exec(&sql,res);
+                sql.clear();
+            }
+
+
+            if(!newitem_name.empty() && !newitem_url.empty()){
+                sql << "INSERT INTO navbar_items (name,url,navbar_id) VALUES('"; sql.escaped(newitem_name.c_str()) << "','"; sql.escaped(newitem_url.c_str()) << "','" << navid << "')";
+                Args->database->exec(&sql,res);
+                sql.clear();
+            }
+
+            sql << "SELECT name,container_id from navbar WHERE id='" << navid << "' LIMIT 1";
+
+            Args->database->exec(&sql,res);
+
+            sql.clear();
+
+            setdiv << "<table><form method=\"POST\" >"
+                   << "<tr><td><span>Name: </span></td><td><input value=\"" << res[0][0] << "\" name=\"navname\" type=\"text\" /></td></tr>"
+                   << "<tr><td><span>Html Container: </span></td><td><input value=\"" << res[0][1] << "\" name=\"navcontainer\" type=\"text\" /></td></tr>"
+                   << "<div id=\"items\">";
+
+            setdiv << "<tr><td><input style=\"display:none;\" type=\"text\" name=\"navid\" value=\"" << navid << "\" /></td></tr>";
+
+            sql << "select id,name,url from navbar_items WHERE navbar_id='" << navid << "' ORDER BY id";
+
+            int n = Args->database->exec(&sql,res);
+
+            setdiv << "<tr><td>item name:</td><td>item url:</td><td>actions:</td></tr>";
+
+            for(int i=0; i<n; ++i){
+                setdiv << "<tr>"
+                       << "<td><input type=\"text\" name=\"navitem_name_"<< res[i][0] << "\" value=\"" << res[i][1] << "\" /></td>"
+                       << "<td><input type=\"text\" name=\"navitem_url_"<< res[i][0] << "\" value=\"" << res[i][2] << "\" /></td>"
+                       << "<td><a href=\"?navid="<< navid <<"&navitem_remove=" << res[i][0] << "\">remove</a></td></tr>";
+            }
+
+            setdiv << "<tr>"
+                   << "<td><input type=\"text\" name=\"navitem_name_new\" value=\"\" /></td>"
+                   << "<td><input type=\"text\" name=\"navitem_url_new\" value=\"\" /></td>"
+                   << "</tr>";
+
+
+            setdiv << "<tr><td><input value=\"save\" type=\"submit\" /></td></tr>"
+                   << "</table></form></div></div>";
 
         }
 
@@ -149,7 +307,6 @@ namespace blogi {
         }
 
         void Settings(libhttppp::HttpRequest *req,libhtmlpp::HtmlString &setdiv){
-
             char url[512];
             std::string surl,curl=req->getRequestURL();
             size_t urlen = curl.length();
@@ -208,8 +365,8 @@ SETTINGSINDEX:
             setdiv << "<table>";
             setdiv << "<tr><th>Name</th><th>Actions</th></tr>";
             for (int i = 0; i < n; ++i) {
-                setdiv << "<tr><td>" << res[i][1] <<"</td><td><a href=\""<< Args->config->buildurl("settings/navbar/editnav?pageid=",url,512) << res[i][0]
-                       << "\">edit</a></td><td><a href=\""<< Args->config->buildurl("settings/navbar/delnav?pageid=",url,512) << res[i][0] << "\">remove</a></td></tr>";
+                setdiv << "<tr><td>" << res[i][1] <<"</td><td><a href=\""<< Args->config->buildurl("settings/navbar/editnav?navid=",url,512) << res[i][0]
+                       << "\">edit</a></td><td><a href=\""<< Args->config->buildurl("settings/navbar/delnav?navid=",url,512) << res[i][0] << "\">remove</a></td></tr>";
             }
             setdiv << "</table>"
                    << "<a href=\"" << Args->config->buildurl("settings/navbar/newnav",url,512) <<"\">New Navigation</a>"
