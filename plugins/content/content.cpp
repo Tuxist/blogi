@@ -228,7 +228,7 @@ namespace blogi {
                             tags.append(curformdat->getData(), curformdat->getDataSize());
                         }
                         else if(strcmp(curctdisp->getName(),"blog_content")==0){
-                            text.append(curformdat->getData(), curformdat->getDataSize());;
+                            text.append(curformdat->getData(), curformdat->getDataSize());
                         }
                     }
                 }
@@ -259,9 +259,10 @@ namespace blogi {
                     localtime_r(&t,&time);
                     asctime_r(&time,ttmp);
 
-                    sql << "INSERT INTO content (title,descrition,text,author,created) VALUES ('"
-                    << title.c_str() << "','" << descrition.c_str() <<"','"<< text.c_str()
-                    <<"','"<< author <<"','" << ttmp << "') RETURNING id;";
+                    sql << "INSERT INTO content (title,descrition,text,author,created) VALUES ('";
+                    sql.escaped(title.c_str()) << "','";
+                    sql.escaped(descrition.c_str()) <<"','";
+                    sql.escaped(text.c_str()) <<"','"<< author <<"','" << ttmp << "') RETURNING id;";
 
                     try {
                         Args->database->exec(&sql,res);
@@ -287,10 +288,12 @@ namespace blogi {
                                     throw excep;
                                 }
 
-                                sql = "select id,name from tags where name='"; sql << tag.c_str() << "' LIMIT 1;";
+                                sql = "select id,name from tags where name='";
+                                sql.escaped(tag.c_str()) << "' LIMIT 1;";
 
                                 if (Args->database->exec(&sql,res) != 1) {
-                                    sql = "insert into tags (name) VALUES ('"; sql << tag.c_str() <<"');";
+                                    sql = "insert into tags (name) VALUES ('";
+                                    sql.escaped(tag.c_str()) <<"');";
                                     Args->database->exec(&sql,res);
                                     ++tries;
                                     goto TAGNAMECHECK;
@@ -472,8 +475,10 @@ namespace blogi {
 
                 if (!text.empty() && !title.empty() && !descrition.empty()) {
                     blogi::SQL sqltext;
-                    sqltext << "UPDATE content SET title='" << title.c_str() << "',descrition='" << descrition.c_str()
-                            << "',text='" << text.c_str()  << "' where id='" << cid << "';";
+                    sqltext << "UPDATE content SET title='";
+                    sql.escaped(title.c_str()) << "',descrition='";
+                    sql.escaped(descrition.c_str()) << "',text='";
+                    sql.escaped(text.c_str())  << "' where id='" << cid << "';";
 
                     blogi::DBResult textres;
 
@@ -506,7 +511,8 @@ namespace blogi {
                                     excep[libhttppp::HTTPException::Critical] << "tag doesn't exists and could not created!";
                                     throw excep;
                                 }
-                                sql="select id,name from tags where name='"; sql << tag.c_str() << "' LIMIT 1;";
+                                sql="select id,name from tags where name='";
+                                sql.escaped(tag.c_str()) << "' LIMIT 1;";
 
                                 int tamount;
 
@@ -516,7 +522,8 @@ namespace blogi {
                                 }
 
                                 if (tamount != 1) {
-                                    sql="insert into tags (name) VALUES ('"; sql << tag.c_str() << "');";
+                                    sql="insert into tags (name) VALUES ('";
+                                    sql.escaped(tag.c_str()) << "');";
                                     Args->database->exec(&sql,res);
                                     ++tries;
                                     goto TAGNAMECHECK;
