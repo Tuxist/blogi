@@ -5,6 +5,7 @@ add_library(blogidev STATIC
     conf.cpp
     plugin.cpp
     theme.cpp
+    editor.cpp
     database/pgsql.cpp
 )
 
