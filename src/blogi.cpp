@@ -61,7 +61,7 @@ blogi::Blogi::Blogi(netplus::socket *serversocket) : event(serversocket){
     PlgArgs->database= new Postgresql(PlgArgs->config->getdbopts());
     PlgArgs->session= new Session();
     PlgArgs->auth=new Auth(PlgArgs->database,PlgArgs->session);
-    PlgArgs->edit=new Editor();
+    PlgArgs->edit=new Editor(PlgArgs->config);
 
     TemplateConfig tplcfg;
     tplcfg.config=Config::getInstance();

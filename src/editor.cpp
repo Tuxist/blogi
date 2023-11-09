@@ -28,12 +28,12 @@
 #include <algorithm>
 
 #include "editor.h"
-#include "conf.h"
 
-blogi::Editor::Editor()
+blogi::Editor::Editor(Config *conf)
 {
     _firstIcon=nullptr;
     _lastIcon=nullptr;
+    _Config=conf;
 }
 
 blogi::Editor::~Editor(){
@@ -60,7 +60,7 @@ void blogi::Editor::displayEditor(const char* inputname,const char *value, libht
     char url[512];
     target << "<div id=\"editor\"><ul> ";
     for(Icons *curicon=_firstIcon; curicon; curicon=curicon->_nextIcon){
-        target << "<li><img src=\"" << Config::getInstance()->buildurl("editor/icon/",url,512) << curicon->_Name
+        target << "<li><img src=\"" << _Config->buildurl("editor/icon/",url,512) << curicon->_Name
                << "." << curicon->_Type << "\" alt=\"" << curicon->_Description << "\" /></li>";
     }
     target << "</ul><textarea name=\"" << inputname << "\">";
@@ -71,10 +71,10 @@ void blogi::Editor::displayEditor(const char* inputname,const char *value, libht
 
 void blogi::Editor::Controller(netplus::con* curcon, libhttppp::HttpRequest* req){
     char url[512];
-    if(strncmp(req->getRequestURL(),Config::getInstance()->buildurl("editor/icon/",url,512),
-       strlen(Config::getInstance()->buildurl("editor/icon/",url,512) ))==0){
+    if(strncmp(req->getRequestURL(),_Config->buildurl("editor/icon/",url,512),
+       strlen(_Config->buildurl("editor/icon/",url,512) ))==0){
         std::string reqfile;
-        std::copy(req->getRequestURL()+strlen(Config::getInstance()->buildurl("editor/icon/",url,512)),
+        std::copy(req->getRequestURL()+strlen(_Config->buildurl("editor/icon/",url,512)),
                   req->getRequestURL()+strlen(req->getRequestURL()),std::inserter<std::string>(reqfile,reqfile.begin()));
         for(Icons *curicon=_firstIcon; curicon; curicon=curicon->_nextIcon){
             if(reqfile.substr(0,reqfile.find("."))==curicon->_Name){

@@ -30,12 +30,14 @@
 
 #include <string>
 
+#include "conf.h"
+
 #pragma once
 
 namespace blogi {
     class Editor{
     public:
-        Editor();
+        Editor(Config *conf);
         ~Editor();
 
         void addIcon(const unsigned char *icon,size_t iconsize,const char *name,const char *type,const char *description);
@@ -65,5 +67,6 @@ namespace blogi {
 
         Icons           *_firstIcon;
         Icons           *_lastIcon;
+        Config          *_Config;
     };
 };
