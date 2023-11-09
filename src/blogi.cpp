@@ -61,7 +61,7 @@ blogi::Blogi::Blogi(netplus::socket *serversocket) : event(serversocket){
     PlgArgs->database= new Postgresql(PlgArgs->config->getdbopts());
     PlgArgs->session= new Session();
     PlgArgs->auth=new Auth(PlgArgs->database,PlgArgs->session);
-
+    PlgArgs->edit=new Editor();
 
     TemplateConfig tplcfg;
     tplcfg.config=Config::getInstance();
@@ -78,6 +78,7 @@ blogi::Blogi::Blogi(netplus::socket *serversocket) : event(serversocket){
 }
 
 blogi::Blogi::~Blogi(){
+    delete PlgArgs->edit;
     delete PlgArgs->auth;
     delete PlgArgs->session;
     delete PlgArgs->database;
@@ -262,6 +263,9 @@ void blogi::Blogi::RequestEvent(netplus::con *curcon){
             return;
         }else if(strncmp(req.getRequestURL(),PlgArgs->config->buildurl("settings",url,512),strlen(PlgArgs->config->buildurl("settings",url,512)))==0){
             settingsPage(curcon,&req);
+            return;
+        }else if(strncmp(req.getRequestURL(),PlgArgs->config->buildurl("editor",url,512),strlen(PlgArgs->config->buildurl("editor",url,512)))==0){
+            PlgArgs->edit->Controller(curcon,&req);
             return;
         }
 

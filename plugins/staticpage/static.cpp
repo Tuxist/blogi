@@ -33,6 +33,7 @@
 
 #include "static.h"
 #include "conf.h"
+#include "editor.h"
 
 blogi::StaticPage::StaticPage(){
 }
@@ -160,10 +161,7 @@ void blogi::StaticPage::newPage(libhttppp::HttpRequest* req, libhtmlpp::HtmlStri
         setdiv << "<span>Meta:</span><br>"
         << "<textarea name=\"meta\" style=\"width:95%; height:200px;\"> Schlagwörter für Google </textarea><br>"
         << "<span>Content:</span><br>";
-        if(text.empty())
-            setdiv<< "<textarea name=\"text\" style=\"width:95%; min-height:800px; color:red;\"> <span>Mein HtmlText</span> </textarea><br>";
-        else
-            setdiv<< "<textarea name=\"text\" style=\"width:95%; min-height:800px;\">" << text <<"</textarea><br>";
+        Args->edit->displayEditor("text",text.c_str(),setdiv);
         setdiv<< "<button type=\"submit\" formaction=\"" << Args->config->buildurl("settings/staticpage",url,512) << "\">Back</button>"
         << "<input type=\"submit\" value=\"Save\">"
         << "</form></div>";

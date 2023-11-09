@@ -25,6 +25,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *******************************************************************************/
 
+#include <httppp/http.h>
 #include <htmlpp/html.h>
 
 #include <string>
@@ -37,11 +38,32 @@ namespace blogi {
         Editor();
         ~Editor();
 
-        void addIcon(const unsigned char *icon,size_t iconsize,const char *type,const char *url,const char *description);
+        void addIcon(const unsigned char *icon,size_t iconsize,const char *name,const char *type,const char *description);
 
-        void displayEditor(const char *inputname,libhtmlpp::HtmlElement *target);
+        void displayEditor(const char *inputname,const char *value,libhtmlpp::HtmlString &target);
+
+        void Controller(netplus::con *curcon,libhttppp::HttpRequest *req);
 
     private:
+        class Icons {
+        public:
+            Icons(){
+                _nextIcon=nullptr;
+            }
 
+            ~Icons(){
+                delete _nextIcon;
+            }
+
+            std::string  _Icon;
+            std::string  _Name;
+            std::string  _Type;
+            std::string  _Description;
+            Icons       *_nextIcon;
+            friend class Editor;
+        };
+
+        Icons           *_firstIcon;
+        Icons           *_lastIcon;
     };
 };

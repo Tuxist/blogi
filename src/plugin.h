@@ -33,6 +33,7 @@
 #include "session.h"
 #include "auth.h"
 #include "theme.h"
+#include "editor.h"
 
 #pragma once
 
@@ -42,6 +43,7 @@ namespace blogi {
         Session  *session;
         Auth     *auth;
         Template *theme;
+        Editor   *edit;
         Config   *config;
     };
 

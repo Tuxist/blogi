@@ -28,65 +28,63 @@
 #include <algorithm>
 
 #include "editor.h"
-
-namespace blogi {
-    class EditorIcons {
-    public:
-        EditorIcons(){
-
-        };
-        ~EditorIcons(){
-
-        }
-    private:
-        class Icons {
-            Icons(){
-                _nextIcon=nullptr;
-            }
-
-            ~Icons(){
-                delete _nextIcon;
-            }
-
-            std::string  _Icon;
-            std::string  _Type;
-            std::string  _Url;
-            std::string  _Description;
-            Icons       *_nextIcon;
-            friend class EditorIcons;
-        };
-
-        void addIcon(const unsigned char* icon, size_t iconsize,const char *type,const char *url, const char* description){
-            if(_firstIcon){
-                _lastIcon->_nextIcon=new Icons;
-                _lastIcon=_lastIcon->_nextIcon;
-            }else{
-                _firstIcon= new Icons;
-                _lastIcon=_firstIcon;
-            }
-            _lastIcon->_Icon.resize(iconsize);
-            std::copy(icon,icon+iconsize,_lastIcon->_Icon.begin());
-            _lastIcon->_Type=type;
-            _lastIcon->_Description=description;
-        }
-
-        Icons *_firstIcon;
-        Icons *_lastIcon;
-
-        friend class Editor;
-    } _EditorIcons;
-};
+#include "conf.h"
 
 blogi::Editor::Editor()
 {
+    _firstIcon=nullptr;
+    _lastIcon=nullptr;
 }
 
 blogi::Editor::~Editor(){
+    delete _firstIcon;
+    delete _lastIcon;
 }
 
-void blogi::Editor::addIcon(const unsigned char* icon, size_t iconsize,const char *type,const char *url, const char* description){
-    _EditorIcons.addIcon(icon,iconsize,type,url,description);
+void blogi::Editor::addIcon(const unsigned char* icon, size_t iconsize,const char *name,const char *type, const char* description){
+    if(_firstIcon){
+        _lastIcon->_nextIcon=new Icons;
+        _lastIcon=_lastIcon->_nextIcon;
+    }else{
+        _firstIcon= new Icons;
+        _lastIcon=_firstIcon;
+    }
+    _lastIcon->_Icon.resize(iconsize);
+    std::copy(icon,icon+iconsize,_lastIcon->_Icon.begin());
+    _lastIcon->_Name=name;
+    _lastIcon->_Type=type;
+    _lastIcon->_Description=description;
 }
 
-void blogi::Editor::displayEditor(const char* inputname, libhtmlpp::HtmlElement* target){
+void blogi::Editor::displayEditor(const char* inputname,const char *value, libhtmlpp::HtmlString& target){
+    char url[512];
+    target << "<div id=\"editor\"><ul> ";
+    for(Icons *curicon=_firstIcon; curicon; curicon=curicon->_nextIcon){
+        target << "<li><img src=\"" << Config::getInstance()->buildurl("editor/icon/",url,512) << curicon->_Name
+               << "." << curicon->_Type << "\" alt=\"" << curicon->_Description << "\" /></li>";
+    }
+    target << "</ul><textarea name=\"" << inputname << "\">";
+    if(value)
+        target << value;
+    target <<"</textarea></div>";
+}
+
+void blogi::Editor::Controller(netplus::con* curcon, libhttppp::HttpRequest* req){
+    char url[512];
+    if(strncmp(req->getRequestURL(),Config::getInstance()->buildurl("editor/icon/",url,512),
+       strlen(Config::getInstance()->buildurl("editor/icon/",url,512) ))==0){
+        std::string reqfile;
+        std::copy(req->getRequestURL()+strlen(Config::getInstance()->buildurl("editor/icon/",url,512)),
+                  req->getRequestURL()+strlen(req->getRequestURL()),std::inserter<std::string>(reqfile,reqfile.begin()));
+        for(Icons *curicon=_firstIcon; curicon; curicon=curicon->_nextIcon){
+            if(reqfile.substr(0,reqfile.find("."))==curicon->_Name){
+                libhttppp::HttpResponse resp;
+                resp.setVersion(HTTPVERSION(1.1));
+                resp.setState(HTTP200);
+                resp.setContentType(std::string("image/").append(curicon->_Type).c_str());
+                resp.send(curcon,curicon->_Icon.c_str(),curicon->_Icon.length());
+                return;
+            }
+        }
+    }
 }

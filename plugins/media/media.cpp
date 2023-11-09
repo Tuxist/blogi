@@ -26,7 +26,6 @@
  *******************************************************************************/
 
 #include <plugin.h>
-#include <editor.h>
 
 #include "icon.webp.h"
 
@@ -48,8 +47,7 @@ namespace blogi {
         }
 
         void initPlugin(){
-            Editor editor;
-            editor.addIcon(icondata,icondatalen,"webp","/editor/image","Insert Image from media albums");
+            Args->edit->addIcon(icondata,icondatalen,"selimage","webp","Insert Image from media albums");
         }
 
         bool Controller(netplus::con *curcon,libhttppp::HttpRequest *req){
