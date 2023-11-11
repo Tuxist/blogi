@@ -280,6 +280,14 @@ void blogi::Blogi::RequestEvent(netplus::con *curcon){
         }else if(strncmp(req.getRequestURL(),PlgArgs->config->buildurl("editor",url,512),strlen(PlgArgs->config->buildurl("editor",url,512)))==0){
             PlgArgs->edit->Controller(curcon,&req);
             return;
+        }else if (strstr(req.getRequestURL(),"robots.txt")){
+               const char *robot = "user-agent: *\r\ndisallow: /blog/settings/";
+               libhttppp::HttpResponse resp;
+               resp.setVersion(HTTPVERSION(1.1));
+               resp.setState(HTTP200);
+               resp.setContentType("text/plain");
+               resp.send(curcon,robot,strlen(robot));
+               return;
         }
 
         libhtmlpp::HtmlElement index;

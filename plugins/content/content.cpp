@@ -623,14 +623,6 @@ namespace blogi {
                     editPostPage(curcon,req,page);
             }else if (strncmp(curl.c_str(), Args->config->buildurl("content/del",url,512), strlen(Args->config->buildurl("content/del",url,512))) == 0) {
                     delPostPage(curcon, req,page);
-            }else if (strstr(req->getRequestURL(),"robots.txt")){
-               const char *robot = "user-agent: *\r\ndisallow: /blog/settings/";
-               libhttppp::HttpResponse resp;
-               resp.setVersion(HTTPVERSION(1.1));
-               resp.setState(HTTP200);
-               resp.setContentType("text/plain");
-               resp.send(curcon,robot,strlen(robot));
-               return true;
             }else{
                 int startpos = 0;
                 libhttppp::HttpForm start;
