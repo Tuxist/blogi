@@ -624,7 +624,7 @@ namespace blogi {
             }else if (strncmp(curl.c_str(), Args->config->buildurl("content/del",url,512), strlen(Args->config->buildurl("content/del",url,512))) == 0) {
                     delPostPage(curcon, req,page);
             }else if (strstr(req->getRequestURL(),"robots.txt")){
-               const char *robot = "User-agent: Googlebot\r\n\r\nUser-agent: *\r\nAllow: /";
+               const char *robot = "User-agent: *\r\nAllow: /";
                libhttppp::HttpResponse resp;
                resp.setVersion(HTTPVERSION(1.1));
                resp.setState(HTTP200);
