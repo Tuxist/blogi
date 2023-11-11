@@ -49,15 +49,16 @@ namespace blogi {
 
     class Template {
     public:
-        Template(TemplateConfig &config,libhtmlpp::HtmlElement &page);
+        Template(TemplateConfig &config);
         ~Template();
+
+        void renderPage(const char *name,libhtmlpp::HtmlPage &page,libhtmlpp::HtmlElement &index);
 
         bool Controller(netplus::con *curcon,libhttppp::HttpRequest *req);
 
         void printSite(std::string &output,libhtmlpp::HtmlElement index,const char *crrurl,bool login,const char *meta=nullptr);
     private:
         TemplateConfig                    _Config;
-        libhtmlpp::HtmlPage               _Page;
         std::map<std::string,std::string> _PublicFiles;
     };
 };

@@ -1,4 +1,4 @@
-add_library(media SHARED media.cpp settings.cpp)
+add_library(media SHARED media.cpp)
 
 target_link_libraries(media dl blogidev)
 

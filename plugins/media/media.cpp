@@ -31,6 +31,7 @@
 #include <plugin.h>
 
 #include "icon.webp.h"
+#include "types.h"
 
 namespace blogi {
     class Media : public PluginApi {
@@ -53,7 +54,7 @@ namespace blogi {
             return true;
         }
 
-        void newPage(libhttppp::HttpRequest * req, libhtmlpp::HtmlString & setdiv){
+        void newAlbum(libhttppp::HttpRequest * req, libhtmlpp::HtmlString & setdiv){
             int id = -1;
             std::string albumname;
             blogi::SQL sql,sql2;
@@ -72,7 +73,7 @@ namespace blogi {
                     albumname=curdat->getValue();
             }
 
-            if(id >0 && !albumname.empty()){
+            if(id >=0 && !albumname.empty()){
                 time_t t = time(NULL);
                 struct tm time = { 0 };
                 char ttmp[26];
@@ -97,6 +98,89 @@ namespace blogi {
                    << "</div>";
         }
 
+        void viewAlbum(libhttppp::HttpRequest * req, libhtmlpp::HtmlString & setdiv){
+            setdiv << "<div><span>View media library</span><br>"
+                   << "</div>";
+        }
+
+        void editMediaTypes(libhttppp::HttpRequest * req, libhtmlpp::HtmlString & setdiv){
+            char url[512];
+
+            libhttppp::HttpForm form;
+            int mtype=-1,mid=-1;
+            bool confirmed=false;
+            std::string mfext,mctype;
+
+            form.parse(req);
+
+            for(libhttppp::HttpForm::UrlcodedFormData *curdat=form.getUrlcodedFormData(); curdat; curdat=curdat->nextUrlcodedFormData()){
+                if(strcmp(curdat->getKey(),"mtype")==0)
+                    mtype=atoi(curdat->getValue());
+                else if(strcmp(curdat->getKey(),"mfext")==0)
+                    mfext=curdat->getValue();
+                else if(strcmp(curdat->getKey(),"mctype")==0)
+                    mctype=curdat->getValue();
+                else if(strcmp(curdat->getKey(),"mtypeid")==0)
+                    mid=atoi(curdat->getValue());
+                else if(strcmp(curdat->getKey(),"confirmed")==0 && strcmp(curdat->getValue(),"true")==0)
+                    confirmed=true;
+            }
+
+            if(strncmp(req->getRequestURL()+strlen(Args->config->buildurl("settings/media/editmediatypes/",url,512)),"delmtype",8)==0){
+                if(mid>=0){
+                    if(confirmed){
+                        blogi::SQL sql;
+                        blogi::DBResult res;
+
+                        sql << "DELETE FROM media_type WHERE id='" << mid << "'";
+
+                        Args->database->exec(&sql,res);
+                    }else{
+                        setdiv << "<div><span>Remove media types </span><br>"
+                               << "<span>You want Remove this media type ? (All Files oh this type will also Removed !)</span>"
+                               << "<a href=\""<< Args->config->buildurl("settings/media/editmediatypes/delmtype?",url,512)
+                               << "mtypeid=" << mid << "&confirmed=true\">yes</a>"
+                               << "</div>";
+                    }
+                }
+            }
+
+            if(mtype>=0 && !mfext.empty() && !mctype.empty()){
+                blogi::SQL sql;
+                blogi::DBResult res;
+
+                sql << "INSERT INTO media_type (type,ext,ctype) VALUES ('" << mtype <<"','"; sql.escaped(mfext.c_str()) << "','";  sql.escaped(mctype.c_str()) << "')";
+
+                Args->database->exec(&sql,res);
+            }
+
+
+            setdiv << "<div><span>Edit media types </span>";
+            blogi::SQL sql;
+            blogi::DBResult res;
+
+            sql << "SELECT id,type,ext,ctype FROM media_type";
+
+            setdiv << "<table><tr><th>Type</th><th>File extension</th><th>Contentype</th><th>Actions</th></tr>";
+
+            int n = Args->database->exec(&sql,res);
+            for(int i=0; i <n; ++i){
+                setdiv << "<tr><td>"<< res[i][1] <<"</td><td>" << res[i][2] << "</td><td>" << res[i][3] <<"</td><td>"
+                       << "<a href=\""<< Args->config->buildurl("settings/media/editmediatypes/delmtype?",url,512) << "mtypeid=" << res[i][0] <<"\">Remove</a>"
+                       << "</td></tr>";
+            }
+            setdiv << "<tr><form method=\"POST\" >"
+                   << "<td><select name=\"mtype\" />"
+                   << "<option value=\"0\">Picture</option>"
+                   << "<option value=\"1\">Audio</option>"
+                   << "<option value=\"2\">Video</option>"
+                   << "</select></td>"
+                   << "<td><input type=\"text\" name=\"mfext\" /></td>"
+                   << "<td><input type=\"text\" name=\"mctype\" /></td>"
+                   << "<td><input value=\"create\" type=\"submit\" /></td>"
+                   <<"</form></tr></table></div>";
+        }
+
         void Settings(libhttppp::HttpRequest * req, libhtmlpp::HtmlString & setdiv){
             char url[512];
 
@@ -113,9 +197,17 @@ namespace blogi {
             if(suburl=="editalbum"){
                 editAlbum(req,setdiv);
                 return;
+            }else if(suburl=="editmediatypes"){
+                editMediaTypes(req,setdiv);
+                return;
+            }else if(suburl=="viewalbum"){
+                viewAlbum(req,setdiv);
+                return;
             }
 
-            setdiv << "<div><span>media library</span><br><table>";
+
+            setdiv << "<div><span>media library</span><br>"
+                      "<a href=\""<< Args->config->buildurl("settings/media/editmediatypes",url,512) <<"\" >Edit Media Types</a><br><table>";
             blogi::SQL sql;
             blogi::DBResult res;
 
@@ -126,12 +218,13 @@ namespace blogi {
             int n = Args->database->exec(&sql,res);
             for(int i=0; i <n; ++i){
                 setdiv << "<tr><td>"<< res[i][1] <<"</td><td>" << res[i][4] << "</td><td>" << res[i][3] <<"</td><td>"
-                       << "<a href=\""<< Args->config->buildurl("settings/media/delalbum?",url,512) << "albumid" << res[i][0] <<"\">Remove</a>"
+                       << "<a href=\""<< Args->config->buildurl("settings/media/delalbum?",url,512) << "albumid=" << res[i][0] <<"\">Remove</a>"
                        << " <a href=\""<< Args->config->buildurl("settings/media/editalbum?",url,512) << "albumid=" << res[i][0] <<"\">Edit</a>"
+                       << " <a href=\""<< Args->config->buildurl("settings/media/viewalbum?",url,512) << "albumid=" << res[i][0] <<"\">View</a>"
                        << "</td></tr>";
             }
             setdiv << "</table><br>";
-            newPage(req,setdiv);
+            newAlbum(req,setdiv);
             setdiv << "</div>";
         }
 

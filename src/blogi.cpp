@@ -68,7 +68,10 @@ blogi::Blogi::Blogi(netplus::socket *serversocket) : event(serversocket){
     tplcfg.Theme=tplcfg.config->gettemplate();
     tplcfg.TDatabase=PlgArgs->database;
 
-    PlgArgs->theme=new Template(tplcfg,Page);
+    PlgArgs->theme=new Template(tplcfg);
+
+    PlgArgs->theme->renderPage("index.html",Page,Index);
+    PlgArgs->theme->renderPage("mobile.html",MPage,MIndex);
 
     BlogiPlg = new Plugin();
 
@@ -115,7 +118,12 @@ void blogi::Blogi::loginPage(netplus::con*curcon,libhttppp::HttpRequest *curreq)
     }
 
     std::string out;
-    libhtmlpp::HtmlElement index=Page;
+
+    libhtmlpp::HtmlElement index;
+    if(curreq->isMobile())
+        index=&MIndex;
+    else
+        index=&Index;
 
     if (!username || !password) {
         libhtmlpp::HtmlString condat;
@@ -214,7 +222,12 @@ void blogi::Blogi::settingsPage(netplus::con* curcon, libhttppp::HttpRequest* cu
 
     setgui << "</td></tr></table></div>";
 
-    libhtmlpp::HtmlElement index=Page;
+    libhtmlpp::HtmlElement index;
+    if(curreq->isMobile())
+        index=&MIndex;
+    else
+        index=&Index;
+
     index.getElementbyID("main")->appendChild(setgui.parse());
 
     for(blogi::Plugin::PluginData *curplg=BlogiPlg->getFirstPlugin(); curplg; curplg=curplg->getNextPlg()){
@@ -269,7 +282,11 @@ void blogi::Blogi::RequestEvent(netplus::con *curcon){
             return;
         }
 
-        libhtmlpp::HtmlElement index=Page;
+        libhtmlpp::HtmlElement index;
+        if(req.isMobile())
+            index=&MIndex;
+        else
+            index=&Index;
 
         if(!PlgArgs->theme->Controller(curcon,&req)){
 

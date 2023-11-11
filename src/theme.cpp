@@ -41,12 +41,8 @@
 #include "theme.h"
 #include "conf.h"
 
-blogi::Template::Template(blogi::TemplateConfig& config,libhtmlpp::HtmlElement &page){
+blogi::Template::Template(blogi::TemplateConfig& config){
     _Config=config;
-    std::string htmlfile=_Config.Theme;
-    htmlfile.append("/index.html");
-
-    page=*_Page.loadFile(htmlfile.c_str());
 
     DIR *directory = opendir(std::string(_Config.Theme).append("/public").c_str());
 
@@ -86,6 +82,13 @@ blogi::Template::Template(blogi::TemplateConfig& config,libhtmlpp::HtmlElement &
 
 blogi::Template::~Template(){
 
+}
+
+void blogi::Template::renderPage(const char *name,libhtmlpp::HtmlPage& page, libhtmlpp::HtmlElement& index){
+    std::string htmlfile=_Config.Theme;
+    htmlfile.append("/");
+    htmlfile.append(name);
+    index=page.loadFile(htmlfile.c_str());
 }
 
 bool blogi::Template::Controller(netplus::con *curcon,libhttppp::HttpRequest *req){

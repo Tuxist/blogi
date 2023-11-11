@@ -44,6 +44,7 @@ namespace blogi {
     private:
         Plugin                 *BlogiPlg;
         PluginArgs             *PlgArgs;
-        libhtmlpp::HtmlElement  Page;
+        libhtmlpp::HtmlPage     Page,MPage;
+        libhtmlpp::HtmlElement  Index,MIndex;
     };
 };
