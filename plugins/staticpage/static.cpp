@@ -228,7 +228,10 @@ void blogi::StaticPage::editPage(libhttppp::HttpRequest* req, libhtmlpp::HtmlStr
                             throw excep;
                         }
                     }
-                    id=atoi(curformdat->getData());
+                    std::string buf;
+                    buf.resize(curformdat->getDataSize());
+                    std::copy(curformdat->getData(),curformdat->getData()+curformdat->getDataSize(),buf.begin());
+                    id=atoi(buf.c_str());
                 }
             }
         }

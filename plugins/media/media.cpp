@@ -25,6 +25,9 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *******************************************************************************/
 
+#include <uuid/uuid.h>
+#include <hiredis/hiredis.h>
+
 #include <htmlpp/html.h>
 #include <httppp/http.h>
 
@@ -142,9 +145,125 @@ namespace blogi {
                    << "</div>";
         }
 
+        void uploadMedia(int id,libhttppp::HttpForm::MultipartFormData *dat,libhttppp::HttpRequest * req, libhtmlpp::HtmlString & setdiv){
+            std::string mediafile,mediafilename;
+
+            if(dat){
+                for (libhttppp::HttpForm::MultipartFormData *curformdat = dat; curformdat; curformdat = curformdat->nextMultipartFormData()) {
+                    libhttppp::HttpForm::MultipartFormData::ContentDisposition* curctdisp = curformdat->getContentDisposition();
+                    if(curctdisp && strcmp(curctdisp->getName(),"mediafile")==0){
+                        mediafilename=curctdisp->getFilename();
+                        mediafile.resize(curformdat->getDataSize());
+                        std::copy(curformdat->getData(),curformdat->getData()+curformdat->getDataSize(),mediafile.begin());
+                    }
+                }
+
+                if(!mediafile.empty() && !mediafilename.empty()){
+                    std::string ext;
+                    size_t expos=mediafilename.rfind('.');
+                    if(expos==std::string::npos){
+                        libhttppp::HTTPException excep;
+                        excep[libhttppp::HTTPException::Error] << "Upload media Wrong filename!";
+                        throw excep;
+                    }
+
+                    if( (++expos) > mediafilename.length()){
+                        libhttppp::HTTPException excep;
+                        excep[libhttppp::HTTPException::Error] << "Upload media Wrong filename!";
+                        throw excep;
+                    }
+
+                    ext=mediafilename.substr(expos,mediafilename.length()-expos);
+
+                    blogi::SQL sql;
+                    blogi::DBResult res;
+
+                    sql << "SELECT id FROM media_type where ext='"; sql.escaped(ext.c_str()) <<"' LIMIT 1";
+
+                    int n = Args->database->exec(&sql,res);
+
+                    if(n<1){
+                        libhttppp::HTTPException excep;
+                        excep[libhttppp::HTTPException::Error] << "media type: " << ext.c_str() << " not found in Database aborting!";
+                        throw excep;
+                    }
+
+                    int tid=atoi(res[0][0]);
+
+                    sql.clear();
+
+                    sql << "INSERT INTO media_items (album_id,name) VALUES('" << id << "','"; sql.escaped(mediafilename.substr(0,expos).c_str()) << "') RETURNING id";
+
+                    Args->database->exec(&sql,res);
+                    sql.clear();
+
+                    int mid=atoi(res[0][0]);
+
+                    uuid_t fuuid;
+                    char   cfuuid[512];
+
+                    uuid_generate(fuuid);
+                    uuid_unparse(fuuid,cfuuid);
+                    uuid_clear(fuuid);
+
+                    sql << "INSERT INTO media_items_files (media_items_id,redis_uuid,media_type_id) VALUES('"
+                        << mid << "','" << cfuuid << "','" << tid << "')";
+
+                    Args->database->exec(&sql,res);
+                    sql.clear();
+
+
+
+                }
+
+            }
+
+            setdiv << "<div><span>Upload Media:</span><br>"
+            << "<form method=\"POST\" enctype=\"multipart/form-data\" >"
+            << "<input style=\"display:none;\" type=\"text\" name=\"albumid\" value=\""<< id <<"\"/>"
+            << "<input type=\"file\" name=\"mediafile\" />"
+            << "<input type=\"submit\" value=\"upload\"/></form>"
+            << "</div>";
+        }
+
         void viewAlbum(libhttppp::HttpRequest * req, libhtmlpp::HtmlString & setdiv){
-            setdiv << "<div><span>View media library</span><br>"
-                   << "</div>";
+            int id;
+            libhttppp::HttpForm form;
+            form.parse(req);
+
+            for(libhttppp::HttpForm::UrlcodedFormData *curdat=form.getUrlcodedFormData(); curdat; curdat=curdat->nextUrlcodedFormData()){
+                if(strcmp(curdat->getKey(),"albumid")==0)
+                    id=atoi(curdat->getValue());
+            }
+
+            libhttppp::HttpForm::MultipartFormData *dat=form.getMultipartFormData();
+
+            for (libhttppp::HttpForm::MultipartFormData *curformdat = dat; curformdat; curformdat = curformdat->nextMultipartFormData()) {
+                libhttppp::HttpForm::MultipartFormData::ContentDisposition* curctdisp = curformdat->getContentDisposition();
+                if(curctdisp && strcmp(curctdisp->getName(),"albumid")==0){
+                    for(size_t i =0; i<curformdat->getDataSize(); ++i){
+                        if(!isdigit(curformdat->getData()[i])){
+                            libhttppp::HTTPException excep;
+                            excep[libhttppp::HTTPException::Error] << "Wrong formted Pageid!";
+                            throw excep;
+                        }
+                    }
+                    std::string buf;
+                    buf.resize(curformdat->getDataSize());
+                    std::copy(curformdat->getData(),curformdat->getData()+curformdat->getDataSize(),buf.begin());
+                    id=atoi(buf.c_str());
+                }
+            }
+
+            if(id<0){
+                libhttppp::HTTPException exp;
+                exp[libhttppp::HTTPException::Warning] << "no album id found!";
+                throw exp;
+            }
+
+            setdiv << "<div><span>View media library</span><br>";
+            uploadMedia(id,dat,req,setdiv);
+            setdiv << "</div>";
         }
 
         void editMediaTypes(libhttppp::HttpRequest * req, libhtmlpp::HtmlString & setdiv){
@@ -279,6 +398,8 @@ namespace blogi {
         bool Controller(netplus::con *curcon,libhttppp::HttpRequest *req,libhtmlpp::HtmlElement page){
             return false;
         }
+    private:
+        redisContext *_RedisCTX;
     };
 };
 

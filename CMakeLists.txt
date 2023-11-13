@@ -11,6 +11,7 @@ find_package(httppp REQUIRED)
 find_package(PostgreSQL REQUIRED)
 find_package(OpenLDAP REQUIRED)
 find_package(OpenSSL REQUIRED)
+find_package(Hiredis REQUIRED)
 
 include_directories(
     ${NETPLUS_INCLUDE_DIRS}
