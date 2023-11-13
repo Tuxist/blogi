@@ -445,6 +445,7 @@ namespace blogi {
                     curres.setState(HTTP404);
                     curres.send(curcon,nullptr,0);
                 }
+                return true;
             }
             return false;
         }
