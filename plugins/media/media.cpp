@@ -94,7 +94,51 @@ namespace blogi {
         }
 
         void editAlbum(libhttppp::HttpRequest * req, libhtmlpp::HtmlString & setdiv){
+            int id = -1;
+            char url[512];
+            libhttppp::HttpForm form;
+            form.parse(req);
+            std::string name;
+
+            for(libhttppp::HttpForm::UrlcodedFormData *curdat=form.getUrlcodedFormData(); curdat; curdat=curdat->nextUrlcodedFormData()){
+                if(strcmp(curdat->getKey(),"albumid")==0)
+                    id=atoi(curdat->getValue());
+                if(strcmp(curdat->getKey(),"albumname")==0)
+                    libhtmlpp::HtmlEncode(curdat->getValue(),name);
+            }
+
+            if(id<0){
+                libhttppp::HTTPException exp;
+                exp[libhttppp::HTTPException::Warning] << "no album id for editing!";
+                throw exp;
+            }
+
+            blogi::SQL sql;
+            blogi::DBResult res;
+
+            if(!name.empty()){
+                sql << "UPDATE media_albums set name='"; sql.escaped(name.c_str()) <<"' WHERE id='" << id << "'";
+                Args->database->exec(&sql,res);
+                sql.clear();
+            }
+
+            sql << "SELECT name FROM media_albums WHERE id='" << id <<"' LIMIT 1";
+
+            if(Args->database->exec(&sql,res)<0){
+                libhttppp::HTTPException exp;
+                exp[libhttppp::HTTPException::Warning] << "this album id is not found Database";
+                throw exp;
+            }
+
+            name=res[0][0];
+
+            sql.clear();
+
             setdiv << "<div><span>Edit media library</span><br>"
+                   << "<form method=\"POST\">"
+                   << "<input style=\"display:none;\" type=\"text\" name=\"albumid\" value=\""<< id <<" \"/>"
+                   << "<input type=\"text\" name=\"albumname\" value=\""<< name <<" \"/>"
+                   << "<input type=\"submit\" value=\"save\"/></form>"
                    << "</div>";
         }
 
