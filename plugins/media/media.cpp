@@ -212,8 +212,12 @@ namespace blogi {
                     Args->database->exec(&sql,res);
                     sql.clear();
 
+                    std::string rediscmd;
 
-
+                    redisCommand(_RedisCTX,"SET %s %b",cfuuid,
+                                 mediafile.c_str(),
+                                 mediafile.length());
+                    redisCommand(_RedisCTX, "save");
                 }
 
             }
@@ -393,6 +397,15 @@ namespace blogi {
 
         void initPlugin(){
             Args->edit->addIcon(icondata,icondatalen,"selimage","webp","Insert Image from media albums");
+
+            _RedisCTX=redisConnect("127.0.0.1", 6381);
+
+            if (_RedisCTX->err) {
+                libhttppp::HTTPException exp;
+                exp[libhttppp::HTTPException::Warning] << "media plugin err: " << _RedisCTX->errstr;
+                throw exp;
+            }
+
         }
 
         bool Controller(netplus::con *curcon,libhttppp::HttpRequest *req,libhtmlpp::HtmlElement page){
