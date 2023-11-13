@@ -330,6 +330,8 @@ void blogi::Blogi::RequestEvent(netplus::con *curcon){
 
         }
     }catch(libhttppp::HTTPException &e){
+        if(e.getErrorType() == libhttppp::HTTPException::Note || e.getErrorType() == libhttppp::HTTPException::Warning)
+            return;
         std::string output;
         libhtmlpp::HtmlString err,hreason;
         libhtmlpp::HtmlEncode(e.what(),hreason);

@@ -206,8 +206,8 @@ namespace blogi {
                     uuid_unparse(fuuid,cfuuid);
                     uuid_clear(fuuid);
 
-                    sql << "INSERT INTO media_items_files (media_items_id,redis_uuid,media_type_id) VALUES('"
-                        << mid << "','" << cfuuid << "','" << tid << "')";
+                    sql << "INSERT INTO media_items_files (media_items_id,redis_uuid,media_type_id,public) VALUES('"
+                        << mid << "','" << cfuuid << "','" << tid << "',True)";
 
                     Args->database->exec(&sql,res);
                     sql.clear();
@@ -398,7 +398,7 @@ namespace blogi {
         void initPlugin(){
             Args->edit->addIcon(icondata,icondatalen,"selimage","webp","Insert Image from media albums");
 
-            _RedisCTX=redisConnect("127.0.0.1", 6381);
+            _RedisCTX=redisConnect("127.0.0.1", 6379);
 
             if (_RedisCTX->err) {
                 libhttppp::HTTPException exp;
@@ -409,6 +409,43 @@ namespace blogi {
         }
 
         bool Controller(netplus::con *curcon,libhttppp::HttpRequest *req,libhtmlpp::HtmlElement page){
+            char url[512];
+            if (strncmp(req->getRequestURL(),Args->config->buildurl("media/getimage/",url,512),strlen(Args->config->buildurl("media/getimage",url,512)))==0){
+                int mlen=strlen(req->getRequestURL())-strlen(Args->config->buildurl("media/getimage/",url,512));
+                if(mlen<=0)
+                    return false;
+                std::string mpath=req->getRequestURL()+strlen(Args->config->buildurl("media/getimage/",url,512));
+
+                size_t expos=mpath.rfind('.');
+
+                if(expos<=0)
+                    return false;
+
+                std::string suuid=mpath.substr(0,expos);
+
+                blogi::SQL sql;
+                blogi::DBResult res;
+
+                sql << "SELECT media_type.ctype from media_items_files LEFT JOIN media_type ON media_type.id=media_type.id WHERE redis_uuid='";
+                sql.escaped(suuid.c_str()) <<"'";
+
+                int n = Args->database->exec(&sql,res);
+
+                libhttppp::HttpResponse curres;
+                curres.setVersion(HTTPVERSION(1.1));
+
+                if(n>0){
+                    curres.setContentType(res[0][0]);
+                    curres.setState(HTTP200);
+                    redisReply* reply = (redisReply*) redisCommand(_RedisCTX, "GET %s",suuid.c_str());
+                    int state = 0;
+                    curres.send(curcon, reply->str, reply->len);
+                    freeReplyObject(reply);
+                }else{
+                    curres.setState(HTTP404);
+                    curres.send(curcon,nullptr,0);
+                }
+            }
             return false;
         }
     private:
