@@ -476,9 +476,9 @@ namespace blogi {
                 if (!text.empty() && !title.empty() && !descrition.empty()) {
                     blogi::SQL sqltext;
                     sqltext << "UPDATE content SET title='";
-                    sql.escaped(title.c_str()) << "',descrition='";
-                    sql.escaped(descrition.c_str()) << "',text='";
-                    sql.escaped(text.c_str())  << "' where id='" << cid << "';";
+                    sqltext.escaped(title.c_str()) << "',descrition='";
+                    sqltext.escaped(descrition.c_str()) << "',text='";
+                    sqltext.escaped(text.c_str())  << "' where id='" << cid << "';";
 
                     blogi::DBResult textres;
 
