@@ -25,9 +25,11 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *******************************************************************************/
 
-#include<iostream>
+#include <iostream>
 
 #include <htmlpp/html.h>
+#include <htmlpp/exception.h>
+
 #include <httppp/http.h>
 #include <httppp/exception.h>
 
@@ -184,7 +186,12 @@ namespace blogi {
 
             std::string out;
 
-            page.getElementbyID("main")->insertChild(condat.parse());
+            try{
+                page.getElementbyID("main")->insertChild(condat.parse());
+            }catch(libhtmlpp::HTMLException &e){
+                excep[libhttppp::HTTPException::Error] << e.what();
+                throw excep;
+            }
 
             Args->theme->printSite(out,page,curreq->getRequestURL(),Args->auth->isLoggedIn(curreq,sid));
 
@@ -378,7 +385,12 @@ namespace blogi {
 
             std::string out;
 
-            page.getElementbyID("main")->insertChild(condat.parse());
+            try{
+                page.getElementbyID("main")->insertChild(condat.parse());
+            }catch(libhtmlpp::HTMLException &e){
+                excep[libhttppp::HTTPException::Error] << e.what();
+                throw excep;
+            }
 
             Args->theme->printSite(out,page,curreq->getRequestURL(),Args->auth->isLoggedIn(curreq,sid));
 
@@ -551,7 +563,7 @@ namespace blogi {
             int ccamount;
 
             if ((ccamount=Args->database->exec(&sql,res)) < 0) {
-                excep[libhttppp::HTTPException::Critical] << "can't find tages for this content id !";
+                excep[libhttppp::HTTPException::Error] << "can't find tages for this content id !";
                 throw excep;
             }
 
@@ -574,8 +586,12 @@ namespace blogi {
             };
             std::string out;
 
-            page.getElementbyID("main")->insertChild(condat.parse());
-
+            try{
+                page.getElementbyID("main")->insertChild(condat.parse());
+            }catch(libhtmlpp::HTMLException &e){
+                excep[libhttppp::HTTPException::Error] << e.what();
+                throw excep;
+            }
             Args->theme->printSite(out,page,curreq->getRequestURL(),Args->auth->isLoggedIn(curreq,sid));
 
             libhttppp::HttpResponse resp;
