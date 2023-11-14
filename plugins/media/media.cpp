@@ -146,6 +146,7 @@ namespace blogi {
         }
 
         void uploadMedia(int id,libhttppp::HttpForm::MultipartFormData *dat,libhttppp::HttpRequest * req, libhtmlpp::HtmlString & setdiv){
+            char url[512];
             std::string mediafile,mediafilename;
 
             if(dat){
@@ -221,6 +222,31 @@ namespace blogi {
                 }
 
             }
+
+            blogi::SQL sql,sql2;
+            blogi::DBResult res,res2;
+
+            sql << "SELECT id FROM media_items WHERE album_id='" << id << "'";
+
+            int n = Args->database->exec(&sql,res);
+
+            setdiv << "<div id=\"viewmedia\"><ul>";
+
+            for(int i=0; i<n; ++i){
+                sql2 << "SELECT redis_uuid,media_type.ext,media_type.type,media_type.ctype FROM media_items_files LEFT JOIN media_type ON"
+                     << " media_items_files.media_type_id=media_type.id WHERE media_items_id='" << res[i][0] << "'";
+                int nn = Args->database->exec(&sql2,res2);
+                for(int ii=0; ii<nn; ++ii){
+                    if(atoi(res2[ii][2])==blogi::MediaTypes::Picture)
+                        setdiv << "<li class=\"upreview\" ><a><img src=\"" << Args->config->buildurl("media/getimage/",url,512) << res2[ii][0] << "." << res2[ii][1] << "\"></a></li>";
+                    else if(atoi(res2[ii][2])==blogi::MediaTypes::Video)
+                        setdiv<< "<li class=\"upreview\" ><a><video> <source src=\"" << Args->config->buildurl("media/getimage/",url,512) << res2[ii][0] << "." << res2[ii][1] << "\""
+                              << " type=\"" <<  res2[ii][3] << "\"></video></a></li>";
+                }
+                sql2.clear();
+            }
+
+            setdiv << "</ul></div><br>";
 
             setdiv << "<div><span>Upload Media:</span><br>"
             << "<form method=\"POST\" enctype=\"multipart/form-data\" >"
@@ -439,6 +465,12 @@ namespace blogi {
                     curres.setState(HTTP200);
                     redisReply* reply = (redisReply*) redisCommand(_RedisCTX, "GET %s",suuid.c_str());
                     int state = 0;
+                    if(!reply->str){
+                        freeReplyObject(reply);
+                        curres.setState(HTTP404);
+                        curres.send(curcon,nullptr,0);
+                        return true;
+                    }
                     curres.send(curcon, reply->str, reply->len);
                     freeReplyObject(reply);
                 }else{
