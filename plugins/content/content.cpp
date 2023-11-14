@@ -579,7 +579,7 @@ namespace blogi {
                         condat << " ";
                 }
                 condat << "\"/><br/>"
-                << "<span>Text:</span><textarea name=\"blog_content\" type=\"text\" style=\"width: 100%; height:480px;\">" << res[0][2] << "</textarea>"
+                << "<span>Text:</span><textarea name=\"blog_content\" type=\"text\" style=\"width: 100%; height:480px;\" >" << res[0][2] << "</textarea>"
                 << "<input type=\"submit\" value=\"Blog eintrag Posten\"/>"
                 << "</form>"
                 << "</div>";
