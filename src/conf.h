@@ -58,6 +58,10 @@ namespace blogi {
         int         gethttpport();
         const char *gethttpaddr();
         int         gethttpmaxcon();
+
+        const char *getRedisHost();
+        int         getRedisPort();
+
     private:
         Config();
         ~Config();

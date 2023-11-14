@@ -424,7 +424,7 @@ namespace blogi {
         void initPlugin(){
             Args->edit->addIcon(icondata,icondatalen,"selimage","webp","Insert Image from media albums");
 
-            _RedisCTX=redisConnect("127.0.0.1", 6379);
+            _RedisCTX=redisConnect(Args->config->getRedisHost(),Args->config->getRedisPort());
 
             if (_RedisCTX->err) {
                 libhttppp::HTTPException exp;

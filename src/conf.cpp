@@ -114,3 +114,12 @@ int blogi::Config::gethttpmaxcon(){
     return _PlsConfig->getIntValue(_PlsConfig->getKey("/BLOGI/HTTP/MAXCON"),0);
 }
 
+const char * blogi::Config::getRedisHost(){
+    return _PlsConfig->getValue(_PlsConfig->getKey("/BLOGI/REDIS/HOST"),0);
+}
+
+int blogi::Config::getRedisPort(){
+    return _PlsConfig->getIntValue(_PlsConfig->getKey("/BLOGI/REDIS/PORT"),0);
+}
+
+
