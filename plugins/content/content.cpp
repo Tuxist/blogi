@@ -570,17 +570,17 @@ namespace blogi {
             if (ccamount > 0) {
                 condat << "<div id=\"content\">"
                 << "<form action=\"" << Args->config->buildurl("content/edit/",url,512) << cid << "\" method=\"post\" enctype=\"multipart/form-data\" >"
-                << "<span>Titel:</span><input maxlength=\"255\" name=\"blog_title\" type=\"text\" style=\"width: 100%;\" value=\"" << res[0][0] << "\"/><br/>"
-                << "<span>Kurzbeschreibung:</span><input maxlength=\"255\" name=\"blog_descrition\" type=\"text\"  style=\"width: 100%;\" value=\"" << res[0][1] << "\"/><br/>"
+                << "<span>Titel:</span><input maxlength=\"255\" name=\"blog_title\" type=\"text\" style=\"width: 100%;\" value=\"" << res[0][0] << "\" ><br>"
+                << "<span>Kurzbeschreibung:</span><input maxlength=\"255\" name=\"blog_descrition\" type=\"text\"  style=\"width: 100%;\" value=\"" << res[0][1] << "\" ><br>"
                 << "<span>Schlagworte:</span><input name=\"blog_tags\" type=\"text\"  style=\"width: 100%;\" value=\"";
                 for (int i = 0; i < ccamount; ++i) {
                     condat << res[i][3];
                     if ((ccamount - 1) != i)
                         condat << " ";
                 }
-                condat << "\"/><br/>"
+                condat << "\" ><br>"
                 << "<span>Text:</span><textarea name=\"blog_content\" type=\"text\" style=\"width: 100%; height:480px;\" >" << res[0][2] << "</textarea>"
-                << "<input type=\"submit\" value=\"Blog eintrag Posten\"/>"
+                << "<input type=\"submit\" value=\"Blog eintrag Posten\">"
                 << "</form>"
                 << "</div>";
             };
