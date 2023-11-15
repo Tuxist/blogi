@@ -46,6 +46,9 @@ namespace blogi {
         bool login(const char *username,const char *password,std::string &ssid);
         bool isLoggedIn(libhttppp::HttpRequest *curreq,std::string &sessionid);
     private:
+        bool ldapLogin(const char *username,const char *password,std::string &ssid);
+        bool locallogin(const char *username,const char *password,std::string &ssid);
+
         blogi::Database *_dbconn;
         blogi::Session  *_session;
         LDAPControl    *_serverctrls;

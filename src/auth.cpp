@@ -44,15 +44,29 @@ blogi::Auth::Auth(blogi::Database *pcon,blogi::Session *session){
 }
 
 blogi::Auth::~Auth(){
+
+}
+
+bool blogi::Auth::login(const char* username, const char* password, std::string& ssid){
+#ifdef LDAPSUPPORT
+    if(!ldapLogin(username,password,ssid))
+        return locallogin(username,password,ssid);
+    else
+        return true;
+#else
+    return locallogin(username,password,ssid);
+#endif
+}
+
+bool blogi::Auth::locallogin(const char* username, const char* password, std::string& ssid){
+    return false;
 }
 
 
-bool blogi::Auth::login(const char *username,const char *password,std::string &ssid){
+bool blogi::Auth::ldapLogin(const char *username,const char *password,std::string &ssid){
     libhttppp::HTTPException excep;
     timeval ltimeout;
     ltimeout.tv_sec = 5;
-
-    char* lattr[] = { (char*)"sAMAccountName", nullptr };
 
     char filter[255];
     snprintf(filter, 255, Config::getInstance()->getlpfilter(), username);
@@ -80,12 +94,10 @@ bool blogi::Auth::login(const char *username,const char *password,std::string &s
         throw excep;
     }
 
-    char userurl[255];
-    snprintf(userurl, 255, "%s@%s", username,Config::getInstance()->getlpdomain());
     berval cred, * servercred;
     cred.bv_val = (char*)password;
     cred.bv_len = strlen(password);
-    ulerr = ldap_sasl_bind_s(userldap, userurl, LDAP_SASL_SIMPLE,
+    ulerr = ldap_sasl_bind_s(userldap, username, LDAP_SASL_SIMPLE,
                              &cred, &userserverctls, &userclientctls, &servercred);
 
     if (ulerr != LDAP_SUCCESS) {
@@ -94,7 +106,7 @@ bool blogi::Auth::login(const char *username,const char *password,std::string &s
         throw excep;
     }
 
-    char* attrs[] = { (char*)"objectSid",(char*)"sAMAccountName",(char*)"mail",NULL };
+    char* attrs[] = { (char*)"objectSid",(char*)"userPrincipalName",(char*)"sAMAccountName",(char*)"mail",NULL };
     LDAPMessage* answer, * entry;
     struct timeval timeout;
 
@@ -131,11 +143,12 @@ bool blogi::Auth::login(const char *username,const char *password,std::string &s
         for (attribute = ldap_first_attribute(userldap, entry, &ber);
          attribute != nullptr; attribute = ldap_next_attribute(userldap, entry, ber)) {
             if ((values = ldap_get_values_len(userldap, entry, attribute))) {
-                if (strcmp(attribute, "sAMAccountName") == 0) {
+                if (strcmp(attribute, "userPrincipalName") == 0) {
                     for (int i = 0; values[i]; i++) {
                         if (strncmp(username, values[i]->bv_val, values[i]->bv_len) == 0) {
-                            goto LOGINUSERFOUND;
-                        }
+                                goto LOGINUSERFOUND;
+                            }
+
                     }
                 }
             }
