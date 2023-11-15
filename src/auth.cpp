@@ -49,7 +49,10 @@ blogi::Auth::~Auth(){
 
 bool blogi::Auth::login(const char* username, const char* password, std::string& ssid){
 #ifdef LDAPSUPPORT
-    return ldapLogin(username,password,ssid);
+    if(!ldapLogin(username,password,ssid))
+        return locallogin(username,password,ssid);
+    else
+        return true;
 #else
     return locallogin(username,password,ssid);
 #endif
@@ -64,9 +67,6 @@ bool blogi::Auth::ldapLogin(const char *username,const char *password,std::strin
     libhttppp::HTTPException excep;
     timeval ltimeout;
     ltimeout.tv_sec = 5;
-
-    char filter[255];
-    snprintf(filter, 255, Config::getInstance()->getlpfilter(), username);
 
     LDAP* userldap;
     LDAPControl* userserverctls = nullptr;
@@ -107,9 +107,9 @@ bool blogi::Auth::ldapLogin(const char *username,const char *password,std::strin
     LDAPMessage* answer, * entry;
     struct timeval timeout;
 
-    timeout.tv_sec = 5;
+    timeout.tv_sec = 1;
 
-    ulerr = ldap_search_ext_s(userldap, Config::getInstance()->getlpbasedn(), LDAP_SCOPE_SUBTREE, filter, attrs, 0, &userserverctls, &userclientctls, &timeout, 0, &answer);
+    ulerr = ldap_search_ext_s(userldap, Config::getInstance()->getlpbasedn(), LDAP_SCOPE_SUBTREE, Config::getInstance()->getlpfilter(), attrs, 0, &userserverctls, &userclientctls, &timeout, 0, &answer);
 
     if (ulerr != LDAP_SUCCESS) {
         excep[libhttppp::HTTPException::Note] << "<span>User can'T find uid !</span>";
@@ -118,7 +118,7 @@ bool blogi::Auth::ldapLogin(const char *username,const char *password,std::strin
 
     size_t entries_found = ldap_count_entries(userldap, answer);
 
-    if (entries_found == 0) {
+    if (entries_found <= 0) {
         excep[libhttppp::HTTPException::Note] << "<span>User can'T find uid !</span>";
         throw excep;
     }
