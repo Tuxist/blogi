@@ -49,10 +49,7 @@ blogi::Auth::~Auth(){
 
 bool blogi::Auth::login(const char* username, const char* password, std::string& ssid){
 #ifdef LDAPSUPPORT
-    if(!ldapLogin(username,password,ssid))
-        return locallogin(username,password,ssid);
-    else
-        return true;
+    return ldapLogin(username,password,ssid);
 #else
     return locallogin(username,password,ssid);
 #endif
@@ -62,7 +59,7 @@ bool blogi::Auth::locallogin(const char* username, const char* password, std::st
     return false;
 }
 
-
+#ifdef LDAPSUPPORT
 bool blogi::Auth::ldapLogin(const char *username,const char *password,std::string &ssid){
     libhttppp::HTTPException excep;
     timeval ltimeout;
@@ -106,7 +103,7 @@ bool blogi::Auth::ldapLogin(const char *username,const char *password,std::strin
         throw excep;
     }
 
-    char* attrs[] = { (char*)"objectSid",(char*)"userPrincipalName",(char*)"sAMAccountName",(char*)"mail",NULL };
+    char* attrs[] = { (char*)"objectSid",(char*)"userPrincipalName",(char*)"mail",NULL };
     LDAPMessage* answer, * entry;
     struct timeval timeout;
 
@@ -146,9 +143,8 @@ bool blogi::Auth::ldapLogin(const char *username,const char *password,std::strin
                 if (strcmp(attribute, "userPrincipalName") == 0) {
                     for (int i = 0; values[i]; i++) {
                         if (strncmp(username, values[i]->bv_val, values[i]->bv_len) == 0) {
-                                goto LOGINUSERFOUND;
-                            }
-
+                                goto LDAPLOGINUSERFOUND;
+                        }
                     }
                 }
             }
@@ -162,7 +158,7 @@ bool blogi::Auth::ldapLogin(const char *username,const char *password,std::strin
     return false;
 
 
-    LOGINUSERFOUND:
+LDAPLOGINUSERFOUND:
          SID* mysid;
          initSID(&mysid);
          berval** values;
@@ -189,7 +185,7 @@ bool blogi::Auth::ldapLogin(const char *username,const char *password,std::strin
         sql = "SELECT sid,id FROM users WHERE sid='"; sql << sid << "' LIMIT 1;";
 
         if (_dbconn->exec(&sql,res) < 1) {
-           sql <<  "INSERT INTO users (sid,username,email) VALUES ('" << sid <<"','" <<username << "','" << email <<"');";
+           sql <<  "INSERT INTO users (sid,username,email) VALUES ('" << sid <<"','" << username << "','" << email <<"');";
            _dbconn->exec(&sql,res);
         };
 
@@ -199,9 +195,8 @@ bool blogi::Auth::ldapLogin(const char *username,const char *password,std::strin
         ldap_msgfree(answer);
         ldap_unbind_ext_s(userldap, &userserverctls, &userclientctls);
         return true;
-    LOGINFAILED:
-        return false;
 }
+#endif
 
 bool blogi::Auth::isLoggedIn(libhttppp::HttpRequest *curreq,std::string &sessionid){
         libhttppp::HttpCookie cookie;

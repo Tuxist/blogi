@@ -34,7 +34,9 @@
 
 extern "C" {
     #include <stdio.h>
+#ifdef LDAPSUPPORT
     #include <ldap.h>
+#endif
 }
 
 namespace blogi {
@@ -46,12 +48,16 @@ namespace blogi {
         bool login(const char *username,const char *password,std::string &ssid);
         bool isLoggedIn(libhttppp::HttpRequest *curreq,std::string &sessionid);
     private:
+#ifdef LDAPSUPPORT
         bool ldapLogin(const char *username,const char *password,std::string &ssid);
+#endif
         bool locallogin(const char *username,const char *password,std::string &ssid);
 
         blogi::Database *_dbconn;
         blogi::Session  *_session;
+#ifdef LDAPSUPPORT
         LDAPControl    *_serverctrls;
         LDAPControl    *_clientctrls;
+#endif
     };
 };

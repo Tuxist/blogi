@@ -66,14 +66,14 @@ namespace blogi {
                     excep[libhttppp::HTTPException::Critical] << "no tag data found for this name!";
                     throw excep;
                 }else {
-                    sql = "select content.id,content.title,content.descrition,users.username,content.created from content ";
+                    sql = "select content.id,content.title,content.descrition,users.displayname,content.created from content ";
                     sql <<"LEFT JOIN users ON content.author=users.id LEFT JOIN tags_content ON tags_content.content_id=content.id where tags_content.tag_id='"
                     << res[0][0]
                     <<"' ORDER BY id DESC OFFSET '" << start << "' LIMIT " << end;
                     ncount=Args->database->exec(&sql,res);
                 }
             } else {
-                sql="select content.id,content.title,content.descrition,users.username,content.created from content LEFT JOIN users ON content.author=users.id ORDER BY id DESC";
+                sql="select content.id,content.title,content.descrition,users.displayname,content.created from content LEFT JOIN users ON content.author=users.id ORDER BY id DESC";
                 sql << " OFFSET '" << start << "' LIMIT " << end;
                 ncount=Args->database->exec(&sql,res);
             }
@@ -159,7 +159,7 @@ namespace blogi {
 
             blogi::SQL sql;
 
-            sql << "select content.id,content.title,content.text,users.username,content.created from content LEFT JOIN users ON content.author=users.id WHERE content.id='" << cid <<"' LIMIT 1";
+            sql << "select content.id,content.title,content.text,users.displayname,content.created from content LEFT JOIN users ON content.author=users.id WHERE content.id='" << cid <<"' LIMIT 1";
 
             blogi::DBResult res;
 
