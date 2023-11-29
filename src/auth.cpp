@@ -59,6 +59,9 @@ bool blogi::Auth::login(const char* username, const char* password, std::string&
 }
 
 bool blogi::Auth::locallogin(const char* username, const char* password, std::string& ssid){
+    blogi::SQL sql;
+    blogi::DBResult res;
+    sql = "SELECT sid,id,username FROM users WHERE username='"; sql.escaped(username) << "' LIMIT 1;";
     return false;
 }
 
@@ -185,7 +188,7 @@ LDAPLOGINUSERFOUND:
         sql = "SELECT sid,id FROM users WHERE sid='"; sql << sid << "' LIMIT 1;";
 
         if (_dbconn->exec(&sql,res) < 1) {
-           sql <<  "INSERT INTO users (sid,username,email) VALUES ('" << sid <<"','" << username << "','" << email <<"');";
+           sql <<  "INSERT INTO users (sid,username,email,authprovider) VALUES ('" << sid <<"','" << username << "','" << email <<"','1');";
            _dbconn->exec(&sql,res);
         };
 

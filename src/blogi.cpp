@@ -388,7 +388,13 @@ int main(int argc, char** argv){
     blogi::Config *cins;
     cins=blogi::Config::getInstance();
 
-    cins->loadconfig(config);
+    if(config)
+        cins->loadconfig(config);
+    else
+        return -1;
+
+    if(!cins)
+        return -1;
 
     HttpConD(cins->gethttpaddr(),
              cins->gethttpport(),

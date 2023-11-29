@@ -64,7 +64,6 @@ namespace blogi {
             }
 
             res.firstRow=nullptr;
-
             DBResult::Data *lastdat;
 
             res.columns=PQnfields(pres);

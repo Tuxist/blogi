@@ -88,6 +88,7 @@ bool blogi::SQL::empty(){
 
 blogi::DBResult::DBResult(){
     firstRow=nullptr;
+    columns=0;
 }
 
 blogi::DBResult::~DBResult(){

@@ -53,73 +53,106 @@ void blogi::Config::loadconfig(const char* path){
 
 
 const char * blogi::Config::getsiteurl(){
-    return _PlsConfig->getValue(_PlsConfig->getKey("/BLOGI/HTTP/URL"),0);
+    if(_PlsConfig->getKey("/BLOGI/HTTP/URL"))
+        return _PlsConfig->getValue(_PlsConfig->getKey("/BLOGI/HTTP/URL"),0);
+    return nullptr;
 }
 
-
 const char * blogi::Config::getprefix(){
-    return _PlsConfig->getValue(_PlsConfig->getKey("/BLOGI/HTTP/PREFIX"),0);
+    if(_PlsConfig->getKey("/BLOGI/HTTP/PREFIX"))
+        return _PlsConfig->getValue(_PlsConfig->getKey("/BLOGI/HTTP/PREFIX"),0);
+    return nullptr;
 }
 
 const char * blogi::Config::gettemplate(){
-    return _PlsConfig->getValue(_PlsConfig->getKey("/BLOGI/TEMPLATE"),0);
+    if(_PlsConfig->getKey("/BLOGI/TEMPLATE"))
+        return _PlsConfig->getValue(_PlsConfig->getKey("/BLOGI/TEMPLATE"),0);
+    return nullptr;
 }
 
 const char * blogi::Config::getstartpage(){
-    return _PlsConfig->getValue(_PlsConfig->getKey("/BLOGI/STARTPAGE"),0);
+    if(_PlsConfig->getKey("/BLOGI/STARTPAGE"))
+        return _PlsConfig->getValue(_PlsConfig->getKey("/BLOGI/STARTPAGE"),0);
+    return nullptr;
 }
 
 const char * blogi::Config::buildurl(const char *url,char *buffer,size_t size){
+    if(!getprefix())
+        return nullptr;
     snprintf(buffer,size,"%s/%s",getprefix(),url);
     return buffer;
 }
 
 const char *blogi::Config::getplgdir(size_t el){
-    return _PlsConfig->getValue(_PlsConfig->getKey("/BLOGI/PLUGINDIR"),el);
+    if(_PlsConfig->getKey("/BLOGI/PLUGINDIR"))
+        return _PlsConfig->getValue(_PlsConfig->getKey("/BLOGI/PLUGINDIR"),el);
+    return nullptr;
 }
 
 size_t blogi::Config::getplgdirs(){
-    return _PlsConfig->getElements(_PlsConfig->getKey("/BLOGI/PLUGINDIR"));
+    if(_PlsConfig->getKey("/BLOGI/PLUGINDIR"))
+        return _PlsConfig->getElements(_PlsConfig->getKey("/BLOGI/PLUGINDIR"));
+    return 0;
 }
 
 const char * blogi::Config::getdbopts(){
-    return _PlsConfig->getValue(_PlsConfig->getKey("/BLOGI/DATABASE/CONNECTION"),0);
+    if(_PlsConfig->getKey("/BLOGI/DATABASE/CONNECTION"))
+        return _PlsConfig->getValue(_PlsConfig->getKey("/BLOGI/DATABASE/CONNECTION"),0);
+    return nullptr;
 }
 
 const char * blogi::Config::getlpdomain(){
-    return _PlsConfig->getValue(_PlsConfig->getKey("/BLOGI/LDAP/DOMAIN"),0);
+    if(_PlsConfig->getKey("/BLOGI/LDAP/DOMAIN"))
+        return _PlsConfig->getValue(_PlsConfig->getKey("/BLOGI/LDAP/DOMAIN"),0);
+    return nullptr;
 }
 
 const char *blogi::Config::getlphost(){
-    return _PlsConfig->getValue(_PlsConfig->getKey("/BLOGI/LDAP/HOST"),0);
+    if(_PlsConfig->getKey("/BLOGI/LDAP/HOST"))
+        return _PlsConfig->getValue(_PlsConfig->getKey("/BLOGI/LDAP/HOST"),0);
+    return nullptr;
 }
 
 const char * blogi::Config::getlpbasedn(){
-    return _PlsConfig->getValue(_PlsConfig->getKey("/BLOGI/LDAP/BASEDN"),0);
+    if(_PlsConfig->getKey("/BLOGI/LDAP/BASEDN"))
+        return _PlsConfig->getValue(_PlsConfig->getKey("/BLOGI/LDAP/BASEDN"),0);
+    return nullptr;
 }
 
 const char * blogi::Config::getlpfilter(){
-    return _PlsConfig->getValue(_PlsConfig->getKey("/BLOGI/LDAP/LOGINFILTER"),0);
+    if(_PlsConfig->getKey("/BLOGI/LDAP/BASEDN"))
+        return _PlsConfig->getValue(_PlsConfig->getKey("/BLOGI/LDAP/LOGINFILTER"),0);
+    return nullptr;
 }
 
 const char * blogi::Config::gethttpaddr(){
-    return _PlsConfig->getValue(_PlsConfig->getKey("/BLOGI/HTTP/BIND"),0);
+    if(_PlsConfig->getKey("/BLOGI/HTTP/BIND"))
+        return _PlsConfig->getValue(_PlsConfig->getKey("/BLOGI/HTTP/BIND"),0);
+    return nullptr;
 }
 
 int blogi::Config::gethttpport(){
-    return _PlsConfig->getIntValue(_PlsConfig->getKey("/BLOGI/HTTP/PORT"),0);
+    if(_PlsConfig->getKey("/BLOGI/HTTP/PORT"))
+        return _PlsConfig->getIntValue(_PlsConfig->getKey("/BLOGI/HTTP/PORT"),0);
+    return -1;
 }
 
 int blogi::Config::gethttpmaxcon(){
-    return _PlsConfig->getIntValue(_PlsConfig->getKey("/BLOGI/HTTP/MAXCON"),0);
+    if(_PlsConfig->getKey("/BLOGI/HTTP/MAXCON"))
+        return _PlsConfig->getIntValue(_PlsConfig->getKey("/BLOGI/HTTP/MAXCON"),0);
+    return -1;
 }
 
 const char * blogi::Config::getRedisHost(){
-    return _PlsConfig->getValue(_PlsConfig->getKey("/BLOGI/REDIS/HOST"),0);
+    if(_PlsConfig->getKey("/BLOGI/REDIS/HOST"))
+        return _PlsConfig->getValue(_PlsConfig->getKey("/BLOGI/REDIS/HOST"),0);
+    return nullptr;
 }
 
 int blogi::Config::getRedisPort(){
-    return _PlsConfig->getIntValue(_PlsConfig->getKey("/BLOGI/REDIS/PORT"),0);
+    if(_PlsConfig->getKey("/BLOGI/REDIS/PORT"))
+        return _PlsConfig->getIntValue(_PlsConfig->getKey("/BLOGI/REDIS/PORT"),0);
+    return -1;
 }
 
 
