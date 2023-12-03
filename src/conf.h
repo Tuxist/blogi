@@ -61,6 +61,7 @@ namespace blogi {
 
         const char *getRedisHost();
         int         getRedisPort();
+        const char *getRedisPassword();
 
     private:
         Config();
