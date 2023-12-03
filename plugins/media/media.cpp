@@ -432,14 +432,15 @@ namespace blogi {
                 throw exp;
             }
 
-            redisReply *reply = (redisReply*)redisCommand(_RedisCTX, "AUTH %s", Args->config->getRedisPassword());
-            if (reply->type == REDIS_REPLY_ERROR) {
-                libhttppp::HTTPException exp;
-                exp[libhttppp::HTTPException::Warning] << "media plugin err: " << _RedisCTX->errstr;
-                throw exp;
+            if(Args->config->getRedisPassword()){
+                redisReply *reply = (redisReply*)redisCommand(_RedisCTX, "AUTH %s", Args->config->getRedisPassword());
+                if (reply->type == REDIS_REPLY_ERROR) {
+                    libhttppp::HTTPException exp;
+                    exp[libhttppp::HTTPException::Warning] << "media plugin err: " << _RedisCTX->errstr;
+                    throw exp;
+                }
+                freeReplyObject(reply);
             }
-            freeReplyObject(reply);
-
 
         }
 
