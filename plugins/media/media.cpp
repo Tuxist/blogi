@@ -422,6 +422,7 @@ namespace blogi {
         }
 
         void initPlugin(){
+
             Args->edit->addIcon(icondata,icondatalen,"selimage","webp","Insert Image from media albums");
 
             _RedisCTX=redisConnect(Args->config->getRedisHost(),Args->config->getRedisPort());

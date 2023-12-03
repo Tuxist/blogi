@@ -69,7 +69,8 @@ namespace blogi {
                 Column[len]='\0';
                 nextData=nullptr;
             }
-            ~Data(){
+
+            virtual ~Data(){
                 delete Column;
                 delete nextData;
             }
