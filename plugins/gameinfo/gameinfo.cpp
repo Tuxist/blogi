@@ -25,6 +25,8 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *******************************************************************************/
 
+#include <iostream>
+
 #include <cstring>
 #include <string>
 #include <vector>
@@ -106,7 +108,8 @@ namespace blogi {
                     << hldsdata.BotsAmount << ")" << "/"
                     << hldsdata.MaxPlayers
                     << "</td></tr></table></div>";
-                }catch(...){
+                }catch(const char *e){
+                    std::cerr << e <<std::endl;
                     rlock.unlock();
                 }
             }
