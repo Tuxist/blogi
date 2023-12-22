@@ -150,9 +150,11 @@ const char * blogi::Config::getRedisHost(){
 }
 
 const char * blogi::Config::getRedisPassword(){
-    if(_PlsConfig->getKey("/BLOGI/REDIS/PASSWORD"))
+    try{
         return _PlsConfig->getValue(_PlsConfig->getKey("/BLOGI/REDIS/PASSWORD"),0);
-    return nullptr;
+    }catch(...){
+        return nullptr;
+    }
 }
 
 int blogi::Config::getRedisPort(){
