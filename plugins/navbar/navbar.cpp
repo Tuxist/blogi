@@ -181,21 +181,21 @@ namespace blogi {
             auto changeItemName = [this,navid](const char *key,const char *value){
                 int iid;
                 sscanf(key,"navitem_name_%d",&iid);
-                blogi::SQL sql;
-                blogi::DBResult res;
-                sql << "UPDATE navbar_items SET name='"; sql.escaped(value) << "' WHERE navbar_id='" << navid << "' AND id='" << iid << "'";
-                Args->database->exec(&sql,res);
-                sql.clear();
+                blogi::SQL sql2;
+                blogi::DBResult res2;
+                sql2 << "UPDATE navbar_items SET name='"; sql2.escaped(value) << "' WHERE navbar_id='" << navid << "' AND id='" << iid << "'";
+                Args->database->exec(&sql2,res2);
+                sql2.clear();
             };
 
             auto changeItemUrl = [this,navid](const char *key,const char *value){
                 int iid;
                 sscanf(key,"navitem_url_%d",&iid);
-                blogi::SQL sql;
-                blogi::DBResult res;
-                sql << "UPDATE navbar_items SET url='"; sql.escaped(value) << "' WHERE navbar_id='" << navid << "' AND id='" << iid << "'";
-                Args->database->exec(&sql,res);
-                sql.clear();
+                blogi::SQL sql2;
+                blogi::DBResult res2;
+                sql2 << "UPDATE navbar_items SET url='"; sql2.escaped(value) << "' WHERE navbar_id='" << navid << "' AND id='" << iid << "'";
+                Args->database->exec(&sql2,res2);
+                sql2.clear();
 
             };
 
