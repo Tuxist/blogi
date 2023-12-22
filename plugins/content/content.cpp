@@ -78,10 +78,6 @@ namespace blogi {
                 ncount=Args->database->exec(&sql,res);
             }
 
-            if (ncount<1) {
-                excep[libhttppp::HTTPException::Critical] << "<span> No Content found! </span>";
-                throw excep;
-            }
             std::string meta;
             condat << "<div id=\"contentidx\">";
             if(Args->auth->isLoggedIn(curreq,sid)){
@@ -91,6 +87,12 @@ namespace blogi {
                 << "</ul>"
                 << "</div>";
             }
+
+            if (ncount<1) {
+                condat << " </div>";
+                return;
+            }
+
             for (int i = 0; i < ncount; i++) {
                 condat << "<div class=\"blog_entry\">"
                 << "<span class=\"title\">" << res[i][1] << "</span>"
