@@ -90,6 +90,15 @@ namespace blogi {
 
             if (ncount<1) {
                 condat << " </div>";
+                std::string out;
+                page.getElementbyID("main")->insertChild(condat.parse());;
+                Args->theme->printSite(out,page,curreq->getRequestURL(),Args->auth->isLoggedIn(curreq,sid),meta.c_str());
+
+                libhttppp::HttpResponse resp;
+                resp.setVersion(HTTPVERSION(1.1));
+                resp.setState(HTTP200);
+                resp.setContentType("text/html");
+                resp.send(curcon,out.c_str(),out.length());
                 return;
             }
 
