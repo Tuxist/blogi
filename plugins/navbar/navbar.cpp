@@ -354,7 +354,7 @@ SETTINGSINDEX:
             }
 
             int n = Args->database->exec(&sql,res);
-            if(n<0){
+            if(n>0){
                 setdiv << "<table>";
                 setdiv << "<tr><th>Name</th><th>Actions</th></tr>";
                 for (int i = 0; i < n; ++i) {
