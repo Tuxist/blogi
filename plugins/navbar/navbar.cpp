@@ -354,20 +354,16 @@ SETTINGSINDEX:
             }
 
             int n = Args->database->exec(&sql,res);
-            if(n<1){
-                libhttppp::HTTPException excep;
-                excep[libhttppp::HTTPException::Critical] << "No entries found for navbar";
-                throw excep;
+            if(n<0){
+                setdiv << "<table>";
+                setdiv << "<tr><th>Name</th><th>Actions</th></tr>";
+                for (int i = 0; i < n; ++i) {
+                    setdiv << "<tr><td>" << res[i][1] <<"</td><td><a href=\""<< Args->config->buildurl("settings/navbar/editnav?navid=",url,512) << res[i][0]
+                           << "\">edit</a></td><td><a href=\""<< Args->config->buildurl("settings/navbar/delnav?navid=",url,512) << res[i][0] << "\">remove</a></td></tr>";
+                }
+                setdiv << "</table>";
             }
-
-            setdiv << "<table>";
-            setdiv << "<tr><th>Name</th><th>Actions</th></tr>";
-            for (int i = 0; i < n; ++i) {
-                setdiv << "<tr><td>" << res[i][1] <<"</td><td><a href=\""<< Args->config->buildurl("settings/navbar/editnav?navid=",url,512) << res[i][0]
-                       << "\">edit</a></td><td><a href=\""<< Args->config->buildurl("settings/navbar/delnav?navid=",url,512) << res[i][0] << "\">remove</a></td></tr>";
-            }
-            setdiv << "</table>"
-                   << "<a href=\"" << Args->config->buildurl("settings/navbar/newnav",url,512) <<"\">New Navigation</a>"
+            setdiv << "<a href=\"" << Args->config->buildurl("settings/navbar/newnav",url,512) <<"\">New Navigation</a>"
                    << "</div>";
 
         }
