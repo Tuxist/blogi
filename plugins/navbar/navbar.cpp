@@ -70,9 +70,7 @@ namespace blogi {
 
             int n = Args->database->exec(&sql,res);
             if(n<1){
-                libhttppp::HTTPException excep;
-                excep[libhttppp::HTTPException::Critical] << "No navbar found";
-                throw excep;
+                return;
             }
 
             for (int i = 0; i < n; i++) {
