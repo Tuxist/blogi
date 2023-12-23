@@ -238,9 +238,9 @@ namespace blogi {
             sql.clear();
 
             setdiv << "<form method=\"POST\" ><table>"
-                   << "<tr><td><span>Name: </span></td><td><input value=\"" << res[0][0] << "\" name=\"navname\" type=\"text\" /></td></tr>"
-                   << "<tr><td><span>Html Container: </span></td><td><input value=\"" << res[0][1] << "\" name=\"navcontainer\" type=\"text\" /></td></tr>"
-                   << "<tr><td><input style=\"display:none;\" type=\"text\" name=\"navid\" value=\"" << navid << "\" /></td></tr>";
+                   << "<tr><td><span>Name: </span></td><td><input value=\"" << res[0][0] << "\" name=\"navname\" type=\"text\" /></td><td> </td></tr>"
+                   << "<tr><td><span>Html Container: </span></td><td><input value=\"" << res[0][1] << "\" name=\"navcontainer\" type=\"text\" /></td><td> </td></tr>"
+                   << "<tr><td><input style=\"display:none;\" type=\"text\" name=\"navid\" value=\"" << navid << "\" /></td><td> </td></tr>";
 
             sql << "select id,name,url from navbar_items WHERE navbar_id='" << navid << "' ORDER BY id";
 
