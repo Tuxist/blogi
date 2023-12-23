@@ -237,7 +237,7 @@ namespace blogi {
 
             sql.clear();
 
-            setdiv << "<table><form method=\"POST\" >"
+            setdiv << "<form method=\"POST\" ><table>"
                    << "<tr><td><span>Name: </span></td><td><input value=\"" << res[0][0] << "\" name=\"navname\" type=\"text\" /></td></tr>"
                    << "<tr><td><span>Html Container: </span></td><td><input value=\"" << res[0][1] << "\" name=\"navcontainer\" type=\"text\" /></td></tr>"
                    << "<div id=\"items\">";
@@ -264,7 +264,7 @@ namespace blogi {
 
 
             setdiv << "<tr><td><input value=\"save\" type=\"submit\" /></td></tr>"
-                   << "</table></form></div></div>";
+                   << "</table> </form> </div> </div>";
 
         }
 
