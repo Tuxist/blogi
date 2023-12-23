@@ -200,9 +200,9 @@ namespace blogi {
             };
 
             for(libhttppp::HttpForm::UrlcodedFormData *cdat=formdat; cdat; cdat=cdat->nextUrlcodedFormData()){
-                if(strncmp(cdat->getKey(),"navitem_name_",13)==0)
+                if(strcmp(cdat->getKey(),"navitem_name_")<0)
                     changeItemName(cdat->getKey(),cdat->getValue());
-                else if(strncmp(cdat->getKey(),"navitem_url_",12)==0)
+                else if(strcmp(cdat->getKey(),"navitem_url_")<0)
                     changeItemUrl(cdat->getKey(),cdat->getValue());
             }
 
