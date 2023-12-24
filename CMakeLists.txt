@@ -12,6 +12,7 @@ find_package(PostgreSQL REQUIRED)
 find_package(OpenLDAP)
 find_package(OpenSSL REQUIRED)
 find_package(Hiredis REQUIRED)
+find_package(libsecureid REQUIRED)
 
 include_directories(
     ${NETPLUS_INCLUDE_DIRS}
@@ -19,6 +20,7 @@ include_directories(
     ${PostgreSQL_INCLUDE_DIRS}
     ${OPENLDAP_INCLUDE_DIRS}
     ${CMAKE_SOURCE_DIR}/src
+    ${SECUREID_INCLUDE_DIRS}
 )
 
 if(${OPENLDAP_FOUND})
