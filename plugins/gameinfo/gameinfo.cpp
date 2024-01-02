@@ -31,7 +31,7 @@
 #include <string>
 #include <vector>
 
-#include <hldsview.h>
+#include <gameinfoplus/hldsview.h>
 
 #include <plugin.h>
 #include <database.h>
