@@ -64,6 +64,21 @@ namespace blogi {
             blogi::SQL        sql;
             blogi::DBResult   res;
 
+
+            sql << "CREATE TABLE IF NOT EXISTS public.gameserver_protocols("
+                <<   "id serial NOT NULL PRIMARY KEY,"
+                <<   "pname character varying(255) NOT NULL,"
+                << "); "
+                << "CREATE TABLE IF NOT EXISTS public.gameserver("
+                <<   "id serial NOT NULL,"
+                <<   "protocol integer,"
+                <<   "addr character varying(255) NOT NULL,"
+                <<   "port integer,"
+                <<   "FOREIGN KEY (protocol) REFERENCES public.gameserver_protocols (id)"
+                << ")";
+
+            Args->database->exec(&sql,res);
+
             sql="select protocol,addr,port from gameserver";
 
             int count = Args->database->exec(&sql,res);
