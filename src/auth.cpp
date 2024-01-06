@@ -43,9 +43,7 @@ blogi::Auth::Auth(blogi::Database *pcon,blogi::Session *session){
     _session=session;
     blogi::SQL sql;
     blogi::DBResult res;
-    sql << "IF (OBJECT_ID('users') IS NULL )"
-        << "BEGIN"
-        <<   "CREATE TABLE public.users ("
+    sql << "CREATE TABLE IF NOT EXISTS public.users ("
         <<      "id serial NOT NULL PRIMARY KEY,"
         <<      "sid character varying(255),"
         <<      "username character varying(255),"
@@ -53,8 +51,7 @@ blogi::Auth::Auth(blogi::Database *pcon,blogi::Session *session){
         <<      "displayname character varying(255) DEFAULT 'please update'::character varying NOT NULL,"
         <<      "authprovider integer DEFAULT 0 NOT NULL,"
         <<      "password character varying(255)"
-        <<   ");"
-        << "END";
+        << ");";
     _dbconn->exec(&sql,res);
 }
 

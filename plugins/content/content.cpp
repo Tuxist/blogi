@@ -627,9 +627,7 @@ namespace blogi {
         void initPlugin(){
             blogi::SQL sql;
             blogi::DBResult res;
-            sql << "IF (OBJECT_ID('content') IS NULL )"
-                << "BEGIN"
-                <<   "CREATE TABLE public.content ("
+            sql << "CREATE TABLE public.content ("
                 <<     "id serial NOT NULL PRIMARY KEY,"
                 <<     "title character varying(255) NOT NULL,"
                 <<     "text text NOT NULL,"
@@ -638,7 +636,28 @@ namespace blogi {
                 <<     "created date NOT NULL"
                 <<   ");"
                 <<   "ADD CONSTRAINT fk_author FOREIGN KEY (author) REFERENCES public.users(id);"
-                << "END";
+                <<   "CREATE TABLE IF NOT EXISTS public.tags("
+                <<      "id serial NOT NULL,"
+                <<      "name character varying(255) NOT NULL,"
+                <<      "CONSTRAINT tags_pkey PRIMARY KEY (id),"
+                <<      "CONSTRAINT name_unique UNIQUE (name)"
+                << ");"
+                << "CREATE TABLE IF NOT EXISTS public.tags("
+                <<   "id serial NOT NULL PRIMARY KEY,"
+                <<   "name character varying(255) NOT NULL UNIQUE,"
+                << ");"
+                << "CREATE TABLE IF NOT EXISTS public.tags_content ("
+                <<   "tag_id integer NOT NULL,"
+                <<   "content_id integer NOT NULL,"
+                <<   "CONSTRAINT tags_content_content_id_fkey FOREIGN KEY (content_id)"
+                <<     "REFERENCES public.content (id) MATCH SIMPLE"
+                <<     "ON UPDATE NO ACTION"
+                <<     "ON DELETE NO ACTION,"
+                <<   "CONSTRAINT tags_content_tag_id_fkey FOREIGN KEY (tag_id)"
+                <<     "REFERENCES public.tags (id) MATCH SIMPLE"
+                <<     "ON UPDATE NO ACTION"
+                <<     "ON DELETE NO ACTION"
+                << ");";
             Args->database->exec(&sql,res);
             return;
         }
