@@ -61,8 +61,15 @@ namespace blogi {
                 <<   "id serial NOT NULL PRIMARY KEY,"
                 <<   "name character varying(255) NOT NULL,"
                 <<   "container_id character varying(255) NOT NULL"
-                << "); ";
-           Args->database->exec(&sql,res);
+                << "); "
+                << "CREATE TABLE IF NOT EXISTS public.navbar_items("
+                <<   "id serial NOT NULL PRIMARY KEY,"
+                <<   "name character varying(255) NOT NULL,"
+                <<   "url character varying(255) NOT NULL,"
+                <<   "navbar_id integer,"
+                <<   "FOREIGN KEY (navbar_id) REFERENCES public.navbar (id)"
+                << ");";
+            Args->database->exec(&sql,res);
             return;
         }
 
