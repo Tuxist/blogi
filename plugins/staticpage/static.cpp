@@ -42,6 +42,14 @@ blogi::StaticPage::~StaticPage(){
 }
 
 void blogi::StaticPage::initPlugin(){
+    blogi::SQL sql;
+    blogi::DBResult res;
+    sql << "CREATE TABLE IF NOT EXISTS public.static_content ("
+        << "id serial NOT NULL PRIMARY KEY,"
+        << "text text,"
+        << "url character varying(255) NOT NULL UNIQUE"
+        << ")";
+    Args->database->exec(&sql,res);
 }
 
 bool blogi::StaticPage::haveSettings(){

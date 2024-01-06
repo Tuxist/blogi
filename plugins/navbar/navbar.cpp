@@ -55,6 +55,14 @@ namespace blogi {
         }
 
         void initPlugin(){
+            blogi::SQL sql;
+            blogi::DBResult res;
+            sql << "CREATE TABLE IF NOT EXISTS public.navbar("
+                <<   "id serial NOT NULL PRIMARY KEY,"
+                <<   "name character varying(255) NOT NULL,"
+                <<   "container_id character varying(255) NOT NULL"
+                << "); ";
+           Args->database->exec(&sql,res);
             return;
         }
 
