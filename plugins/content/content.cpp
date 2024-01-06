@@ -625,6 +625,21 @@ namespace blogi {
         }
 
         void initPlugin(){
+            blogi::SQL sql;
+            blogi::DBResult res;
+            sql << "IF (OBJECT_ID('users') IS NULL )"
+                << "BEGIN"
+                <<   "CREATE TABLE public.content ("
+                <<     "id serial NOT NULL PRIMARY KEY,"
+                <<     "title character varying(255) NOT NULL,"
+                <<     "text text NOT NULL,"
+                <<     "descrition character varying(255) NOT NULL,"
+                <<     "author integer ,"
+                <<     "created date NOT NULL"
+                <<   ");"
+                <<   "ADD CONSTRAINT fk_author FOREIGN KEY (author) REFERENCES public.users(id);"
+                << "END";
+            Args->database->exec(&sql,res);
             return;
         }
 
