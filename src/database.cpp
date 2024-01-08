@@ -49,7 +49,7 @@ blogi::SQL & blogi::SQL::operator<<(const char* sql){
 }
 
 blogi::SQL & blogi::SQL::operator<<(int sql){
-    char buf[512];
+    char buf[512*sizeof(int)];
     snprintf(buf,512,"%d",sql);
     _SQL.append(buf);
     return *this;
