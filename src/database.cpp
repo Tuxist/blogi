@@ -85,6 +85,11 @@ bool blogi::SQL::empty(){
     return _SQL.empty();
 }
 
+size_t blogi::SQL::length(){
+    return _SQL.length();
+}
+
+
 
 blogi::DBResult::DBResult(){
     firstRow=nullptr;

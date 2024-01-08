@@ -46,6 +46,7 @@ namespace blogi {
         const char *c_str();
         void clear();
         bool empty();
+        size_t length();
     private:
         std::string _SQL;
         friend class Database;

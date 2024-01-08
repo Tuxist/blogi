@@ -7,6 +7,7 @@ add_library(blogidev STATIC
     theme.cpp
     editor.cpp
     database/pgsql.cpp
+    database/sqlite.cpp
 )
 
 target_link_libraries(blogidev

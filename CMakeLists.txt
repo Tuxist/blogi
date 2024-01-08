@@ -9,6 +9,7 @@ find_package(libcryptplus REQUIRED)
 find_package(htmlpp REQUIRED)
 find_package(httppp REQUIRED)
 find_package(PostgreSQL REQUIRED)
+find_package(SQLite3 REQUIRED)
 find_package(OpenLDAP)
 find_package(OpenSSL REQUIRED)
 find_package(Hiredis REQUIRED)
@@ -18,6 +19,7 @@ include_directories(
     ${NETPLUS_INCLUDE_DIRS}
     ${CRYPTPLUS_INCLUDE_DIRS}
     ${PostgreSQL_INCLUDE_DIRS}
+    ${SQLite3_INCLUDE_DIRS}
     ${OPENLDAP_INCLUDE_DIRS}
     ${CMAKE_SOURCE_DIR}/src
     ${SECUREID_INCLUDE_DIRS}
