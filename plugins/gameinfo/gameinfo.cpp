@@ -66,11 +66,11 @@ namespace blogi {
 
 
             sql << "CREATE TABLE IF NOT EXISTS gameserver_protocols("
-                <<   "id int BY DEFAULT AS IDENTITY PRIMARY KEY,"
+                <<   "id INTEGER PRIMARY KEY,"
                 <<   "pname character varying(255) NOT NULL"
                 << "); "
                 << "CREATE TABLE IF NOT EXISTS gameserver("
-                <<   "id int BY DEFAULT AS IDENTITY PRIMARY KEY,"
+                <<   "id INTEGER PRIMARY KEY,"
                 <<   "protocol integer,"
                 <<   "addr character varying(255) NOT NULL,"
                 <<   "port integer,"

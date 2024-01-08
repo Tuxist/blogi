@@ -628,7 +628,7 @@ namespace blogi {
             blogi::SQL sql;
             blogi::DBResult res;
             sql << "CREATE TABLE IF NOT EXISTS content ("
-                <<     "id int BY DEFAULT AS IDENTITY PRIMARY KEY,"
+                <<     "id INTEGER PRIMARY KEY,"
                 <<     "title character varying(255) NOT NULL,"
                 <<     "text text NOT NULL,"
                 <<     "descrition character varying(255) NOT NULL,"
@@ -637,7 +637,7 @@ namespace blogi {
                 <<     "FOREIGN KEY (author) REFERENCES users(id)"
                 <<   "); "
                 << "CREATE TABLE IF NOT EXISTS tags ("
-                <<      "id int BY DEFAULT AS IDENTITY PRIMARY KEY,"
+                <<      "id INTEGER PRIMARY KEY,"
                 <<      "name character varying(255) NOT NULL UNIQUE"
                 << "); "
                 << "CREATE TABLE IF NOT EXISTS tags_content ("

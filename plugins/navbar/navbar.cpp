@@ -58,12 +58,12 @@ namespace blogi {
             blogi::SQL sql;
             blogi::DBResult res;
             sql << "CREATE TABLE IF NOT EXISTS navbar("
-                <<   "id int BY DEFAULT AS IDENTITY PRIMARY KEY,"
+                <<   "id INTEGER PRIMARY KEY,"
                 <<   "name character varying(255) NOT NULL,"
                 <<   "container_id character varying(255) NOT NULL"
                 << "); "
                 << "CREATE TABLE IF NOT EXISTS navbar_items("
-                <<   "id int BY DEFAULT AS IDENTITY PRIMARY KEY,"
+                <<   "id INTEGER PRIMARY KEY,"
                 <<   "name character varying(255) NOT NULL,"
                 <<   "url character varying(255) NOT NULL,"
                 <<   "navbar_id integer,"

@@ -45,7 +45,7 @@ void blogi::StaticPage::initPlugin(){
     blogi::SQL sql;
     blogi::DBResult res;
     sql << "CREATE TABLE IF NOT EXISTS static_content ("
-        << "id int BY DEFAULT AS IDENTITY PRIMARY KEY,"
+        << "id INTEGER PRIMARY KEY,"
         << "text text,"
         << "meta text,"
         << "url character varying(255) NOT NULL UNIQUE"
