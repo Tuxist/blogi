@@ -57,13 +57,15 @@ namespace blogi {
         void initPlugin(){
             blogi::SQL sql;
             blogi::DBResult res;
-            sql << "CREATE TABLE IF NOT EXISTS navbar("
-                <<   "id INTEGER PRIMARY KEY,"
+            sql << "CREATE SEQUENCE IF NOT EXISTS navbar; "
+                << "CREATE TABLE IF NOT EXISTS navbar("
+                <<   "id INTEGER PRIMARY KEY DEFAULT NEXTVAL('navbar_sequence'),"
                 <<   "name character varying(255) NOT NULL,"
                 <<   "container_id character varying(255) NOT NULL"
                 << "); "
+                << "CREATE SEQUENCE IF NOT EXISTS navbar_items; "
                 << "CREATE TABLE IF NOT EXISTS navbar_items("
-                <<   "id INTEGER PRIMARY KEY,"
+                <<   "id INTEGER PRIMARY KEY DEFAULT NEXTVAL('navbar_items_sequence'),"
                 <<   "name character varying(255) NOT NULL,"
                 <<   "url character varying(255) NOT NULL,"
                 <<   "navbar_id integer,"

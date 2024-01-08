@@ -65,12 +65,14 @@ namespace blogi {
             blogi::DBResult   res;
 
 
-            sql << "CREATE TABLE IF NOT EXISTS gameserver_protocols("
-                <<   "id INTEGER PRIMARY KEY,"
+            sql << "CREATE SEQUENCE IF NOT EXISTS  gameserver_protocols_sequence; "
+                << "CREATE TABLE IF NOT EXISTS gameserver_protocols("
+                <<   "id INTEGER PRIMARY KEY DEFAULT NEXTVAL('gameserver_protocols_sequence'),"
                 <<   "pname character varying(255) NOT NULL"
                 << "); "
+                << "CREATE SEQUENCE IF NOT EXISTS gameserver_sequence;"
                 << "CREATE TABLE IF NOT EXISTS gameserver("
-                <<   "id INTEGER PRIMARY KEY,"
+                <<   "id INTEGER PRIMARY KEY DEFAULT NEXTVAL('gameserver_sequence'),"
                 <<   "protocol integer,"
                 <<   "addr character varying(255) NOT NULL,"
                 <<   "port integer,"
