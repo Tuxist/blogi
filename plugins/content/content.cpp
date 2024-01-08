@@ -69,12 +69,12 @@ namespace blogi {
                     sql = "select content.id,content.title,content.descrition,users.displayname,content.created from content ";
                     sql <<"LEFT JOIN users ON content.author=users.id LEFT JOIN tags_content ON tags_content.content_id=content.id where tags_content.tag_id='"
                     << res[0][0]
-                    <<"' ORDER BY id DESC OFFSET '" << start << "' LIMIT " << end;
+                    <<"' ORDER BY content.id DESC LIMIT '" << end << "' OFFSET " << start;
                     ncount=Args->database->exec(&sql,res);
                 }
             } else {
-                sql="select content.id,content.title,content.descrition,users.displayname,content.created from content LEFT JOIN users ON content.author=users.id ORDER BY id DESC";
-                sql << " OFFSET '" << start << "' LIMIT " << end;
+                sql="select content.id,content.title,content.descrition,users.displayname,content.created from content LEFT JOIN users ON content.author=users.id ORDER BY content.id DESC";
+                sql << " LIMIT '" << end << "' OFFSET " << start;
                 ncount=Args->database->exec(&sql,res);
             }
 

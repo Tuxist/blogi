@@ -75,7 +75,7 @@ namespace blogi {
                 <<   "addr character varying(255) NOT NULL,"
                 <<   "port integer,"
                 <<   "FOREIGN KEY (protocol) REFERENCES gameserver_protocols (id)"
-                << ")";
+                << ");";
 
             Args->database->exec(&sql,res);
 
