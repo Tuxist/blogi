@@ -95,7 +95,7 @@ size_t blogi::Config::getplgdirs(){
     return 0;
 }
 
-const char * blogi::Config::getdbopts(){
+const char * blogi::Config::getdbdriver(){
     if(_PlsConfig->getKey("/BLOGI/DATABASE/DRIVER"))
         return _PlsConfig->getValue(_PlsConfig->getKey("/BLOGI/DATABASE/DRIVER"),0);
     return nullptr;
