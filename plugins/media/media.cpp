@@ -423,6 +423,54 @@ namespace blogi {
 
         void initPlugin(){
 
+            blogi::SQL sql;
+            blogi::DBResult res;
+            sql << "CREATE TABLE IF NOT EXISTS public.media_albums ("
+                <<   "id serial NOT NULL PRIMARY KEY,"
+                <<   "name character varying(255) NOT NULL,"
+                <<   "owner integer NOT NULL,"
+                <<   "created date NOT NULL,"
+                <<   "FOREIGN KEY (owner) REFERENCES public.users (id)"
+                << "); "
+                << "CREATE TABLE IF NOT EXISTS public.media_type ("
+                <<   "id serial NOT NULL PRIMARY KEY,"
+                <<   "type integer NOT NULL,"
+                <<   "ext character varying(255) NOT NULL,"
+                <<   "ctype character varying(255) NOT NULL,"
+                << "); "
+                << "CREATE TABLE IF NOT EXISTS public.media_items ("
+                <<   "id serial NOT NULL DEFAULT PRIMARY KEY,"
+                <<   "album_id integer NOT NULL,"
+                <<   "name character varying(255) NOT NULL,"
+                <<   "FOREIGN KEY (album_id) REFERENCES public.media_albums (id)"
+                << "); "
+                << "CREATE TABLE IF NOT EXISTS public.media_items_files ("
+                <<   "id serial NOT NULL PRIMARY KEY ,"
+                <<   "media_items_id integer NOT NULL,"
+                <<   "redis_uuid uuid NOT NULL,"
+                <<   "media_type_id integer NOT NULL,"
+                <<   "public boolean NOT NULL,"
+                <<   "FOREIGN KEY (media_items_id) REFERENCES public.media_items (id),"
+                <<   "FOREIGN KEY (media_type_id) REFERENCES public.media_type (id)"
+                << "); "
+                << "CREATE TABLE IF NOT EXISTS public.media_preview ("
+                <<   "id serial NOT NULL PRIMARY KEY,"
+                <<   "name character varying(255) NOT NULL,"
+                <<   "options character varying(255),"
+                <<   "media_type_id integer,"
+                <<   "FOREIGN KEY (media_type_id) REFERENCES public.media_type (id)"
+                << "); "
+                << "CREATE TABLE IF NOT EXISTS public.media_items_preview ("
+                <<   "id serial NOT NULL PRIMARY KEY,"
+                <<   "media_items_id integer NOT NULL,"
+                <<   "redis_uuid uuid NOT NULL,"
+                <<   "media_type_id integer NOT NULL,"
+                <<   "public boolean NOT NULL,"
+                <<   "FOREIGN KEY (media_items_id) REFERENCES public.media_items (id),"
+                <<   "FOREIGN KEY (media_type_id) REFERENCES public.media_type (id)"
+                << ");";
+            Args->database->exec(&sql,res);
+
             Args->edit->addIcon(icondata,icondatalen,"selimage","webp","Insert Image from media albums");
 
             _RedisCTX=redisConnect(Args->config->getRedisHost(),Args->config->getRedisPort());
