@@ -1,3 +1,7 @@
+add_definitions(
+    -DSQLITE_THREADSAFE=2
+)
+
 add_library(blogidev STATIC
     session.cpp
     auth.cpp
