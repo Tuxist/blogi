@@ -25,6 +25,8 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *******************************************************************************/
 
+#include <atomic>
+
 #include <httppp/exception.h>
 
 #include <sqlite3.h>
@@ -32,9 +34,13 @@
 #include "../database.h"
 
 namespace blogi {
+
+    std::atomic<bool> sqllock(false);
+
     class SQLite : public Database{
     public:
         SQLite(const char *constr) : Database (constr) {
+            while( sqllock.exchange(true, std::memory_order_acquire) );
             int status=sqlite3_open(constr,&_dbconn);
             if (status != SQLITE_OK ){
                 libhttppp::HTTPException exp;
@@ -42,6 +48,8 @@ namespace blogi {
                 sqlite3_close(_dbconn);
                 throw exp;
             }
+            sqllock.store(false);
+
         }
 
         ~SQLite(){
@@ -49,6 +57,7 @@ namespace blogi {
         }
 
         int exec(SQL *sql,DBResult &res){
+            while( sqllock.exchange(true, std::memory_order_acquire) );
             char *ssql;
             ssql=new char[sql->length()];
             memcpy(ssql,sql->c_str(),sql->length());
@@ -73,6 +82,7 @@ namespace blogi {
                     exp[libhttppp::HTTPException::Critical] << sqlite3_errmsg(_dbconn);
                     sqlite3_finalize(prep);
                     delete[] ssql;
+                    sqllock.store(false);
                     throw exp;
                 }
 
@@ -84,6 +94,7 @@ namespace blogi {
                         libhttppp::HTTPException exp;
                         exp[libhttppp::HTTPException::Critical] << sqlite3_errmsg(_dbconn);
                         delete[] ssql;
+                        sqllock.store(false);
                         throw exp;
                     }
 
@@ -114,6 +125,7 @@ namespace blogi {
                     prep=next;
                 }while(prep);
             };
+            sqllock.store(false);
             delete[] ssql;
             return rcount;
         };
