@@ -48,6 +48,7 @@ namespace blogi {
         const char* getplgdir(size_t el);
         size_t      getplgdirs();
 
+        const char* getdbdriver();
         const char* getdbopts();
 
         const char *getlpdomain();

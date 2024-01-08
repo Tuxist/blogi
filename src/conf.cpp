@@ -96,6 +96,12 @@ size_t blogi::Config::getplgdirs(){
 }
 
 const char * blogi::Config::getdbopts(){
+    if(_PlsConfig->getKey("/BLOGI/DATABASE/DRIVER"))
+        return _PlsConfig->getValue(_PlsConfig->getKey("/BLOGI/DATABASE/DRIVER"),0);
+    return nullptr;
+}
+
+const char * blogi::Config::getdbopts(){
     if(_PlsConfig->getKey("/BLOGI/DATABASE/CONNECTION"))
         return _PlsConfig->getValue(_PlsConfig->getKey("/BLOGI/DATABASE/CONNECTION"),0);
     return nullptr;

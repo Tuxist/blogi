@@ -51,14 +51,18 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "conf.h"
 
 #include "blogi.h"
-#include "pgsql.cpp"
 
+#include "pgsql.cpp"
+#include "sqlite.cpp"
 
 blogi::Blogi::Blogi(netplus::socket *serversocket) : event(serversocket){
 
     PlgArgs = new PluginArgs;
     PlgArgs->config=Config::getInstance();
-    PlgArgs->database= new Postgresql(PlgArgs->config->getdbopts());
+    if(strcmp(PlgArgs->config->getdbdriver(),"pgsql")==0)
+        PlgArgs->database= new Postgresql(PlgArgs->config->getdbopts());
+    else if(strcmp(PlgArgs->config->getdbdriver(),"sqlite")==0)
+        PlgArgs->database= new SQLite(PlgArgs->config->getdbopts());
     PlgArgs->session= new Session();
     PlgArgs->auth=new Auth(PlgArgs->database,PlgArgs->session);
     PlgArgs->edit=new Editor(PlgArgs->config);

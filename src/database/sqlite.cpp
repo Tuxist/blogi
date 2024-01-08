@@ -82,10 +82,10 @@ namespace blogi {
             for(int i = 0; i < rcount; ++i ){
                 for(int ii=0; ii < res.columns; ++ii){
                     if(!res.firstRow){
-                       res.firstRow = new DBResult::Data(i,ii,(const char*)sqlite3_column_text(prep,ii),sqlite3_column_bytes(prep));
+                       res.firstRow = new DBResult::Data(i,ii,(const char*)sqlite3_column_text(prep,ii),sqlite3_column_bytes(prep,ii));
                        lastdat=res.firstRow;
                     }else{
-                       lastdat->nextData=new DBResult::Data(i,ii,(const char*)sqlite3_column_text(prep,ii),sqlite3_column_bytes(prep));
+                       lastdat->nextData=new DBResult::Data(i,ii,(const char*)sqlite3_column_text(prep,ii),sqlite3_column_bytes(prep,ii));
                        lastdat=lastdat->nextData;
                     }
                 }
