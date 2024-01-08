@@ -49,61 +49,82 @@ namespace blogi {
         }
 
         int exec(SQL *sql,DBResult &res){
+            char *ssql;
+            ssql=new char[sql->length()];
+            memcpy(ssql,sql->c_str(),sql->length());
             sqlite3_stmt *prep;
-
-            int pstate=sqlite3_prepare_v3(_dbconn,sql->c_str(),sql->length(),0,&prep,nullptr);
-
-
-            if(pstate != SQLITE_OK) {
-                 libhttppp::HTTPException exp;
-                 exp[libhttppp::HTTPException::Critical] << sqlite3_errmsg(_dbconn);
-                 sqlite3_finalize(prep);
-                 throw exp;
-            }
-
-            int pcode =sqlite3_step(prep);
+            int rcount = 0;
 
             if(res.firstRow){
                 delete res.firstRow;
             }
 
-            if(pcode != SQLITE_OK){
-                if(pcode==SQLITE_DONE){
-                    sqlite3_finalize(prep);
-                    return 0;
-                }
-                libhttppp::HTTPException exp;
-                exp[libhttppp::HTTPException::Critical] << sqlite3_errmsg(_dbconn);
-                throw exp;
-            }
-
             res.firstRow=nullptr;
             DBResult::Data *lastdat;
 
-            res.columns=sqlite3_data_count(prep);
+            const char *sqlptr=ssql;
 
-            int rcount=sqlite3_column_count(prep);
+            while(sqlptr < ssql+sql->length()){
 
-            for(int i = 0; i < rcount; ++i ){
-                for(int ii=0; ii < res.columns; ++ii){
-                    if(!res.firstRow){
-                       res.firstRow = new DBResult::Data(i,ii,(const char*)sqlite3_column_text(prep,ii),sqlite3_column_bytes(prep,ii));
-                       lastdat=res.firstRow;
-                    }else{
-                       lastdat->nextData=new DBResult::Data(i,ii,(const char*)sqlite3_column_text(prep,ii),sqlite3_column_bytes(prep,ii));
-                       lastdat=lastdat->nextData;
-                    }
+                int pstate=sqlite3_prepare_v3(_dbconn,sqlptr,sql->length(),0,&prep,&sqlptr);
+
+                if(pstate == SQLITE_ERROR) {
+                    libhttppp::HTTPException exp;
+                    exp[libhttppp::HTTPException::Critical] << sqlite3_errmsg(_dbconn);
+                    sqlite3_finalize(prep);
+                    delete[] ssql;
+                    throw exp;
                 }
-                prep=sqlite3_next_stmt(_dbconn,prep);
-            }
 
-            sqlite3_finalize(prep);
+                do {
+
+                    int pcode = sqlite3_step(prep);
+
+                    if(pcode==SQLITE_ERROR){
+                        libhttppp::HTTPException exp;
+                        exp[libhttppp::HTTPException::Critical] << sqlite3_errmsg(_dbconn);
+                        delete[] ssql;
+                        throw exp;
+                    }
+
+                    if(pcode==SQLITE_BUSY){
+                        continue;
+                    }
+
+                    res.columns=sqlite3_data_count(prep);
+
+                    int i=0;
+
+                    for(i=0; i < res.columns; ++i){
+                        if(!res.firstRow){
+                            res.firstRow = new DBResult::Data(rcount,i,(const char*)sqlite3_column_text(prep,i),sqlite3_column_bytes(prep,i));
+                            lastdat=res.firstRow;
+                        }else{
+                            lastdat->nextData=new DBResult::Data(rcount,i,(const char*)sqlite3_column_text(prep,i),sqlite3_column_bytes(prep,i));
+                            lastdat=lastdat->nextData;
+                        }
+                    }
+
+                    if(i>0)
+                        ++rcount;
+
+                    sqlite3_stmt *next;
+                    next=sqlite3_next_stmt(_dbconn, prep);
+                    sqlite3_finalize(prep);
+                    prep=next;
+                }while(prep);
+            };
+            delete[] ssql;
             return rcount;
         };
 
         const char *getDriverName(){
             return "sqlite";
         };
+
+        const char *autoincrement(){
+            return "AUTOINCREMENT";
+        }
 
     private:
 
