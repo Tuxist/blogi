@@ -19,6 +19,7 @@ target_link_libraries(blogidev
     secureid
     cmdplus
     ${PostgreSQL_LIBRARIES}
+    ${SQLite3_LIBRARIES}
     ${OPENLDAP_LIBRARIES}
     confplus
 )
