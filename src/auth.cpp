@@ -118,7 +118,7 @@ bool blogi::Auth::ldapLogin(const char *username,const char *password,std::strin
         throw excep;
     }
 
-    char* attrs[] = { (char*)"objectSid",(char*)"userPrincipalName",(char*)"mail",(char*)"displayname",NULL };
+    char* attrs[] = { (char*)"objectSid",(char*)"userPrincipalName",(char*)"mail",(char*)"gecos",NULL };
     LDAPMessage* answer, * entry;
     struct timeval timeout;
 
@@ -185,7 +185,7 @@ LDAPLOGINUSERFOUND:
                  }else if (strcmp(attribute, "mail") == 0) {
                      memcpy(&email,values[0]->bv_val,values[0]->bv_len);
                      email[values[0]->bv_len]='\0';
-                 }else if (strcmp(attribute, "displayname") == 0) {
+                 }else if (strcmp(attribute, "gecos") == 0) {
                      memcpy(&displayname,values[0]->bv_val,values[0]->bv_len);
                      displayname[values[0]->bv_len]='\0';
                  }
