@@ -627,9 +627,8 @@ namespace blogi {
         void initPlugin(){
             blogi::SQL sql;
             blogi::DBResult res;
-            sql << "CREATE SEQUENCE IF NOT EXISTS  content_sequence; "
-                << "CREATE TABLE IF NOT EXISTS content ("
-                <<     "id INTEGER PRIMARY KEY DEFAULT nextval('content_sequence')"
+            sql << "CREATE TABLE IF NOT EXISTS content ("
+                <<     "id integer PRIMARY KEY GENERATED DEFAULT AS IDENTITY,"
                 <<     "title character varying(255) NOT NULL,"
                 <<     "text text NOT NULL,"
                 <<     "descrition character varying(255) NOT NULL,"
@@ -637,9 +636,8 @@ namespace blogi {
                 <<     "created date NOT NULL,"
                 <<     "FOREIGN KEY (author) REFERENCES users(id)"
                 <<   "); "
-                << "CREATE SEQUENCE IF NOT EXISTS tags_sequence; "
                 << "CREATE TABLE IF NOT EXISTS tags ("
-                <<      "id INTEGER PRIMARY KEY  DEFAULT nextval('tags_sequence')"
+                <<      "id integer PRIMARY KEY GENERATED DEFAULT AS IDENTITY,"
                 <<      "name character varying(255) NOT NULL UNIQUE"
                 << "); "
                 << "CREATE TABLE IF NOT EXISTS tags_content ("
