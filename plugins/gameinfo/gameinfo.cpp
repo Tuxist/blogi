@@ -65,16 +65,16 @@ namespace blogi {
             blogi::DBResult   res;
 
 
-            sql << "CREATE TABLE IF NOT EXISTS public.gameserver_protocols("
+            sql << "CREATE TABLE IF NOT EXISTS gameserver_protocols("
                 <<   "id serial NOT NULL PRIMARY KEY,"
                 <<   "pname character varying(255) NOT NULL"
                 << "); "
-                << "CREATE TABLE IF NOT EXISTS public.gameserver("
+                << "CREATE TABLE IF NOT EXISTS gameserver("
                 <<   "id serial NOT NULL,"
                 <<   "protocol integer,"
                 <<   "addr character varying(255) NOT NULL,"
                 <<   "port integer,"
-                <<   "FOREIGN KEY (protocol) REFERENCES public.gameserver_protocols (id)"
+                <<   "FOREIGN KEY (protocol) REFERENCES gameserver_protocols (id)"
                 << ")";
 
             Args->database->exec(&sql,res);

@@ -57,17 +57,17 @@ namespace blogi {
         void initPlugin(){
             blogi::SQL sql;
             blogi::DBResult res;
-            sql << "CREATE TABLE IF NOT EXISTS public.navbar("
+            sql << "CREATE TABLE IF NOT EXISTS navbar("
                 <<   "id serial NOT NULL PRIMARY KEY,"
                 <<   "name character varying(255) NOT NULL,"
                 <<   "container_id character varying(255) NOT NULL"
                 << "); "
-                << "CREATE TABLE IF NOT EXISTS public.navbar_items("
+                << "CREATE TABLE IF NOT EXISTS navbar_items("
                 <<   "id serial NOT NULL PRIMARY KEY,"
                 <<   "name character varying(255) NOT NULL,"
                 <<   "url character varying(255) NOT NULL,"
                 <<   "navbar_id integer,"
-                <<   "FOREIGN KEY (navbar_id) REFERENCES public.navbar (id)"
+                <<   "FOREIGN KEY (navbar_id) REFERENCES navbar (id)"
                 << ");";
             Args->database->exec(&sql,res);
             return;

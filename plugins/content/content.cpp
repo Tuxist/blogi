@@ -627,24 +627,24 @@ namespace blogi {
         void initPlugin(){
             blogi::SQL sql;
             blogi::DBResult res;
-            sql << "CREATE TABLE IF NOT EXISTS public.content ("
+            sql << "CREATE TABLE IF NOT EXISTS content ("
                 <<     "id serial NOT NULL PRIMARY KEY,"
                 <<     "title character varying(255) NOT NULL,"
                 <<     "text text NOT NULL,"
                 <<     "descrition character varying(255) NOT NULL,"
                 <<     "author integer ,"
                 <<     "created date NOT NULL,"
-                <<     "FOREIGN KEY (author) REFERENCES public.users(id)"
+                <<     "FOREIGN KEY (author) REFERENCES users(id)"
                 <<   "); "
-                << "CREATE TABLE IF NOT EXISTS public.tags ("
+                << "CREATE TABLE IF NOT EXISTS tags ("
                 <<      "id serial NOT NULL PRIMARY KEY,"
                 <<      "name character varying(255) NOT NULL UNIQUE"
                 << "); "
-                << "CREATE TABLE IF NOT EXISTS public.tags_content ("
+                << "CREATE TABLE IF NOT EXISTS tags_content ("
                 <<   "tag_id integer NOT NULL,"
                 <<   "content_id integer NOT NULL,"
-                <<   "FOREIGN KEY (content_id) REFERENCES public.content (id),"
-                <<   "FOREIGN KEY (tag_id) REFERENCES public.tags (id)"
+                <<   "FOREIGN KEY (content_id) REFERENCES content (id),"
+                <<   "FOREIGN KEY (tag_id) REFERENCES tags (id)"
                 << ");";
             Args->database->exec(&sql,res);
             return;

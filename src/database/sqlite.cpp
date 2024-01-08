@@ -58,18 +58,23 @@ namespace blogi {
 
             if(pstate) {
                  libhttppp::HTTPException exp;
-                 exp[libhttppp::HTTPException::Critical] << zErrMsg;
-                 throw exp;
-            }
-
-            if(sqlite3_step(prep)){
-                 libhttppp::HTTPException exp;
                  exp[libhttppp::HTTPException::Critical] << sqlite3_errmsg(_dbconn);
                  throw exp;
             }
 
+            int pcode =sqlite3_step(prep);
+
             if(res.firstRow){
                 delete res.firstRow;
+            }
+
+            if(pcode){
+                 if(pcode==SQLITE_DONE){
+                    return 0;
+                }
+                libhttppp::HTTPException exp;
+                exp[libhttppp::HTTPException::Critical] << sqlite3_errmsg(_dbconn);
+                throw exp;
             }
 
             res.firstRow=nullptr;

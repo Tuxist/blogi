@@ -361,8 +361,12 @@ public:
         libhttppp::HTTPException httpexception;
         try {
             blogi::Session session;
-            blogi::Blogi blg(getServerSocket());
-            blg.runEventloop();
+            try{
+                blogi::Blogi blg(getServerSocket());
+                blg.runEventloop();
+            }catch(libhttppp::HTTPException &e){
+                std::cerr << e.what() << std::endl;
+            }
         }catch(netplus::NetException &e){
             std::cout << e.what() << std::endl;
         }
