@@ -1,0 +1,39 @@
+<!DOCTYPE html> 
+   <html lang="de">  
+     <head>    
+       <title>Blogi</title>    
+       <meta name="author" content="Jan Koester">    
+       <meta name="robots" content="all" />
+       <meta charset="utf-8">   
+       <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+       <link rel="stylesheet" href="/blog/theme/public/reset.css">
+       <link rel="stylesheet" href="/blog/theme/public/mstyle.css">
+    </head>
+    <body>
+       <div id="header">
+        <img id="menunav" alt="nav" src="/blog/theme/public/start.webp" srcset="/blog/theme/public/start_small.webp 8 w,start 48 w" size="50vw" /> 
+	 <!-- Navbar--> 
+       </div>
+       <div id="main">
+         <!-- content -->
+       </div>
+       <div id="ghost"> 
+       </div>
+       <div id="footer">
+         <span id="copyrigt" > (c) Jan Koester 2021 </span>
+         <br/>
+         <span id="footernav">
+         </span>
+       </div>
+       <script>
+          document.addEventListener('DOMContentLoaded',function() {
+              document.getElementById("menunav").addEventListener("click", function() {
+                  if(document.getElementById("headnav").style.display != "block")
+                     document.getElementById("headnav").style.display = "block";
+                  else
+                     document.getElementById("headnav").style.display = "none";
+              })
+          });
+       </script>
+    </body>
+  </html>

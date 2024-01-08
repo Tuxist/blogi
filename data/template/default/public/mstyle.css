@@ -1,0 +1,254 @@
+#banner {
+   display:block; 
+   margin:0px auto;
+}
+
+#header {
+   width:100%;
+   background: rgb(49, 54, 59);
+}
+
+#headnav {
+     display:none;
+     width:100%;
+     margin:0px auto;
+     text-align:left;
+}
+ 
+#headnav a{
+  display:flex;
+  margin:0.5em 0.5em;
+  font-size: 1.5em;
+  width:100%;
+}
+
+#content {
+   float: left;
+   width:100%;
+   margin:10px 0;
+   font-size: 0.5em;
+}
+
+#contentidx {
+  width:100%;
+  margin:10px 0;
+}
+  
+#main {
+  display:block; 
+  width:100%; 
+}
+
+#ghost {
+    display:inline-block;
+    min-height:300px;
+    height:20%;
+    width:100%;
+    min-width:300px;
+}
+
+ 
+#footer {
+    position:fixed;
+    margin:50px 0 0 0;
+    display:block;
+    text-align:center;
+    bottom:0px;
+    background: rgb(49, 54, 59);
+    width:100%;
+}
+
+#menunav {
+   height:48px;
+   width:48px;
+}
+
+#headnav ul {
+}
+
+#headnav li {
+   padding: 0.1em 0.25em;
+}
+
+#headnav li:hover {
+    background:rgb(35, 38, 41);
+    border-top: solid 1px transparent;
+    border-bottom: solid 1px transparent;
+}
+
+#headnav li.active {
+    border-top: solid 1px rgb(61, 174, 233);
+    background:rgb(35, 38, 39);
+    border-right:solid 1px rgb(34, 37, 41);
+    border-bottom: solid 1px transparent;
+    height:100%;
+}
+
+#headnav li.inactive {
+    border-top:solid 1px rgb(35, 38, 39);
+    border-bottom: solid 1px transparent;    
+}
+
+#headnav li.active:hover {
+    border-bottom:none;
+}
+
+#headnav a:link {
+    color:rgb(238, 238, 238);
+    text-decoration: none;
+}
+
+#headnav a:visited {
+    color:rgb(238, 238, 238);
+    text-decoration: none;
+}
+
+body {
+    color: rgb(238, 238, 238);
+    background: rgb(35, 38, 39);
+    margin:0;
+    padding:0;
+    font-size:min(1.0em);
+    width:100%;
+}
+
+a {
+    text-decoration: none;
+    color: rgb(58,212, 58);
+    font-size:min(1.5em);
+}
+
+#footer a.footer {
+    margin:0 10px;
+}
+
+.blog_adminmenu {
+    background: rgb(49, 54, 59);
+    margin:20px 0px;
+}
+
+.blog_entry {
+    background: rgb(49, 54, 59);
+    margin:20px 0px;
+}
+
+.title {
+    display:block; padding: 10px 0px;
+}
+
+.entry_text {
+    padding: 0 10px 0 0
+}
+
+.author {
+    display:block;
+    padding: 10px 0px;
+}
+
+#idxtags {
+    text-align:center;
+    background: rgb(49, 54, 59);
+    width:100%;
+}
+
+#idxtags ul{
+    list-style-type: none;
+    padding: 0 10px;
+    display:inline-block;
+}
+
+#idxtags li{
+    text-align:left;
+    margin: 0.5em 0.5em;
+    font-size:1.5em;
+}
+
+#idxtags a{
+    text-decoration:none;
+    color:rgb(255, 255, 255);
+}
+
+.staticpage {
+    background: rgb(49, 54, 59);
+}
+
+.gameserver {
+    background: rgb(49, 54, 59);
+    margin:20px 0;
+}
+
+.kinfo {
+    background: rgb(49, 54, 59);
+    width:100%;
+}
+
+.projects {
+    background: rgb(49, 54, 59);
+    width:100%;
+    margin:20px 0;
+}
+
+#pager {
+  background: #31363B;
+  text-align: center;
+}
+
+#settings {
+    background: rgb(49, 54, 59);
+    margin:20px 0;
+}
+ 
+#settings table{
+    width: 100%; 
+    background: rgb(49, 54, 59); 
+    margin:0;
+}
+ 
+#setnav {
+    font-size: 1.5em;
+    width:15%;
+    padding:0;
+    margin:0;
+}
+
+#setnav ul{
+   list-style: none;
+   padding: 0;
+   margin: 0;
+}
+
+#setnav li {
+        list-style: none;
+        background: rgb(35, 38, 39);
+        height: 1.5em;
+        border-top: solid rgb(49, 54, 59) 0.5em;
+        border-bottom: solid rgb(49, 54, 59) 0.5em;
+        width: 90%;
+        text-align: center;
+        font-size: 1.0em;
+}
+
+.upreview{
+    display: flex;
+    width: 128px;
+    height: 128px;
+    float:left;
+}
+
+.upreview img{
+    display: flex;
+    width: 128px;
+    max-height: 128px;
+}
+
+.upreview video{
+    display: flex;
+    width: 128px;
+    max-height: 128px;
+}
+
+#viewmedia {
+    display: inline-block;
+    margin: 2em 0;
+}
+
