@@ -1,4 +1,4 @@
-INSTALL(DIRECTORIES
+INSTALL(DIRECTORY
         template
     DESTINATION
         share/blogi
