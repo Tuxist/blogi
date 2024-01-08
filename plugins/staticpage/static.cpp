@@ -45,10 +45,11 @@ void blogi::StaticPage::initPlugin(){
     blogi::SQL sql;
     blogi::DBResult res;
     sql << "CREATE TABLE IF NOT EXISTS static_content ("
-        << "id serial NOT NULL PRIMARY KEY,"
+        << "id int BY DEFAULT AS IDENTITY PRIMARY KEY,"
         << "text text,"
+        << "meta text,"
         << "url character varying(255) NOT NULL UNIQUE"
-        << ")";
+        << ");";
     Args->database->exec(&sql,res);
 }
 
@@ -149,7 +150,7 @@ void blogi::StaticPage::newPage(libhttppp::HttpRequest* req, libhtmlpp::HtmlStri
         sql << "INSERT INTO static_content (url,meta,text) VALUES('";
         sql.escaped(surl.c_str()) << "','";
         sql.escaped(meta.c_str()) << "','";
-        sql.escaped(text.c_str()) <<"')";
+        sql.escaped(text.c_str()) <<"');";
         Args->database->exec(&sql,res);
         sql.clear();
         setdiv << "<div id=\"staticsettings\"><span>Added succesfully! </span></div>";

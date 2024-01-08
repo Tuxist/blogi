@@ -36,7 +36,7 @@ namespace blogi {
     public:
         SQLite(const char *constr) : Database (constr) {
             int status=sqlite3_open(constr,&_dbconn);
-            if (status){
+            if (status != SQLITE_OK ){
                 libhttppp::HTTPException exp;
                 exp[libhttppp::HTTPException::Critical] << sqlite3_errmsg(_dbconn);
                 sqlite3_close(_dbconn);
@@ -49,16 +49,15 @@ namespace blogi {
         }
 
         int exec(SQL *sql,DBResult &res){
-            const char *zErrMsg = 0;
-
             sqlite3_stmt *prep;
 
-            int pstate=sqlite3_prepare(_dbconn,sql->c_str(),sql->length(),&prep,&zErrMsg);
+            int pstate=sqlite3_prepare_v3(_dbconn,sql->c_str(),sql->length(),0,&prep,nullptr);
 
 
-            if(pstate) {
+            if(pstate != SQLITE_OK) {
                  libhttppp::HTTPException exp;
                  exp[libhttppp::HTTPException::Critical] << sqlite3_errmsg(_dbconn);
+                 sqlite3_finalize(prep);
                  throw exp;
             }
 
@@ -68,8 +67,9 @@ namespace blogi {
                 delete res.firstRow;
             }
 
-            if(pcode){
-                 if(pcode==SQLITE_DONE){
+            if(pcode != SQLITE_OK){
+                if(pcode==SQLITE_DONE){
+                    sqlite3_finalize(prep);
                     return 0;
                 }
                 libhttppp::HTTPException exp;
