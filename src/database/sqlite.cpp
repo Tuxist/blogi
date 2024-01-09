@@ -71,11 +71,10 @@ namespace blogi {
             res.firstRow=nullptr;
             DBResult::Data *lastdat;
 
-            const char *sqlptr=nullptr;
             const char *cssql=ssql;
 
             do{
-
+                const char *sqlptr;
                 int pstate=sqlite3_prepare_v3(_dbconn,cssql,sql->length(),0,&prep,&sqlptr);
 
                 cssql=sqlptr;
