@@ -124,7 +124,7 @@ namespace blogi {
                     sqlite3_finalize(prep);
                     prep=next;
                 }while(prep);
-            }while(sqlptr < ssql+sql->length());
+            }while(sqlptr != ssql+sql->length());
             sqllock.store(false);
             delete[] ssql;
             return rcount;
