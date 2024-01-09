@@ -88,7 +88,7 @@ namespace blogi {
                 if(!prep)
                     continue;
 
-		int pcode;
+                int pcode;
 
                 while( ( pcode = sqlite3_step(prep) ) !=SQLITE_DONE ) {
 
@@ -112,7 +112,7 @@ namespace blogi {
                             }
                         }
                         ++rcount;
-		    }
+                    }
           
                 } 
                 sqlite3_finalize(prep);
