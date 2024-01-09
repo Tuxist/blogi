@@ -101,28 +101,29 @@ namespace blogi {
                     if(pcode==SQLITE_BUSY){
                         continue;
                     }
+                    for(int i=0; i<sqlite3_column_count(prep); ++i){
+                        res.columns=sqlite3_data_count(prep);
 
-                    res.columns=sqlite3_data_count(prep);
+                        int ii=0;
 
-                    int i=0;
-
-                    for(i=0; i < res.columns; ++i){
-                        if(!res.firstRow){
-                            res.firstRow = new DBResult::Data(rcount,i,(const char*)sqlite3_column_text(prep,i),sqlite3_column_bytes(prep,i));
-                            lastdat=res.firstRow;
-                        }else{
-                            lastdat->nextData=new DBResult::Data(rcount,i,(const char*)sqlite3_column_text(prep,i),sqlite3_column_bytes(prep,i));
-                            lastdat=lastdat->nextData;
+                        for(ii=0; ii < res.columns; ++ii){
+                            if(!res.firstRow){
+                                res.firstRow = new DBResult::Data(rcount,i,(const char*)sqlite3_column_text(prep,ii),sqlite3_column_bytes(prep,ii));
+                                lastdat=res.firstRow;
+                            }else{
+                                lastdat->nextData=new DBResult::Data(rcount,i,(const char*)sqlite3_column_text(prep,ii),sqlite3_column_bytes(prep,ii));
+                                lastdat=lastdat->nextData;
+                            }
                         }
+
+                        if(i>0)
+                            ++rcount;
+
+                        sqlite3_stmt *next;
+                        next=sqlite3_next_stmt(_dbconn, prep);
+                        sqlite3_finalize(prep);
+                        prep=next;
                     }
-
-                    if(i>0)
-                        ++rcount;
-
-                    sqlite3_stmt *next;
-                    next=sqlite3_next_stmt(_dbconn, prep);
-                    sqlite3_finalize(prep);
-                    prep=next;
                 }while(prep);
             };
             sqllock.store(false);
