@@ -81,11 +81,7 @@ namespace blogi {
 
                 if(pstate == SQLITE_ERROR) {
                     libhttppp::HTTPException exp;
-                    exp[libhttppp::HTTPException::Critical] << sqlite3_errmsg(_dbconn);
-                    sqlite3_finalize(prep);
-                    delete[] ssql;
-                    sqllock.store(false);
-                    throw exp;
+                    exp[libhttppp::HTTPException::Note] << sqlite3_errmsg(_dbconn);
                 }
 
                 if(!prep)
