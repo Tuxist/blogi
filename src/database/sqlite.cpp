@@ -73,7 +73,7 @@ namespace blogi {
 
             const char *sqlptr=ssql;
 
-            while(sqlptr < ssql+sql->length()){
+            do{
 
                 int pstate=sqlite3_prepare_v3(_dbconn,sqlptr,sql->length(),0,&prep,&sqlptr);
 
@@ -124,7 +124,7 @@ namespace blogi {
                     sqlite3_finalize(prep);
                     prep=next;
                 }while(prep);
-            };
+            }while(sqlptr < ssql+sql->length());
             sqllock.store(false);
             delete[] ssql;
             return rcount;
