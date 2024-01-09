@@ -116,7 +116,8 @@ namespace blogi {
                         }
                     }
 
-                    ++rcount;
+                    if(res.columns>0)
+                        ++rcount;
 
                     sqlite3_stmt *next;
                     next=sqlite3_next_stmt(_dbconn, prep);
