@@ -63,7 +63,7 @@ namespace blogi {
             ssql=new char[sql->length()];
             memcpy(ssql,sql->c_str(),sql->length());
             sqlite3_stmt *prep;
-            int rcount = 0;
+            int rcount = -1;
 
             if(res.firstRow){
                 delete res.firstRow;
@@ -105,7 +105,7 @@ namespace blogi {
 
                     int i;
 
-                    for(i=0; i < sqlite3_column_count(prep); ++i){
+                    for(i=0; i < sqlite3_data_count(prep); ++i){
                         if(!res.firstRow){
                             res.firstRow = new DBResult::Data(rcount,i,(const char*)sqlite3_column_text(prep,i),sqlite3_column_bytes(prep,i));
                             lastdat=res.firstRow;
@@ -123,7 +123,7 @@ namespace blogi {
                     sqlite3_finalize(prep);
                     prep=next;
                 }while(prep);
-            }while(cssql<ssql+sql->length());
+            }while(cssql);
             sqllock.store(false);
             delete[] ssql;
             return rcount;
