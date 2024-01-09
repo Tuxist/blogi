@@ -75,13 +75,17 @@ namespace blogi {
 
             do{
                 const char *sqlptr=nullptr;
-                int pstate=sqlite3_prepare_v3(_dbconn,cssql,sql->length(),-1,&prep,&sqlptr);
+                int pstate=sqlite3_prepare_v3(_dbconn,cssql,sql->length(),0,&prep,&sqlptr);
 
                 cssql=sqlptr;
 
                 if(pstate == SQLITE_ERROR) {
                     libhttppp::HTTPException exp;
-                    exp[libhttppp::HTTPException::Note] << sqlite3_errmsg(_dbconn);
+                    exp[libhttppp::HTTPException::Critical] << sqlite3_errmsg(_dbconn);
+                    sqlite3_finalize(prep);
+                    delete[] ssql;
+                    sqllock.store(false);
+                    throw exp;
                 }
 
                 if(!prep)
