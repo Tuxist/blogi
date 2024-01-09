@@ -82,6 +82,7 @@ namespace blogi {
 
                 if(pstate == SQLITE_ERROR) {
                     std::cerr << sqlite3_errmsg(_dbconn) << std::endl;
+                    continue;
                 }
 
                 if(!prep)
