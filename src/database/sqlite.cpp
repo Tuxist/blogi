@@ -71,7 +71,8 @@ namespace blogi {
             res.firstRow=nullptr;
             DBResult::Data *lastdat;
 
-            const char *sqlptr,*cssql=ssql;
+            const char *sqlptr=nullptr;
+            const char *cssql=ssql;
 
             do{
 
