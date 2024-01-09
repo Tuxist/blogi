@@ -71,11 +71,10 @@ namespace blogi {
             res.firstRow=nullptr;
             DBResult::Data *lastdat;
 
-            const char *cssql=ssql;
             const char *sqlptr;
 
             do{
-
+                const char *cssql=nullptr;
                 int pstate=sqlite3_prepare_v3(_dbconn,cssql,sql->length(),0,&prep,&sqlptr);
 
                 cssql=sqlptr;
@@ -90,7 +89,7 @@ namespace blogi {
                 }
 
                 do {
-
+STEP_AGAIN:
                     int pcode = sqlite3_step(prep);
 
                     if(pcode==SQLITE_ERROR){
@@ -102,7 +101,7 @@ namespace blogi {
                     }
 
                     if(pcode==SQLITE_BUSY){
-                        continue;
+                        goto STEP_AGAIN;
                     }
 
                     res.columns=sqlite3_data_count(prep);
@@ -127,7 +126,7 @@ namespace blogi {
                     sqlite3_finalize(prep);
                     prep=next;
                 }while(prep);
-            }while(cssql!=sqlptr);
+            }while(*sqlptr);
             sqllock.store(false);
             delete[] ssql;
             return rcount;
