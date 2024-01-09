@@ -72,9 +72,10 @@ namespace blogi {
             DBResult::Data *lastdat;
 
             const char *cssql=ssql;
+            const char *sqlptr;
 
             do{
-                const char *sqlptr;
+
                 int pstate=sqlite3_prepare_v3(_dbconn,cssql,sql->length(),0,&prep,&sqlptr);
 
                 cssql=sqlptr;
@@ -126,7 +127,7 @@ namespace blogi {
                     sqlite3_finalize(prep);
                     prep=next;
                 }while(prep);
-            }while(cssql);
+            }while(cssql!=sqlptr);
             sqllock.store(false);
             delete[] ssql;
             return rcount;
