@@ -106,7 +106,7 @@ namespace blogi {
                         continue;
                     }
 
-                    res.columns=sqlite3_data_count(prep);
+                    res.columns=sqlite3_column_count(prep);
 
                     int i;
 
