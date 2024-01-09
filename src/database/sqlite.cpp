@@ -63,7 +63,7 @@ namespace blogi {
             ssql=new char[sql->length()];
             memcpy(ssql,sql->c_str(),sql->length());
             sqlite3_stmt *prep;
-            int rcount = -1;
+            int rcount = 0;
 
             if(res.firstRow){
                 delete res.firstRow;
