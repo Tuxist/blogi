@@ -82,7 +82,6 @@ namespace blogi {
             Data       *nextData;
             friend class DBResult;
         };
-        int            columns;
         Data          *firstRow;
         friend Database;
         friend DBResult2;

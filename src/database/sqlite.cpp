@@ -106,11 +106,9 @@ namespace blogi {
                         continue;
                     }
 
-                    res.columns=sqlite3_column_count(prep);
-
                     int i;
 
-                    for(i=0; i < res.columns; ++i){
+                    for(i=0; i < sqlite3_column_count(prep); ++i){
                         if(!res.firstRow){
                             res.firstRow = new DBResult::Data(rcount,i,(const char*)sqlite3_column_text(prep,i),sqlite3_column_bytes(prep,i));
                             lastdat=res.firstRow;
@@ -120,7 +118,7 @@ namespace blogi {
                         }
                     }
 
-                    if(res.columns>0)
+                    if(i>0)
                         ++rcount;
 
                     sqlite3_stmt *next;

@@ -66,12 +66,10 @@ namespace blogi {
             res.firstRow=nullptr;
             DBResult::Data *lastdat;
 
-            res.columns=PQnfields(pres);
-
             int rcount=PQntuples(pres);
 
             for(int i = 0; i < rcount; ++i ){
-                for(int ii=0; ii < res.columns; ++ii){
+                for(int ii=0; ii < PQnfields(pres); ++ii){
                     if(!res.firstRow){
                        res.firstRow = new DBResult::Data(i,ii,PQgetvalue(pres,i,ii),PQgetlength(pres,i,ii));
                        lastdat=res.firstRow;

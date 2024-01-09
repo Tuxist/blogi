@@ -93,7 +93,6 @@ size_t blogi::SQL::length(){
 
 blogi::DBResult::DBResult(){
     firstRow=nullptr;
-    columns=0;
 }
 
 blogi::DBResult::~DBResult(){
