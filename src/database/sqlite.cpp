@@ -88,7 +88,7 @@ namespace blogi {
                     throw exp;
                 }
 
-                if(!cssql)
+                if(!prep)
                     continue;
 
                 do {
