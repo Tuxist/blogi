@@ -71,11 +71,13 @@ namespace blogi {
             res.firstRow=nullptr;
             DBResult::Data *lastdat;
 
-            const char *sqlptr=ssql;
+            const char *sqlptr,*cssql=ssql;
 
             do{
 
-                int pstate=sqlite3_prepare_v3(_dbconn,sqlptr,sql->length(),0,&prep,&sqlptr);
+                int pstate=sqlite3_prepare_v3(_dbconn,cssql,sql->length(),0,&prep,&sqlptr);
+
+                cssql=sqlptr;
 
                 if(pstate == SQLITE_ERROR) {
                     libhttppp::HTTPException exp;
@@ -124,7 +126,7 @@ namespace blogi {
                     sqlite3_finalize(prep);
                     prep=next;
                 }while(prep);
-            }while(sqlptr);
+            }while(cssql);
             sqllock.store(false);
             delete[] ssql;
             return rcount;
