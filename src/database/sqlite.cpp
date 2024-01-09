@@ -80,12 +80,7 @@ namespace blogi {
                 cssql=sqlptr;
 
                 if(pstate == SQLITE_ERROR) {
-                    libhttppp::HTTPException exp;
-                    exp[libhttppp::HTTPException::Critical] << sqlite3_errmsg(_dbconn);
-                    sqlite3_finalize(prep);
-                    delete[] ssql;
-                    sqllock.store(false);
-                    throw exp;
+                    std::cerr << sqlite3_errmsg(_dbconn) << std::endl;
                 }
 
                 if(!prep)
