@@ -73,7 +73,7 @@ namespace blogi {
 
             const char *sqlptr=ssql;
 
-            while(sqlptr != ssql+sql->length()){
+            while(sqlptr < ssql+sql->length()){
 
                 int pstate=sqlite3_prepare_v3(_dbconn,sqlptr,sql->length(),0,&prep,&sqlptr);
 
