@@ -88,10 +88,11 @@ namespace blogi {
                 if(!prep)
                     continue;
 
-                do {
-                    int pcode = sqlite3_step(prep);
+		int pcode;
 
-                    if(pcode==SQLITE_ERROR){
+                while( ( pcode = sqlite3_step(prep) ) !=SQLITE_DONE ) {
+
+                   if(pcode==SQLITE_ERROR){
                         libhttppp::HTTPException exp;
                         exp[libhttppp::HTTPException::Critical] << sqlite3_errmsg(_dbconn);
                         delete[] ssql;
@@ -99,31 +100,24 @@ namespace blogi {
                         throw exp;
                     }
 
-                    if(pcode==SQLITE_BUSY){
-                        continue;
-                    }
-
-                    int i;
-
-                    for(i=0; i < sqlite3_data_count(prep); ++i){
-                        if(!res.firstRow){
-                            res.firstRow = new DBResult::Data(rcount,i,(const char*)sqlite3_column_text(prep,i),sqlite3_column_bytes(prep,i));
-                            lastdat=res.firstRow;
-                        }else{
-                            lastdat->nextData=new DBResult::Data(rcount,i,(const char*)sqlite3_column_text(prep,i),sqlite3_column_bytes(prep,i));
-                            lastdat=lastdat->nextData;
+                    if(pcode==SQLITE_ROW){
+                         int i;
+                         for(i=0; i < sqlite3_column_count(prep); ++i){
+                            if(!res.firstRow){
+                                res.firstRow = new DBResult::Data(rcount,i,(const char*)sqlite3_column_text(prep,i),sqlite3_column_bytes(prep,i));
+                                lastdat=res.firstRow;
+                            }else{
+                                lastdat->nextData=new DBResult::Data(rcount,i,(const char*)sqlite3_column_text(prep,i),sqlite3_column_bytes(prep,i));
+                                lastdat=lastdat->nextData;
+                            }
                         }
-                    }
-
-                    if(i>0)
                         ++rcount;
+		    }
+          
+                } 
+                sqlite3_finalize(prep);
+            }while(cssql != ssql+sql->length());
 
-                    sqlite3_stmt *next;
-                    next=sqlite3_next_stmt(_dbconn, prep);
-                    sqlite3_finalize(prep);
-                    prep=next;
-                }while(prep);
-            }while(cssql < ssql+sql->length());
             sqllock.store(false);
             delete[] ssql;
             return rcount;
