@@ -263,88 +263,89 @@ void blogi::Blogi::RequestEvent(netplus::con *curcon){
 
         std::cout << std::endl;
 
-        /*blogi internal pages and redirections*/
-        if(strcmp(req.getRequestURL(),"/")==0 || strcmp(req.getRequestURL(),PlgArgs->config->getprefix())==0){
-            libhttppp::HttpResponse curres;
-            curres.setState(HTTP307);
-            curres.setVersion(HTTPVERSION(1.1));
-            *curres.setData("Location") << PlgArgs->config->buildurl("content/tag",url,512);
-            curres.setContentType("text/html");
-            curres.send(curcon, nullptr, 0);
-            return;
-        }else if(strncmp(req.getRequestURL(),PlgArgs->config->buildurl("logout",url,512),strlen(PlgArgs->config->buildurl("logout",url,512)))==0){
-            logoutPage(curcon,&req);
-            return;
-        }else if(strncmp(req.getRequestURL(),PlgArgs->config->buildurl("login",url,512),strlen(PlgArgs->config->buildurl("login",url,512)))==0){
-            loginPage(curcon,&req);
-            return;
-        }else if(strncmp(req.getRequestURL(),PlgArgs->config->buildurl("settings",url,512),strlen(PlgArgs->config->buildurl("settings",url,512)))==0){
-            settingsPage(curcon,&req);
-            return;
-        }else if(strncmp(req.getRequestURL(),PlgArgs->config->buildurl("editor",url,512),strlen(PlgArgs->config->buildurl("editor",url,512)))==0){
-            PlgArgs->edit->Controller(curcon,&req);
-            return;
-        }else if (strstr(req.getRequestURL(),"robots.txt")){
-               const char *robot = "user-agent: *\r\ndisallow: /blog/settings/";
-               libhttppp::HttpResponse resp;
-               resp.setVersion(HTTPVERSION(1.1));
-               resp.setState(HTTP200);
-               resp.setContentType("text/plain");
-               resp.send(curcon,robot,strlen(robot));
-               return;
-        }
-
-        libhtmlpp::HtmlElement index;
-        if(req.isMobile())
-            index=&MIndex;
-        else
-            index=&Index;
-
-        if(!PlgArgs->theme->Controller(curcon,&req)){
-
-            for(blogi::Plugin::PluginData *curplg=BlogiPlg->getFirstPlugin(); curplg; curplg=curplg->getNextPlg()){
-                curplg->getInstace()->Rendering(&req,index);
+RETRY_REQUEST:
+        try{
+            /*blogi internal pages and redirections*/
+            if(strcmp(req.getRequestURL(),"/")==0 || strcmp(req.getRequestURL(),PlgArgs->config->getprefix())==0){
+                libhttppp::HttpResponse curres;
+                curres.setState(HTTP307);
+                curres.setVersion(HTTPVERSION(1.1));
+                *curres.setData("Location") << PlgArgs->config->buildurl("content/tag",url,512);
+                curres.setContentType("text/html");
+                curres.send(curcon, nullptr, 0);
+                return;
+            }else if(strncmp(req.getRequestURL(),PlgArgs->config->buildurl("logout",url,512),strlen(PlgArgs->config->buildurl("logout",url,512)))==0){
+                logoutPage(curcon,&req);
+                return;
+            }else if(strncmp(req.getRequestURL(),PlgArgs->config->buildurl("login",url,512),strlen(PlgArgs->config->buildurl("login",url,512)))==0){
+                loginPage(curcon,&req);
+                return;
+            }else if(strncmp(req.getRequestURL(),PlgArgs->config->buildurl("settings",url,512),strlen(PlgArgs->config->buildurl("settings",url,512)))==0){
+                settingsPage(curcon,&req);
+                return;
+            }else if(strncmp(req.getRequestURL(),PlgArgs->config->buildurl("editor",url,512),strlen(PlgArgs->config->buildurl("editor",url,512)))==0){
+                PlgArgs->edit->Controller(curcon,&req);
+                return;
+            }else if (strstr(req.getRequestURL(),"robots.txt")){
+                const char *robot = "user-agent: *\r\ndisallow: /blog/settings/";
+                libhttppp::HttpResponse resp;
+                resp.setVersion(HTTPVERSION(1.1));
+                resp.setState(HTTP200);
+                resp.setContentType("text/plain");
+                resp.send(curcon,robot,strlen(robot));
+                return;
             }
 
-            for(blogi::Plugin::PluginData *curplg=BlogiPlg->getFirstPlugin(); curplg; curplg=curplg->getNextPlg()){
-                PluginApi *api=curplg->getInstace();
-                std::string url=PlgArgs->config->getprefix();
-                url+="/";
-                url+=api->getName();
-                if(strncmp(req.getRequestURL(),url.c_str(),url.length())==0){
-                    if(api->Controller(curcon,&req,index))
-                        return;
+            libhtmlpp::HtmlElement index;
+            if(req.isMobile())
+                index=&MIndex;
+            else
+                index=&Index;
+
+            if(!PlgArgs->theme->Controller(curcon,&req)){
+
+                for(blogi::Plugin::PluginData *curplg=BlogiPlg->getFirstPlugin(); curplg; curplg=curplg->getNextPlg()){
+                    curplg->getInstace()->Rendering(&req,index);
+                }
+
+                for(blogi::Plugin::PluginData *curplg=BlogiPlg->getFirstPlugin(); curplg; curplg=curplg->getNextPlg()){
+                    PluginApi *api=curplg->getInstace();
+                    std::string url=PlgArgs->config->getprefix();
+                    url+="/";
+                    url+=api->getName();
+                    if(strncmp(req.getRequestURL(),url.c_str(),url.length())==0){
+                        if(api->Controller(curcon,&req,index))
+                            return;
+                    }
+                }
+
+
+                std::string output;
+                libhtmlpp::HtmlString err;
+                err << "<!DOCTYPE html><html><body style=\"color:rgb(238, 238, 238); background:rgb(35, 38, 39);\"><span>"
+                << "Seite oder Inhalt nicht gefudnen"
+                << "</span><br/><a style=\"text-decoration: none; color: rgb(58,212, 58);\" href=\""
+                <<  PlgArgs->config->getstartpage()
+                << "\" >Zur&uuml;ck zur Startseite</a></body></html>";
+                libhtmlpp::print(err.parse(),nullptr,output);
+                libhttppp::HttpResponse resp;
+                resp.setVersion(HTTPVERSION(1.1));
+                resp.setState(HTTP404);
+                resp.setContentType("text/html");
+                resp.send(curcon,output.c_str(),output.length());
+            }
+        }catch(libhttppp::HTTPException &e){
+            if(!PlgArgs->database->isConnected()){
+                PlgArgs->database->reset();
+                if(PlgArgs->database->isConnected()){
+                    goto RETRY_REQUEST;
                 }
             }
-
-
-            std::string output;
-            libhtmlpp::HtmlString err;
-            err << "<!DOCTYPE html><html><body style=\"color:rgb(238, 238, 238); background:rgb(35, 38, 39);\"><span>"
-            << "Seite oder Inhalt nicht gefudnen"
-            << "</span><br/><a style=\"text-decoration: none; color: rgb(58,212, 58);\" href=\""
-            <<  PlgArgs->config->getstartpage()
-            << "\" >Zur&uuml;ck zur Startseite</a></body></html>";
-            libhtmlpp::print(err.parse(),nullptr,output);
-            libhttppp::HttpResponse resp;
-            resp.setVersion(HTTPVERSION(1.1));
-            resp.setState(HTTP404);
-            resp.setContentType("text/html");
-            resp.send(curcon,output.c_str(),output.length());
-
+            throw e;
         }
     }catch(libhttppp::HTTPException &e){
         if(e.getErrorType() == libhttppp::HTTPException::Note || e.getErrorType() == libhttppp::HTTPException::Warning)
             return;
-
-        if(!PlgArgs->database->isConnected()){
-            PlgArgs->database->reset();
-            if(PlgArgs->database->isConnected()){
-                RequestEvent(curcon);
-                return;
-            }
-        }
-
         std::string output;
         libhtmlpp::HtmlString err,hreason;
         libhtmlpp::HtmlEncode(e.what(),hreason);
