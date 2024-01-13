@@ -123,12 +123,24 @@ namespace blogi {
             return rcount;
         };
 
-        const char *getDriverName(){
+        const char *getDriverName() override{
             return "sqlite";
         };
 
-        const char *autoincrement(){
+        const char *autoincrement() override{
             return "AUTOINCREMENT";
+        }
+
+        bool isConnected() override{
+            int current,high;
+            if(sqlite3_db_status(_dbconn,0,&current,&high,0)==SQLITE_OK)
+                return true;
+            return false;
+        }
+
+        void reset() override{
+            int current,high;
+            sqlite3_db_status(_dbconn,0,&current,&high,1);
         }
 
     private:

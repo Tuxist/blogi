@@ -114,5 +114,7 @@ namespace blogi {
         virtual int exec(SQL *sql,DBResult &res)=0;
         virtual const char *getDriverName()=0;
         virtual const char *autoincrement()=0;
+        virtual bool isConnected()=0;
+        virtual void reset() =0;
     };
 };
