@@ -48,11 +48,11 @@ namespace blogi {
             PQfinish(_dbconn);
         }
 
-        int exec(SQL *sql,DBResult &res){
+        int exec(SQL *sql,DBResult &res) override{
             PGresult *pres = PQexec(_dbconn,sql->c_str());
             int pstate=PQresultStatus(pres);
 
-            if( ( pstate!=PGRES_COMMAND_OK && pstate != PGRES_EMPTY_QUERY && pstate != PGRES_TUPLES_OK)) {
+            if(pstate != PGRES_TUPLES_OK) {
                  libhttppp::HTTPException exp;
                  exp[libhttppp::HTTPException::Critical] << PQerrorMessage(_dbconn);
                  PQclear(pres);

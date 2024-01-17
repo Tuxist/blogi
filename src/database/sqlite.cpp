@@ -57,7 +57,7 @@ namespace blogi {
             sqlite3_close(_dbconn);
         }
 
-        int exec(SQL *sql,DBResult &res){
+        int exec(SQL *sql,DBResult &res) override{
             while( sqllock.exchange(true, std::memory_order_acquire) );
             char *ssql;
             ssql=new char[sql->length()];
