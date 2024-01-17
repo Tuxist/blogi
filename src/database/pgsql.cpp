@@ -52,7 +52,7 @@ namespace blogi {
             PGresult *pres = PQexec(_dbconn,sql->c_str());
             int pstate=PQresultStatus(pres);
 
-            if( pstate!=PGRES_COMMAND_OK) {
+            if(pstate==PGRES_FATAL_ERROR || pstate==PGRES_BAD_RESPONSE) {
                  libhttppp::HTTPException exp;
                  exp[libhttppp::HTTPException::Critical] << PQerrorMessage(_dbconn);
                  PQclear(pres);
