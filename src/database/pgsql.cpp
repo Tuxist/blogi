@@ -94,7 +94,7 @@ namespace blogi {
         }
 
         bool isConnected() override{
-            if(PQstatus(_dbconn)==CONNECTION_CONSUME)
+            if(PQstatus(_dbconn)==CONNECTION_OK)
                 return true;
             return false;
         }
