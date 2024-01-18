@@ -62,11 +62,9 @@ REDISSAVE:
 }
 
 void blogi::RedisStore::load(const std::string key,std::string &value) {
-    std::cout << "test" <<  std::endl;
 REDISLOAD:
     redisReply* reply = (redisReply*) redisCommand(_RedisCTX, "GET %s",key.c_str());
-    std::cout << reply->len << std::endl;
-    if(reply->len>0){
+    if(reply){
         value.resize(reply->len);
         value.insert(0,reply->str,reply->len);
     }else{
