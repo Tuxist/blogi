@@ -100,7 +100,7 @@ namespace blogi {
         }
 
         void reset() override{
-            PQresetPoll(_dbconn);
+            PQreset(_dbconn);
         }
 
     private:
