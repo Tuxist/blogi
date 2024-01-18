@@ -81,6 +81,8 @@ REDISLOAD:
 }
 
 bool blogi::RedisStore::reconnect(){
-    return redisReconnect(_RedisCTX);
+    if(redisReconnect(_RedisCTX)!=REDIS_ERR)
+        return true;
+    return false;
 }
 
