@@ -26,7 +26,6 @@
  *******************************************************************************/
 
 #include <uuid/uuid.h>
-#include <hiredis/hiredis.h>
 
 #include <htmlpp/html.h>
 #include <httppp/http.h>
@@ -35,12 +34,19 @@
 
 #include "icon.webp.h"
 #include "types.h"
+#include "backend.h"
 
 namespace blogi {
     class Media : public PluginApi {
     public:
         Media(){
+            _store=nullptr;
         }
+
+        ~Media(){
+            delete _store;
+        }
+
         const char* getName(){
             return "media";
         }
@@ -147,7 +153,7 @@ namespace blogi {
 
         void uploadMedia(int id,libhttppp::HttpForm::MultipartFormData *dat,libhttppp::HttpRequest * req, libhtmlpp::HtmlString & setdiv){
             char url[512];
-            std::string mediafile,mediafilename;
+            std::string mediafilename,mediafile;
 
             if(dat){
                 for (libhttppp::HttpForm::MultipartFormData *curformdat = dat; curformdat; curformdat = curformdat->nextMultipartFormData()) {
@@ -213,12 +219,7 @@ namespace blogi {
                     Args->database->exec(&sql,res);
                     sql.clear();
 
-                    std::string rediscmd;
-
-                    redisCommand(_RedisCTX,"SET %s %b",cfuuid,
-                                 mediafile.c_str(),
-                                 mediafile.length());
-                    redisCommand(_RedisCTX, "save");
+                    _store->save(cfuuid,mediafile);
                 }
 
             }
@@ -473,24 +474,11 @@ namespace blogi {
 
             Args->edit->addIcon(icondata,icondatalen,"selimage","webp","Insert Image from media albums");
 
-            _RedisCTX=redisConnect(Args->config->getRedisHost(),Args->config->getRedisPort());
-
-            if (_RedisCTX->err) {
-                libhttppp::HTTPException exp;
-                exp[libhttppp::HTTPException::Warning] << "media plugin err: " << _RedisCTX->errstr;
-                throw exp;
-            }
-
             if(Args->config->getRedisPassword()){
-                redisReply *reply = (redisReply*)redisCommand(_RedisCTX, "AUTH %s", Args->config->getRedisPassword());
-                if (reply->type == REDIS_REPLY_ERROR) {
-                    libhttppp::HTTPException exp;
-                    exp[libhttppp::HTTPException::Warning] << "media plugin err: " << _RedisCTX->errstr;
-                    throw exp;
-                }
-                freeReplyObject(reply);
+                _store = new RedisStore(Args->config->getRedisHost(),Args->config->getRedisPort(),Args->config->getRedisPassword());
+            }else{
+                _store = new RedisStore(Args->config->getRedisHost(),Args->config->getRedisPort());
             }
-
         }
 
         bool Controller(netplus::con *curcon,libhttppp::HttpRequest *req,libhtmlpp::HtmlElement page){
@@ -522,16 +510,14 @@ namespace blogi {
                 if(n>0){
                     curres.setContentType(res[0][0]);
                     curres.setState(HTTP200);
-                    redisReply* reply = (redisReply*) redisCommand(_RedisCTX, "GET %s",suuid.c_str());
-                    int state = 0;
-                    if(!reply->str){
-                        freeReplyObject(reply);
+                    try{
+                        std::string value;
+                        _store->load(suuid,value);
+                        curres.send(curcon, value.c_str(), value.length());
+                    }catch(...){
                         curres.setState(HTTP404);
                         curres.send(curcon,nullptr,0);
-                        return true;
                     }
-                    curres.send(curcon, reply->str, reply->len);
-                    freeReplyObject(reply);
                 }else{
                     curres.setState(HTTP404);
                     curres.send(curcon,nullptr,0);
@@ -541,7 +527,7 @@ namespace blogi {
             return false;
         }
     private:
-        redisContext *_RedisCTX;
+        Store *_store;
     };
 };
 

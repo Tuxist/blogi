@@ -1,6 +1,6 @@
 find_package(Hiredis REQUIRED)
 
-add_library(media SHARED media.cpp)
+add_library(media SHARED media.cpp redis.cpp)
 
 target_include_directories(media PUBLIC
     ${Hiredis_INCLUDE_DIRS}
