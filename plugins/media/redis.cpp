@@ -25,6 +25,8 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *******************************************************************************/
 
+#include <iostream>
+
 #include <httppp/exception.h>
 
 #include "backend.h"
@@ -59,13 +61,14 @@ REDISSAVE:
     }
 }
 
-void blogi::RedisStore::load(const std::string key,std::string &value){
+void blogi::RedisStore::load(const std::string key,std::string &value) {
+    std::cout << "test" <<  std::endl;
 REDISLOAD:
     redisReply* reply = (redisReply*) redisCommand(_RedisCTX, "GET %s",key.c_str());
-    if(reply->str){
-        value.clear();
+    std::cout << reply->len << std::endl;
+    if(reply->len>0){
         value.resize(reply->len);
-        value.append(reply->str,reply->len);
+        value.insert(0,reply->str,reply->len);
     }else{
         if(reconnect())
             goto REDISLOAD;

@@ -35,7 +35,7 @@ namespace blogi {
         Store(){};
         virtual ~Store(){};
         virtual void save(const std::string key,const std::string value)=0;
-        virtual void load(const std::string key,std::string &value)=0;
+        virtual void load(const std::string key,std::string &value) =0;
     };
 
     class RedisStore : public Store {

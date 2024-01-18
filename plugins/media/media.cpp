@@ -513,7 +513,7 @@ namespace blogi {
                     try{
                         std::string value;
                         _store->load(suuid,value);
-                        curres.send(curcon, value.c_str(), value.size());
+                        curres.send(curcon, value.c_str(), value.length());
                     }catch(...){
                         curres.setState(HTTP404);
                         curres.send(curcon,nullptr,0);
