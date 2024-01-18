@@ -46,5 +46,6 @@ namespace blogi {
     private:
         bool reconnect();
         redisContext *_RedisCTX;
+        std::string   _pw;
     };
 };

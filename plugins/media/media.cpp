@@ -508,11 +508,11 @@ namespace blogi {
                 curres.setVersion(HTTPVERSION(1.1));
 
                 if(n>0){
-                    curres.setContentType(res[0][0]);
-                    curres.setState(HTTP200);
                     try{
                         std::string value;
                         _store->load(suuid,value);
+                        curres.setContentType(res[0][0]);
+                        curres.setState(HTTP200);
                         curres.send(curcon, value.c_str(), value.length());
                     }catch(...){
                         curres.setState(HTTP404);
