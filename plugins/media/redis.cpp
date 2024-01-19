@@ -85,7 +85,8 @@ REDISLOAD:
 }
 
 bool blogi::RedisStore::reconnect(){
-    if(redisReconnect(_RedisCTX) && !_RedisCTX->err){
+    int c = redisReconnect(_RedisCTX);
+    if( c != REDIS_ERR ){
         if(!_pw.empty()){
             redisReply *reply = (redisReply*)redisCommand(_RedisCTX, "AUTH %s", _pw.c_str());
             if (reply->type == REDIS_REPLY_ERROR) {
