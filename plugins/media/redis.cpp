@@ -54,9 +54,14 @@ blogi::RedisStore::RedisStore(const char *host,int port,const char *password){
 }
 void blogi::RedisStore::save(const std::string key, const std::string value){
 REDISSAVE:
-    redisCommand(_RedisCTX,"SET %s %b",key.c_str(),value.c_str(),value.length());
-    redisCommand(_RedisCTX, "save");
-    if (_RedisCTX->err) {
+    redisReply* reply = (redisReply*) redisCommand(_RedisCTX,"SET %s %b",key.c_str(),value.c_str(),value.length());
+    if (reply && reply->type!=REDIS_REPLY_ERROR) {
+        if(reconnect())
+            goto REDISSAVE;
+    }
+    freeReplyObject(reply);
+    reply = (redisReply*) redisCommand(_RedisCTX, "save");
+    if (reply && reply->type!=REDIS_REPLY_ERROR) {
         if(reconnect())
             goto REDISSAVE;
     }
@@ -65,7 +70,7 @@ REDISSAVE:
 void blogi::RedisStore::load(const std::string key,std::string &value) {
 REDISLOAD:
     redisReply* reply = (redisReply*) redisCommand(_RedisCTX, "GET %s",key.c_str());
-    if(reply){
+    if(reply && reply->type!=REDIS_REPLY_ERROR){
         value.resize(reply->len);
         value.insert(0,reply->str,reply->len);
     }else{
@@ -87,6 +92,7 @@ bool blogi::RedisStore::reconnect(){
                 freeReplyObject(reply);
                 return false;
             }else{
+                freeReplyObject(reply);
                 return true;
             }
         }
