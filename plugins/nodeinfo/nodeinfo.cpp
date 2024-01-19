@@ -83,7 +83,7 @@ namespace blogi {
             htmltable << libhtmlpp::HtmlTable::Row() << "Release Version :" << usysinfo.release;
             htmltable << libhtmlpp::HtmlTable::Row() << "Hardware        :" << usysinfo.machine;
 
-            std::fstream osr(RELEASEFILE);
+            std::fstream osr(RELEASEFILE,std::ios::in);
             std::string osline;
 
             if(osr.is_open()){
@@ -91,7 +91,10 @@ namespace blogi {
                     std::string name,entry;
                     int deli=osline.find('=');
                     name=osline.substr(0,deli);
-                    entry=osline.substr(deli+1,osline.length()-(deli+1));
+                    size_t sts=osline.find('\"',deli);
+                    size_t ets=osline.find('\"',++sts);
+                    if(sts!=std::string::npos && ets!=std::string::npos)
+                        entry=osline.substr(sts,ets-sts);
                     htmltable << libhtmlpp::HtmlTable::Row() << name.c_str() << entry.c_str();
                 }
             }
