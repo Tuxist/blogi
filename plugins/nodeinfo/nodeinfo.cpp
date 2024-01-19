@@ -25,6 +25,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *******************************************************************************/
 
+#include <fstream>
 #include <cstring>
 #include <string>
 #include <vector>
@@ -35,6 +36,8 @@
 #include "database.h"
 #include "theme.h"
 #include "conf.h"
+
+#define RELEASEFILE "/etc/os-release"
 
 namespace blogi {
     class NodeInfo : public PluginApi {
@@ -79,6 +82,20 @@ namespace blogi {
             htmltable << libhtmlpp::HtmlTable::Row() << "Operating system:" << usysinfo.sysname;
             htmltable << libhtmlpp::HtmlTable::Row() << "Release Version :" << usysinfo.release;
             htmltable << libhtmlpp::HtmlTable::Row() << "Hardware        :" << usysinfo.machine;
+
+            std::fstream osr(RELEASEFILE);
+            std::string osline;
+
+            if(osr.is_open()){
+                while ( getline (osr,osline) ){
+                    std::string name,entry;
+                    int deli=osline.find('=');
+                    name=osline.substr(0,deli);
+                    entry=osline.substr(deli+1,osline.length()-(deli+1));
+                    htmltable << libhtmlpp::HtmlTable::Row() << name.c_str() << entry.c_str();
+                }
+            }
+
 
             long psize;
             if((psize=sysconf(_SC_PAGESIZE))>0){
