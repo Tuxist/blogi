@@ -25,7 +25,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *******************************************************************************/
 
-#include <fstream>
+#include <iostream>
 #include <cstring>
 #include <string>
 #include <vector>
@@ -37,10 +37,16 @@
 #include "theme.h"
 #include "conf.h"
 
+#include <json-c/json.h>
+#include <json-c/json_object.h>
+
 #include <httppp/http.h>
 #include <httppp/exception.h>
 
 #include <netplus/exception.h>
+
+#include <confplus/exception.h>
+
 
 namespace blogi {
     template<typename T = size_t>
@@ -86,14 +92,71 @@ namespace blogi {
         }
 
         void initPlugin(){
-            Config::ConfigData *url=Args->config->getKey("/BLOGI/NGINXFILER/URL");
-            if(Args->config->getValue(url,0)){
-                _Url=Args->config->getValue(url,0);
-            }else{
+            try{
+                _NHost=Args->config->getValue(Args->config->getKey("/BLOGI/NGINXFILER/HOST"),0);
+                _NPort=Args->config->getIntValue(Args->config->getKey("/BLOGI/NGINXFILER/PORT"),0);
+                _NPrefix=Args->config->getValue(Args->config->getKey("/BLOGI/NGINXFILER/PREFIX"),0);
+                _NSSL=Args->config->getIntValue(Args->config->getKey("/BLOGI/NGINXFILER/SSL"),0);
+            }catch(confplus::ConfException &e){
                 libhttppp::HTTPException err;
-                err[libhttppp::HTTPException::Error] << "No Nginx url found in Config Aborting!";
+                err[libhttppp::HTTPException::Error] << "NginxFiler init failed: " << e.what();
                 throw err;
             }
+        }
+
+        void RenderUI(std::string path,struct json_object *jobj,libhtmlpp::HtmlString &out){
+            int fcount = json_object_array_length(jobj);
+            out<<"<div id=\"main\"><ul>";
+            for(int i =0; i<fcount; ++i) {
+                int ntype=-1;
+                std::string name,date;
+                json_object_object_foreach(json_object_array_get_idx(jobj,i), key, val) {
+                    enum json_type type = json_object_get_type(val);
+                    switch (type) {
+                        case json_type_string: {
+                            if(strcmp(key,"type")==0){
+                                if(strcmp(json_object_get_string(val),"file")==0){
+                                    ntype=0;
+                                }else if(strcmp(json_object_get_string(val),"directory")==0){
+                                    ntype=1;
+                                }
+                            }else if(strcmp(key,"name")==0){
+                                name=json_object_get_string(val);
+                            }else if(strcmp(key,"mtime")==0){
+                                date=json_object_get_string(val);
+                            }
+                            break;
+                        }
+                        default: {
+                            break;
+                        }
+                    }
+                }
+                char url[512];
+                if(ntype==0)
+                    out << "<li class=\"file\" ><a href=\"http://" << _NHost << ":" << _NPort << "/"
+                        << _NPrefix << path << name <<"\" >" << name << "</a></li>";
+                else if(ntype==1)
+                    out << "<li class=\"dir\" ><a href=\""<< Args->config->buildurl("nginxfiler",url,512) << "/"
+                        << path << name << "\" >" << name << "</a></li>";
+            }
+            if(path!=_NPrefix){
+                size_t sstart=0;
+
+                while(path[sstart]=='/'){
+                    ++sstart;
+                }
+
+                size_t deli=path.find('/',sstart);
+
+                if(deli!=std::string::npos){
+                    char url[512];
+                    std::string back=path.substr(deli,path.length()-deli);
+                    out << "<li><a href=\"" << Args->config->buildurl("nginxfiler",url,512) << "/"
+                        << "/" << back.c_str() << "\">..</a></li>";
+                }
+            }
+            out<<"</ul><div>";
         }
 
         bool Controller(netplus::con *curcon,libhttppp::HttpRequest *req,libhtmlpp::HtmlElement page){
@@ -101,13 +164,21 @@ namespace blogi {
             if(strncmp(req->getRequestURL(),Args->config->buildurl("nginxfiler",url,512),strlen(Args->config->buildurl("nginxfiler",url,512)))!=0){
                 return false;
             }
-            netplus::tcp *srvsock;
+
+            std::string path;
+
+            if(req->getRequestURL()+strlen(Args->config->buildurl("nginxfiler",url,512)))
+                path=req->getRequestURL()+strlen(Args->config->buildurl("nginxfiler",url,512));
+
+            path+="/";
+
+            std::cerr << path << std::endl;
+
+            netplus::tcp *srvsock=nullptr;
             netplus::socket *cltsock=nullptr;
             try{
-                char host[255];
-                sscanf(_Url.c_str(),"http://%s/*",host);
                 try{
-                    srvsock= new netplus::tcp("10.1.2.207",80,2,0);
+                    srvsock= new netplus::tcp(_NHost.c_str(),_NPort,1,0);
                     cltsock=srvsock->connect();
                 }catch(netplus::NetException &e){
                     libhttppp::HTTPException he;
@@ -115,18 +186,14 @@ namespace blogi {
                     throw he;
                 }
 
+                std::string nurl=_NPrefix+path;
+
                 libhttppp::HttpRequest nreq;
                 nreq.setRequestType(GETREQUEST);
-                size_t udel=_Url.rfind("/");
-                if(udel==std::string::npos){
-                    libhttppp::HTTPException exp;
-                    exp[libhttppp::HTTPException::Error] << "nginx filer Url incoreect !";
-                    throw exp;
-                }
-                nreq.setRequestURL("/files");
+                nreq.setRequestURL(nurl.c_str());
                 nreq.setRequestVersion(HTTPVERSION(1.1));
                 *nreq.setData("connection") << "keep-alive";
-                *nreq.setData("host")  << "tuxist.de";
+                *nreq.setData("host")  << _NHost.c_str() << ":" << _NPort;
                 *nreq.setData("accept") << "text/json";
                 *nreq.setData("user-agent") << "blogi/1.0 (Alpha Version 0.1)";
                 nreq.send(cltsock,srvsock);
@@ -147,6 +214,7 @@ namespace blogi {
                 std::string json;
                 libhttppp::HttpResponse res;
                 size_t len=recv,chunklen=0,hsize=0;
+                bool chunked=false;
 
                 int rlen=0;
 
@@ -154,13 +222,15 @@ namespace blogi {
                 hsize=res.parse(data,len);
                 if(strcmp(res.getTransferEncoding(),"chunked")==0){
                     chunklen=readchunk(data,recv,--hsize);
+                    chunked=true;
                 }else{
                     rlen=res.getContentLength();
                     json.resize(rlen);
                 }
 
+
                 try{
-                    if(chunklen==0){
+                    if(!chunked){
                         do{
                             json.append(data+hsize,recv-hsize);
                             rlen-=recv-hsize;
@@ -172,13 +242,15 @@ namespace blogi {
                     }else{
                         size_t cpos=hsize;
                         do{
-                            json.append(data+cpos,chunklen);
-                            cpos+=chunklen;
-                            if(recv<chunklen){
-                                recv=srvsock->recvData(cltsock,data,16384);
+                            if((cpos+chunklen)<recv){
+                                json.append(data+cpos,chunklen);
+                                break;
+                            }else if(chunklen>recv){
+                                json.append(data+cpos,recv-cpos);
+                                chunklen-=(recv-cpos);
                                 cpos=0;
                             }
-                        }while((chunklen=readchunk(data,recv,cpos))!=0);
+                        }while((chunklen=readchunk(data,recv,cpos))>0);
                     }
                 }catch(netplus::NetException &e){
                     libhttppp::HTTPException he;
@@ -186,23 +258,38 @@ namespace blogi {
                     throw he;
                 }
 
-                delete cltsock;
-                delete srvsock;
+                struct json_object *ndir;
+                ndir = json_tokener_parse(json.c_str());
+
+                if(!ndir){
+                    libhttppp::HTTPException e;
+                    e[libhttppp::HTTPException::Error] << "nginxfiler: counld't read json !";
+                    throw e;
+                }
+
+                libhtmlpp::HtmlString fileHtml;
+
+                RenderUI(path,ndir,fileHtml);
+
+                std::string out,sid;
+                page.getElementbyID("main")->insertChild(fileHtml.parse());
+
+                Args->theme->printSite(out,page,req->getRequestURL(),Args->auth->isLoggedIn(req,sid));
 
                 libhttppp::HttpResponse curres;
                 curres.setVersion(HTTPVERSION(1.1));
-                curres.setContentType("text/json");
+                curres.setContentType("text/html");
                 curres.setState(HTTP200);
-                curres.send(curcon, json.c_str(),json.length());
+                curres.send(curcon, out.c_str(),out.length());
             }catch(libhttppp::HTTPException &e){
-                delete cltsock;
-                delete srvsock;
                 libhttppp::HttpResponse curres;
                 curres.setVersion(HTTPVERSION(1.1));
-                curres.setContentType("text/json");
-                curres.setState(HTTP200);
-                curres.send(curcon, e.what());
+                curres.setContentType("text/html");
+                curres.setState(HTTP500);
+                curres.send(curcon, e.what(),strlen(e.what()));
             }
+            delete cltsock;
+            delete srvsock;
             return true;
         }
     private:
@@ -222,7 +309,10 @@ namespace blogi {
             return Hex2Int(value,nullptr);
         }
 
-        std::string _Url;
+        std::string _NHost;
+        int         _NPort;
+        std::string _NPrefix;
+        bool        _NSSL;
     };
 };
 
