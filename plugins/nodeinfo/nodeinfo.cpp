@@ -57,7 +57,6 @@ namespace blogi {
         }
 
         void initPlugin(){
-
         }
 
         bool Controller(netplus::con *curcon,libhttppp::HttpRequest *req,libhtmlpp::HtmlElement page){

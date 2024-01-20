@@ -55,20 +55,20 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "pgsql.cpp"
 #include "sqlite.cpp"
 
-blogi::Blogi::Blogi(netplus::socket *serversocket) : event(serversocket){
+blogi::Blogi::Blogi(Config *blgcfg,netplus::socket *serversocket) : event(serversocket){
 
     PlgArgs = new PluginArgs;
-    PlgArgs->config=Config::getInstance();
+    PlgArgs->config=blgcfg;
     if(strcmp(PlgArgs->config->getdbdriver(),"pgsql")==0)
         PlgArgs->database= new Postgresql(PlgArgs->config->getdbopts());
     else if(strcmp(PlgArgs->config->getdbdriver(),"sqlite")==0)
         PlgArgs->database= new SQLite(PlgArgs->config->getdbopts());
     PlgArgs->session= new Session();
-    PlgArgs->auth=new Auth(PlgArgs->database,PlgArgs->session);
+    PlgArgs->auth=new Auth(PlgArgs->database,PlgArgs->session,PlgArgs->config);
     PlgArgs->edit=new Editor(PlgArgs->config);
 
     TemplateConfig tplcfg;
-    tplcfg.config=Config::getInstance();
+    tplcfg.config=blgcfg;
     tplcfg.Theme=tplcfg.config->gettemplate();
     tplcfg.TDatabase=PlgArgs->database;
 
@@ -366,13 +366,13 @@ RETRY_REQUEST:
 
 class HttpConD : public libhttppp::HttpD {
 public:
-    HttpConD(const char *httpaddr, int port,int maxconnections,const char *sslcertpath,const char *sslkeypath)
-            : HttpD(httpaddr,port,maxconnections,sslcertpath,sslkeypath){
+    HttpConD(blogi::Config *blgcfg)
+            : HttpD(blgcfg->gethttpaddr(),blgcfg->gethttpport(),blgcfg->gethttpmaxcon(),blgcfg->getsslcertpath(),blgcfg->getsslkeypath()){
         libhttppp::HTTPException httpexception;
         try {
             blogi::Session session;
             try{
-                blogi::Blogi blg(getServerSocket());
+                blogi::Blogi blg(blgcfg,getServerSocket());
                 blg.runEventloop();
             }catch(libhttppp::HTTPException &e){
                 std::cerr << e.what() << std::endl;
@@ -381,7 +381,6 @@ public:
             std::cout << e.what() << std::endl;
         }
     };
-private:
 };
 
 int main(int argc, char** argv){
@@ -404,22 +403,19 @@ int main(int argc, char** argv){
     const char *config = BlogiCmdCtl->getCmdbyKey("config")->getValue();
 
     blogi::Config *cins;
-    cins=blogi::Config::getInstance();
+
 
     if(config)
-        cins->loadconfig(config);
+        cins = new blogi::Config(config);
     else
         return -1;
 
     if(!cins)
         return -1;
 
-    HttpConD(cins->gethttpaddr(),
-             cins->gethttpport(),
-             cins->gethttpmaxcon(),
-             nullptr,
-             nullptr
-            );
+    HttpConD blogiD(cins);
+
+    // delete cins;
 }
 
 

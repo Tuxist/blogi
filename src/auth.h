@@ -29,6 +29,7 @@
 
 #include "database.h"
 #include "session.h"
+#include "conf.h"
 
 #pragma once
 
@@ -43,7 +44,7 @@ namespace blogi {
 
     class Auth{
     public:
-        Auth(blogi::Database *pcon,blogi::Session *session);
+        Auth(blogi::Database *pcon,blogi::Session *session,blogi::Config *cfg);
         ~Auth();
         bool login(const char *username,const char *password,std::string &ssid);
         bool isLoggedIn(libhttppp::HttpRequest *curreq,std::string &sessionid);
@@ -55,6 +56,7 @@ namespace blogi {
 
         blogi::Database *_dbconn;
         blogi::Session  *_session;
+        blogi::Config   *_config;
 #ifdef LDAPSUPPORT
         LDAPControl    *_serverctrls;
         LDAPControl    *_clientctrls;

@@ -29,52 +29,81 @@
 
 #include "conf.h"
 
-blogi::Config *blogi::Config::_Instance=nullptr;
+blogi::Config::Config(const char *path) : confplus::Config(path){
+    if(getKey("/BLOGI/PLUGINDIR")){
+        for(int i =0; i<getElements(getKey("/BLOGI/PLUGINDIR")); ++i){
+             _PlgDir.push_back(getValue(getKey("/BLOGI/PLUGINDIR"),i));
+        }
+    }
 
-blogi::Config::Config(){
-    _PlsConfig=nullptr;
+    if(getKey("/BLOGI/DATABASE/DRIVER"))
+        _DBDriver=getValue(getKey("/BLOGI/DATABASE/DRIVER"),0);
+
+    if(getKey("/BLOGI/DATABASE/CONNECTION"))
+        _DBConnection=getValue(getKey("/BLOGI/DATABASE/CONNECTION"),0);
+
+    if(getKey("/BLOGI/LDAP/DOMAIN"))
+        _LDAPDomain=getValue(getKey("/BLOGI/LDAP/DOMAIN"),0);
+
+    if(getKey("/BLOGI/LDAP/HOST"))
+        _LDAPHost=getValue(getKey("/BLOGI/LDAP/HOST"),0);
+
+    if(getKey("/BLOGI/LDAP/BASEDN"))
+        _LDAPBase=getValue(getKey("/BLOGI/LDAP/BASEDN"),0);
+
+    if(getKey("/BLOGI/LDAP/LOGINFILTER"))
+        _LDAPFilter=getValue(getKey("/BLOGI/LDAP/LOGINFILTER"),0);
+
+    if(getKey("/BLOGI/HTTP/BIND"))
+        _HttpBind=getValue(getKey("/BLOGI/HTTP/BIND"),0);
+
+    if(getKey("/BLOGI/HTTP/PORT"))
+        _HttpPort=getIntValue(getKey("/BLOGI/HTTP/PORT"),0);
+    else
+        _HttpPort=-1;
+
+
+    if(getKey("/BLOGI/HTTP/MAXCON"))
+        _MaxCon=getIntValue(getKey("/BLOGI/HTTP/MAXCON"),0);
+    else
+        _MaxCon=-1;
+
+    try{
+        _RedisHost=getValue(getKey("/BLOGI/REDIS/HOST"),0);
+        _RedisPassword=getValue(getKey("/BLOGI/REDIS/PASSWORD"),0);
+    }catch(...){
+    }
+
+    if(getKey("/BLOGI/REDIS/PORT"))
+        _RedisPort=getIntValue(getKey("/BLOGI/REDIS/PORT"),0);
+    else
+        _RedisPort=-1;
+
+    if(getKey("/BLOGI/HTTP/URL"))
+        _HttpUrl=getValue(getKey("/BLOGI/HTTP/URL"),0);
+
+    if(getKey("/BLOGI/HTTP/PREFIX"))
+        _HttpPrefix=getValue(getKey("/BLOGI/HTTP/PREFIX"),0);
+
+    if(getKey("/BLOGI/TEMPLATE"))
+        _Template=getValue(getKey("/BLOGI/TEMPLATE"),0);
+
+    if(getKey("/BLOGI/STARTPAGE"))
+        _StartPage=getValue(getKey("/BLOGI/STARTPAGE"),0);
+
+    try{
+        if(getKey("/BLOGI/SSLCERTPATH"))
+            _SSLCertpath=getValue(getKey("/BLOGI/SSLCERTPATH"),0);
+
+        if(getKey("/BLOGI/SSLKEYPATH"))
+            _SSLKeypath=getValue(getKey("/BLOGI/SSLKEYPATH"),0);
+    }catch(...){
+    }
 }
 
 blogi::Config::~Config(){
-    delete _PlsConfig;
 }
 
-blogi::Config* blogi::Config::getInstance(){
-    if(_Instance==nullptr)
-        _Instance=new Config;
-    return _Instance;
-}
-
-void blogi::Config::loadconfig(const char* path){
-    if(_PlsConfig)
-        delete _PlsConfig;
-    _PlsConfig=new confplus::Config(path);
-}
-
-
-const char * blogi::Config::getsiteurl(){
-    if(_PlsConfig->getKey("/BLOGI/HTTP/URL"))
-        return _PlsConfig->getValue(_PlsConfig->getKey("/BLOGI/HTTP/URL"),0);
-    return nullptr;
-}
-
-const char * blogi::Config::getprefix(){
-    if(_PlsConfig->getKey("/BLOGI/HTTP/PREFIX"))
-        return _PlsConfig->getValue(_PlsConfig->getKey("/BLOGI/HTTP/PREFIX"),0);
-    return nullptr;
-}
-
-const char * blogi::Config::gettemplate(){
-    if(_PlsConfig->getKey("/BLOGI/TEMPLATE"))
-        return _PlsConfig->getValue(_PlsConfig->getKey("/BLOGI/TEMPLATE"),0);
-    return nullptr;
-}
-
-const char * blogi::Config::getstartpage(){
-    if(_PlsConfig->getKey("/BLOGI/STARTPAGE"))
-        return _PlsConfig->getValue(_PlsConfig->getKey("/BLOGI/STARTPAGE"),0);
-    return nullptr;
-}
 
 const char * blogi::Config::buildurl(const char *url,char *buffer,size_t size){
     if(!getprefix())
@@ -84,89 +113,113 @@ const char * blogi::Config::buildurl(const char *url,char *buffer,size_t size){
 }
 
 const char *blogi::Config::getplgdir(size_t el){
-    if(_PlsConfig->getKey("/BLOGI/PLUGINDIR"))
-        return _PlsConfig->getValue(_PlsConfig->getKey("/BLOGI/PLUGINDIR"),el);
-    return nullptr;
+    return _PlgDir[el].c_str();
 }
 
 size_t blogi::Config::getplgdirs(){
-    if(_PlsConfig->getKey("/BLOGI/PLUGINDIR"))
-        return _PlsConfig->getElements(_PlsConfig->getKey("/BLOGI/PLUGINDIR"));
-    return 0;
+    return _PlgDir.size();
 }
 
 const char * blogi::Config::getdbdriver(){
-    if(_PlsConfig->getKey("/BLOGI/DATABASE/DRIVER"))
-        return _PlsConfig->getValue(_PlsConfig->getKey("/BLOGI/DATABASE/DRIVER"),0);
-    return nullptr;
+    if(_DBDriver.empty())
+        return nullptr;
+    return _DBDriver.c_str();
 }
 
 const char * blogi::Config::getdbopts(){
-    if(_PlsConfig->getKey("/BLOGI/DATABASE/CONNECTION"))
-        return _PlsConfig->getValue(_PlsConfig->getKey("/BLOGI/DATABASE/CONNECTION"),0);
-    return nullptr;
+    if(_DBConnection.empty())
+        return nullptr;
+    return _DBConnection.c_str();
 }
 
 const char * blogi::Config::getlpdomain(){
-    if(_PlsConfig->getKey("/BLOGI/LDAP/DOMAIN"))
-        return _PlsConfig->getValue(_PlsConfig->getKey("/BLOGI/LDAP/DOMAIN"),0);
-    return nullptr;
+    if(_LDAPDomain.empty())
+        return nullptr;
+    return _LDAPDomain.c_str();
 }
 
 const char *blogi::Config::getlphost(){
-    if(_PlsConfig->getKey("/BLOGI/LDAP/HOST"))
-        return _PlsConfig->getValue(_PlsConfig->getKey("/BLOGI/LDAP/HOST"),0);
-    return nullptr;
+    if(_LDAPHost.empty())
+        return nullptr;
+    return _LDAPHost.c_str();
 }
 
 const char * blogi::Config::getlpbasedn(){
-    if(_PlsConfig->getKey("/BLOGI/LDAP/BASEDN"))
-        return _PlsConfig->getValue(_PlsConfig->getKey("/BLOGI/LDAP/BASEDN"),0);
-    return nullptr;
+    if(_LDAPBase.empty())
+        return nullptr;
+    return _LDAPBase.c_str();
 }
 
 const char * blogi::Config::getlpfilter(){
-    if(_PlsConfig->getKey("/BLOGI/LDAP/BASEDN"))
-        return _PlsConfig->getValue(_PlsConfig->getKey("/BLOGI/LDAP/LOGINFILTER"),0);
-    return nullptr;
+    if(_LDAPFilter.empty())
+        return nullptr;
+    return _LDAPFilter.c_str();
 }
 
 const char * blogi::Config::gethttpaddr(){
-    if(_PlsConfig->getKey("/BLOGI/HTTP/BIND"))
-        return _PlsConfig->getValue(_PlsConfig->getKey("/BLOGI/HTTP/BIND"),0);
-    return nullptr;
+    if(_HttpBind.empty())
+        return nullptr;
+    return _HttpBind.c_str();
 }
 
 int blogi::Config::gethttpport(){
-    if(_PlsConfig->getKey("/BLOGI/HTTP/PORT"))
-        return _PlsConfig->getIntValue(_PlsConfig->getKey("/BLOGI/HTTP/PORT"),0);
-    return -1;
+    return _HttpPort;
 }
 
 int blogi::Config::gethttpmaxcon(){
-    if(_PlsConfig->getKey("/BLOGI/HTTP/MAXCON"))
-        return _PlsConfig->getIntValue(_PlsConfig->getKey("/BLOGI/HTTP/MAXCON"),0);
-    return -1;
+    return _MaxCon;
 }
 
 const char * blogi::Config::getRedisHost(){
-    if(_PlsConfig->getKey("/BLOGI/REDIS/HOST"))
-        return _PlsConfig->getValue(_PlsConfig->getKey("/BLOGI/REDIS/HOST"),0);
-    return nullptr;
+    if(_RedisHost.empty())
+        return nullptr;
+    return _RedisHost.c_str();
 }
 
 const char * blogi::Config::getRedisPassword(){
-    try{
-        return _PlsConfig->getValue(_PlsConfig->getKey("/BLOGI/REDIS/PASSWORD"),0);
-    }catch(...){
+    if(_RedisPassword.empty())
         return nullptr;
-    }
+    return _RedisPassword.c_str();
 }
 
 int blogi::Config::getRedisPort(){
-    if(_PlsConfig->getKey("/BLOGI/REDIS/PORT"))
-        return _PlsConfig->getIntValue(_PlsConfig->getKey("/BLOGI/REDIS/PORT"),0);
-    return -1;
+    return _RedisPort;
 }
 
+const char * blogi::Config::getsiteurl(){
+    if(_HttpUrl.empty())
+        return nullptr;
+    return _HttpUrl.c_str();
+}
+
+const char * blogi::Config::getprefix(){
+    if(_HttpPrefix.empty())
+        return nullptr;
+    return _HttpPrefix.c_str();
+}
+
+
+const char * blogi::Config::gettemplate(){
+    if(_Template.empty())
+        return nullptr;
+    return _Template.c_str();
+}
+
+const char * blogi::Config::getstartpage(){
+    if(_StartPage.empty())
+        return nullptr;
+    return _StartPage.c_str();
+}
+
+const char * blogi::Config::getsslcertpath(){
+    if(_SSLCertpath.empty())
+        return nullptr;
+    return _SSLCertpath.c_str();
+}
+
+const char * blogi::Config::getsslkeypath(){
+    if(_SSLKeypath.empty())
+        return nullptr;
+    return _SSLKeypath.c_str();
+}
 

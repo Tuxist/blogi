@@ -25,19 +25,23 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *******************************************************************************/
 
+#include <string>
+#include <vector>
+
 #include <confplus/conf.h>
 
 #pragma once
 
 namespace blogi {
-    class Config {
+    class Config : public confplus::Config {
     public:
-        static Config *getInstance();
-
-        void loadconfig(const char *path);
+        Config(const char *path);
+        ~Config();
 
         const char* getsiteurl();
         const char* getprefix();
+
+        const char* getConfigPath();
 
         const char* gettemplate();
 
@@ -64,14 +68,28 @@ namespace blogi {
         int         getRedisPort();
         const char *getRedisPassword();
 
+        const char *getsslcertpath();
+        const char *getsslkeypath();
     private:
-        Config();
-        ~Config();
-
-        Config(Config &other) = delete;
-        void operator=(const Config &) = delete;
-
-        static Config    *_Instance;
-        confplus::Config *_PlsConfig;
+        std::vector<std::string>  _PlgDir;
+        std::string               _DBDriver;
+        std::string               _DBConnection;
+        std::string               _LDAPDomain;
+        std::string               _LDAPHost;
+        std::string               _LDAPBase;
+        std::string               _LDAPFilter;
+        std::string               _HttpHost;
+        std::string               _HttpBind;
+        int                       _HttpPort;
+        int                       _MaxCon;
+        std::string               _RedisHost;
+        int                       _RedisPort;
+        std::string               _RedisPassword;
+        std::string               _HttpUrl;
+        std::string               _HttpPrefix;
+        std::string               _Template;
+        std::string               _StartPage;
+        std::string               _SSLCertpath;
+        std::string               _SSLKeypath;
     };
 };

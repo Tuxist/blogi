@@ -38,7 +38,7 @@
 #include "conf.h"
 #include "theme.h"
 
-blogi::Auth::Auth(blogi::Database *pcon,blogi::Session *session){
+blogi::Auth::Auth(blogi::Database *pcon,blogi::Session *session,blogi::Config *cfg){
     _dbconn=pcon;
     _session=session;
     blogi::SQL sql;
@@ -87,7 +87,7 @@ bool blogi::Auth::ldapLogin(const char *username,const char *password,std::strin
     LDAPControl* userserverctls = nullptr;
     LDAPControl* userclientctls = nullptr;
 
-    int ulerr = ldap_initialize(&userldap, Config::getInstance()->getlphost());
+    int ulerr = ldap_initialize(&userldap, _config->getlphost());
 
     if (ulerr != LDAP_SUCCESS) {
         excep[libhttppp::HTTPException::Critical] << "User Ldap init failed: "
@@ -124,7 +124,7 @@ bool blogi::Auth::ldapLogin(const char *username,const char *password,std::strin
 
     timeout.tv_sec = 1;
 
-    ulerr = ldap_search_ext_s(userldap, Config::getInstance()->getlpbasedn(), LDAP_SCOPE_SUBTREE, Config::getInstance()->getlpfilter(), attrs, 0, &userserverctls, &userclientctls, &timeout, 0, &answer);
+    ulerr = ldap_search_ext_s(userldap, _config->getlpbasedn(), LDAP_SCOPE_SUBTREE, _config->getlpfilter(), attrs, 0, &userserverctls, &userclientctls, &timeout, 0, &answer);
 
     if (ulerr != LDAP_SUCCESS) {
         excep[libhttppp::HTTPException::Note] << "<span>User can'T find uid !</span>";

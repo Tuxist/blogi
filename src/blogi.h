@@ -35,7 +35,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace blogi {
     class Blogi : public netplus::event  {
     public:
-        Blogi(netplus::socket *serversocket);
+        Blogi(Config *blgcfg,netplus::socket *serversocket);
         ~Blogi();
         void loginPage(netplus::con*curcon,libhttppp::HttpRequest *curreq);
         void logoutPage(netplus::con *curcon,libhttppp::HttpRequest *curreq);
@@ -46,5 +46,6 @@ namespace blogi {
         PluginArgs             *PlgArgs;
         libhtmlpp::HtmlPage     Page,MPage;
         libhtmlpp::HtmlElement  Index,MIndex;
+        blogi::Config          *BlogConfig;
     };
 };
