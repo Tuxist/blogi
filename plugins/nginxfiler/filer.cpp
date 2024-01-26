@@ -26,11 +26,11 @@
  *******************************************************************************/
 
 #include <iostream>
+#include <chrono>
+#include <thread>
 #include <cstring>
 #include <string>
 #include <vector>
-#include <unistd.h>
-#include <sys/utsname.h>
 
 #include "plugin.h"
 #include "database.h"
@@ -137,22 +137,27 @@ namespace blogi {
                     out << "<li class=\"file\" ><a href=\"http://" << _NHost << ":" << _NPort << "/"
                         << _NPrefix << path << name <<"\" >" << name << "</a></li>";
                 else if(ntype==1)
-                    out << "<li class=\"dir\" ><a href=\""<< Args->config->buildurl("nginxfiler",url,512) << "/"
+                    out << "<li class=\"dir\" ><a href=\""<< Args->config->buildurl("nginxfiler",url,512)
                         << path << name << "\" >" << name << "</a></li>";
             }
             if(path!=_NPrefix){
-                size_t sstart=0;
+                size_t nend=path.length();
+                bool nstart=false;
 
-                while(path[sstart]=='/'){
-                    ++sstart;
+                while(nend>0){
+                    --nend;
+                    if(path[nend]!='/' && !nstart){
+                        nstart=true;
+                    }
+                    if(path[nend]=='/' && nstart){
+                        break;
+                    }
                 }
 
-                size_t deli=path.find('/',sstart);
-
-                if(deli!=std::string::npos){
+                if(nend>0){
                     char url[512];
-                    std::string back=path.substr(deli,path.length()-deli);
-                    out << "<li><a href=\"" << Args->config->buildurl("nginxfiler",url,512) << "/"
+                    std::string back=path.substr(0,nend);
+                    out << "<li><a href=\"" << Args->config->buildurl("nginxfiler",url,512)
                         << "/" << back.c_str() << "\">..</a></li>";
                 }
             }
@@ -172,14 +177,14 @@ namespace blogi {
 
             path+="/";
 
-            std::cerr << path << std::endl;
-
             netplus::tcp *srvsock=nullptr;
             netplus::socket *cltsock=nullptr;
             try{
                 try{
                     srvsock= new netplus::tcp(_NHost.c_str(),_NPort,1,0);
+                    srvsock->setnonblocking();
                     cltsock=srvsock->connect();
+                    cltsock->setnonblocking();
                 }catch(netplus::NetException &e){
                     libhttppp::HTTPException he;
                     he[libhttppp::HTTPException::Error] << e.what();
@@ -199,10 +204,21 @@ namespace blogi {
                 nreq.send(cltsock,srvsock);
 
                 char data[16384];
-                size_t recv;
+                int recv,tries=0,chunklen=0;
 
                 try{
-                    recv=srvsock->recvData(cltsock,data,16384);
+                    for(;;){
+                        recv=srvsock->recvData(cltsock,data,16384);
+                        if(recv>0)
+                                break;
+                        if(tries>5){
+                            netplus::NetException e;
+                            e[netplus::NetException::Error] << "nginxfiler: can't reach nginx server !";
+                            throw e;
+                        }
+                        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                        ++tries;
+                    }
                 }catch(netplus::NetException &e){
                     libhttppp::HTTPException he;
                     he[libhttppp::HTTPException::Error] << e.what();
@@ -213,50 +229,103 @@ namespace blogi {
 
                 std::string json;
                 libhttppp::HttpResponse res;
-                size_t len=recv,chunklen=0,hsize=0;
+                size_t len=recv,hsize=0,cpos;
                 bool chunked=false;
 
                 int rlen=0;
 
 
                 hsize=res.parse(data,len);
-                if(strcmp(res.getTransferEncoding(),"chunked")==0){
-                    chunklen=readchunk(data,recv,--hsize);
-                    chunked=true;
-                }else{
+
+                cpos=hsize-1;
+
+                try{
+                    if(strcmp(res.getTransferEncoding(),"chunked")==0){
+                        chunklen=readchunk(data,recv,cpos);
+                        chunked=true;
+                    }else{
+                        throw;
+                    }
+                }catch(...){
                     rlen=res.getContentLength();
                     json.resize(rlen);
                 }
 
+                tries=0;
 
-                try{
-                    if(!chunked){
-                        do{
-                            json.append(data+hsize,recv-hsize);
-                            rlen-=recv-hsize;
-                            if(rlen>0){
-                                recv=srvsock->recvData(cltsock,data,16384);
-                                hsize=0;
-                            }
-                        }while(rlen>0);
+                try {
+                    if(strcmp(res.getTransferEncoding(),"chunked")==0){
+                        chunklen=readchunk(data,recv,hsize);
+                        chunked=true;
                     }else{
-                        size_t cpos=hsize;
-                        do{
-                            if((cpos+chunklen)<recv){
-                                json.append(data+cpos,chunklen);
-                                break;
-                            }else if(chunklen>recv){
-                                json.append(data+cpos,recv-cpos);
-                                chunklen-=(recv-cpos);
-                                cpos=0;
-                            }
-                        }while((chunklen=readchunk(data,recv,cpos))>0);
+                        rlen=res.getContentLength();
+                        json.resize(rlen);
                     }
-                }catch(netplus::NetException &e){
-                    libhttppp::HTTPException he;
-                    he[libhttppp::HTTPException::Error] << e.what();
-                    throw he;
+                }catch(libhttppp::HTTPException &e){
+                    std::cerr << e.what() << std::endl;
+                };
+
+                if(!chunked){
+                    do{
+                        json.append(data+hsize,recv-hsize);
+                        rlen-=recv-hsize;
+                        if(rlen>0){
+                            for(;;){
+                                recv=srvsock->recvData(cltsock,data,16384);
+                                if(recv>0)
+                                    break;
+                                if(tries>5){
+                                    netplus::NetException e;
+                                    e[netplus::NetException::Error] << "nginxfiler: can't reach nginx server !";
+                                    throw e;
+                                }
+                                ++tries;;
+                                std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+                            }
+                            hsize=0;
+                        }
+                    }while(rlen>0);
+                }else{
+READCHUNK:
+                    if(recv >= chunklen){
+                        chunklen-=cpos;
+                        std::cerr << "recv: " << chunklen << std::endl;
+                        json.append(data+cpos,chunklen);
+                        cpos+=(chunklen-1);
+                        recv-=chunklen;
+                    }else{
+                        recv-=cpos;
+                        std::cerr << "chuncklen: " << recv << std::endl;
+                        json.append(data+cpos,recv);
+                        cpos+=(recv-1);
+                        chunklen-=recv;
+                    }
+
+                    std::cerr << "recv: " << recv << std::endl;
+
+                    if(chunklen!=0){
+                        for(;;){
+                            recv=srvsock->recvData(cltsock,data,16384);
+                            if(recv>0)
+                                break;
+                            if(tries>5){
+                                netplus::NetException e;
+                                e[netplus::NetException::Error] << "nginxfiler: can't reach nginx server !";
+                                throw e;
+                            }
+                            ++tries;
+                            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                        }
+                        cpos=0;
+                        goto READCHUNK;
+                    }
+
+                    if((chunklen=readchunk(data,recv,cpos)) > 0)
+                        goto READCHUNK;
                 }
+
+                std::cout << json << std::endl;
 
                 struct json_object *ndir;
                 ndir = json_tokener_parse(json.c_str());

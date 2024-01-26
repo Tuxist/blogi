@@ -49,7 +49,6 @@ include_directories(
 
 target_link_libraries(blogi
     stdc++
-    ssl
     crypto
     blogidev
 )
