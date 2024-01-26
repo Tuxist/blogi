@@ -287,42 +287,36 @@ namespace blogi {
                         }
                     }while(rlen>0);
                 }else{
-READCHUNK:
-                    if(recv >= chunklen){
-                        chunklen-=cpos;
-                        std::cerr << "recv: " << chunklen << std::endl;
-                        json.append(data+cpos,chunklen);
-                        cpos+=(chunklen-1);
-                        recv-=chunklen;
-                    }else{
+                    do{
                         recv-=cpos;
-                        std::cerr << "chuncklen: " << recv << std::endl;
-                        json.append(data+cpos,recv);
-                        cpos+=(recv-1);
-                        chunklen-=recv;
-                    }
+                        chunklen-=cpos;
 
-                    std::cerr << "recv: " << recv << std::endl;
+                        int &culen= ( recv < chunklen ) ? recv : chunklen;
 
-                    if(chunklen!=0){
-                        for(;;){
+                        if(recv<cpos && chunklen>0){
+                            cpos=0;
                             recv=srvsock->recvData(cltsock,data,16384);
-                            if(recv>0)
-                                break;
-                            if(tries>5){
-                                netplus::NetException e;
-                                e[netplus::NetException::Error] << "nginxfiler: can't reach nginx server !";
-                                throw e;
-                            }
-                            ++tries;
-                            std::this_thread::sleep_for(std::chrono::milliseconds(100));
                         }
-                        cpos=0;
-                        goto READCHUNK;
-                    }
 
-                    if((chunklen=readchunk(data,recv,cpos)) > 0)
-                        goto READCHUNK;
+                        if(culen<0 && recv > 0){
+                            culen*=-1;
+                            json.append(data+cpos,culen);
+                            cpos+=culen;
+                            continue;
+                        }else if(culen>0){
+                            json.append(data+cpos,culen);
+                            cpos+=culen;
+                            continue;
+                        }
+
+
+                        chunklen=readchunk(data,recv,cpos);
+
+
+                        std::cout << chunklen << std::endl;
+
+                    }while(chunklen>0);
+
                 }
 
                 std::cout << json << std::endl;
