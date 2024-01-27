@@ -106,7 +106,7 @@ namespace blogi {
 
         void RenderUI(std::string path,struct json_object *jobj,libhtmlpp::HtmlString &out){
             int fcount = json_object_array_length(jobj);
-            out<<"<div id=\"main\"><ul>";
+            out<<"<div id=\"nginxfiler\"><ul>";
             for(int i =0; i<fcount; ++i) {
                 int ntype=-1;
                 std::string name,date;
@@ -161,7 +161,7 @@ namespace blogi {
                         << "/" << back.c_str() << "\">..</a></li>";
                 }
             }
-            out<<"</ul><div>";
+            out<<"</ul></div>";
         }
 
         bool Controller(netplus::con *curcon,libhttppp::HttpRequest *req,libhtmlpp::HtmlElement page){
@@ -287,35 +287,37 @@ namespace blogi {
                         }
                     }while(rlen>0);
                 }else{
+
                     do{
-                        recv-=cpos;
-                        chunklen-=cpos;
 
                         int &culen= ( recv < chunklen ) ? recv : chunklen;
 
-                        if(recv<cpos && chunklen>0){
-                            cpos=0;
-                            recv=srvsock->recvData(cltsock,data,16384);
-                        }
+                        int &maxlen = ( recv > chunklen ) ? recv : chunklen;
 
-                        if(culen<0 && recv > 0){
+                        if( culen<0 ){
+                            if(recv <= 0){
+                                cpos=0;
+                                recv=srvsock->recvData(cltsock,data,16384);
+                                continue;
+                            }
                             culen*=-1;
                             json.append(data+cpos,culen);
                             cpos+=culen;
-                            continue;
                         }else if(culen>0){
                             json.append(data+cpos,culen);
                             cpos+=culen;
-                            continue;
                         }
 
-
-                        chunklen=readchunk(data,recv,cpos);
-
+                        recv-=cpos;
+                        chunklen-=cpos;
 
                         std::cout << chunklen << std::endl;
 
-                    }while(chunklen>0);
+                        if(chunklen==0){
+                            chunklen=readchunk(data,recv,cpos);
+                        }
+
+                    }while(chunklen!=0);
 
                 }
 
@@ -335,7 +337,7 @@ namespace blogi {
                 RenderUI(path,ndir,fileHtml);
 
                 std::string out,sid;
-                page.getElementbyID("main")->insertChild(fileHtml.parse());
+                page.getElementbyID("main")->appendChild(fileHtml.parse());
 
                 Args->theme->printSite(out,page,req->getRequestURL(),Args->auth->isLoggedIn(req,sid));
 

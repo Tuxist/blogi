@@ -11,7 +11,6 @@ find_package(httppp REQUIRED)
 find_package(PostgreSQL REQUIRED)
 find_package(SQLite3 REQUIRED)
 find_package(OpenLDAP)
-find_package(OpenSSL REQUIRED)
 find_package(Hiredis REQUIRED)
 find_package(libsecureid REQUIRED)
 
