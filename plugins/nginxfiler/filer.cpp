@@ -237,7 +237,7 @@ namespace blogi {
 
                 hsize=res.parse(data,len);
 
-                cpos=hsize-1;
+                cpos=hsize;
 
                 try{
                     if(strcmp(res.getTransferEncoding(),"chunked")==0){
@@ -255,7 +255,7 @@ namespace blogi {
 
                 try {
                     if(strcmp(res.getTransferEncoding(),"chunked")==0){
-                        chunklen=readchunk(data,recv,hsize);
+                        chunklen=readchunk(data,recv,cpos);
                         chunked=true;
                     }else{
                         rlen=res.getContentLength();
@@ -267,57 +267,71 @@ namespace blogi {
 
                 if(!chunked){
                     do{
-                        json.append(data+hsize,recv-hsize);
-                        rlen-=recv-hsize;
-                        if(rlen>0){
-                            for(;;){
-                                recv=srvsock->recvData(cltsock,data,16384);
-                                if(recv>0)
-                                    break;
-                                if(tries>5){
-                                    netplus::NetException e;
-                                    e[netplus::NetException::Error] << "nginxfiler: can't reach nginx server !";
-                                    throw e;
-                                }
-                                ++tries;;
-                                std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                        try{
+                            json.append(data+hsize,recv-hsize);
+                            rlen-=recv-hsize;
+                            if(rlen>0){
+                                tries=0;
+                                for(;;){
+                                    recv=srvsock->recvData(cltsock,data,16384);
+                                    if(recv>0)
+                                        break;
+                                    if(tries>5){
+                                        netplus::NetException e;
+                                        e[netplus::NetException::Error] << "nginxfiler: can't reach nginx server !";
+                                        throw e;
+                                    }
+                                    ++tries;;
+                                    std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
+                                }
+                                hsize=0;
                             }
-                            hsize=0;
+                        }catch(netplus::NetException &e){
+                            libhttppp::HTTPException ee;
+                            ee[libhttppp::HTTPException::Error] << e.what();
+                            throw ee;
                         }
                     }while(rlen>0);
                 }else{
+                    for(;;){
+                        if(recv == 0){
+                            try{
+                                tries=0;
+                                for(;;){
+                                    recv=srvsock->recvData(cltsock,data,16384);
+                                    cpos=0;
+                                    if(recv ==0 && tries>5){
+                                        netplus::NetException e;
+                                        e[netplus::NetException::Error] << "nginxfiler: can't reach nginx server !";
+                                        throw e;
+                                    }
+                                    ++tries;
+                                    std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
-                    do{
-
-                        int &culen= ( recv < chunklen ) ? recv : chunklen;
-
-                        int &maxlen = ( recv > chunklen ) ? recv : chunklen;
-
-                        if( culen<0 ){
-                            if(recv <= 0){
-                                cpos=0;
-                                recv=srvsock->recvData(cltsock,data,16384);
-                                continue;
+                                }
+                            }catch(netplus::NetException &e){
+                                libhttppp::HTTPException ee;
+                                ee[libhttppp::HTTPException::Error] << e.what();
+                                throw ee;
                             }
-                            culen*=-1;
-                            json.append(data+cpos,culen);
-                            cpos+=culen;
-                        }else if(culen>0){
-                            json.append(data+cpos,culen);
-                            cpos+=culen;
                         }
 
-                        recv-=cpos;
-                        chunklen-=cpos;
-
-                        std::cout << chunklen << std::endl;
-
-                        if(chunklen==0){
-                            chunklen=readchunk(data,recv,cpos);
+                        if( recv < chunklen ){
+                            json.append(data+cpos,recv);
+                            cpos+=recv-1;
+                            chunklen-=recv;
+                            recv=0;
+                        } else {
+                            json.append(data+cpos,chunklen);
+                            cpos+=chunklen-1;
+                            recv-=chunklen;
+                            chunklen=0;
                         }
 
-                    }while(chunklen!=0);
+                        if( (chunklen=readchunk(data,recv,cpos)) == 0 )
+                           break;
+                    };
 
                 }
 
@@ -360,16 +374,19 @@ namespace blogi {
     private:
         size_t readchunk(const char *data,size_t datasize,size_t &pos){
             size_t start=pos;
-            while( (pos < datasize || pos < 512)&& data[pos++]!='\r');
+            while( (pos < datasize) && data[++pos]!='\r');
             char value[512];
 
             if(pos-start > 512){
-                return 0;
+                libhttppp::HTTPException ee;
+                ee[libhttppp::HTTPException::Error] << "nginxfiler: chunck size: " << pos-start << " to big aborting !";
+                throw ee;
             }
 
             memcpy(value,data+start,pos-start);
+            value[pos-start]='\0';
 
-            ++pos;
+            std::cout << value << std::endl;
 
             return Hex2Int(value,nullptr);
         }
