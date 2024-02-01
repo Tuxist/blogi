@@ -50,7 +50,7 @@ void blogi::Editor::addIcon(const unsigned char* icon, size_t iconsize,const cha
         _lastIcon=_firstIcon;
     }
     _lastIcon->_Icon.resize(iconsize);
-    std::copy(icon,icon+iconsize,_lastIcon->_Icon.begin());
+    std::copy(icon,icon+iconsize,std::inserter<std::string>(_lastIcon->_Icon,_lastIcon->_Icon.begin()));
     _lastIcon->_Name=name;
     _lastIcon->_Type=type;
     _lastIcon->_Description=description;
