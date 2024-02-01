@@ -25,8 +25,6 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *******************************************************************************/
 
-#include <algorithm>
-
 #include "editor.h"
 
 blogi::Editor::Editor(Config *conf)
@@ -50,7 +48,11 @@ void blogi::Editor::addIcon(const unsigned char* icon, size_t iconsize,const cha
         _lastIcon=_firstIcon;
     }
     _lastIcon->_Icon.resize(iconsize);
-    std::copy(icon,icon+iconsize,std::inserter<std::string>(_lastIcon->_Icon,_lastIcon->_Icon.begin()));
+
+    for(int i=0; i<iconsize; ++i){
+        _lastIcon->_Icon.push_back(icon[i]);
+    }
+
     _lastIcon->_Name=name;
     _lastIcon->_Type=type;
     _lastIcon->_Description=description;
