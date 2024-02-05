@@ -35,7 +35,6 @@ install(TARGETS blogidev DESTINATION lib/blogi)
 
 add_executable(blogi
     blogi.cpp
-
 )
 
 include_directories(
