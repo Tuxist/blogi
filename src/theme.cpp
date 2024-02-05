@@ -47,15 +47,15 @@
 
 template<typename T>
 void compress(const std::string in,std::string &out){
-    size_t len=0;
-    unsigned char *buf = new unsigned char[BrotliEncoderMaxCompressedSize(in.length())];
+    size_t len=BrotliEncoderMaxCompressedSize(in.length());
+    unsigned char *buf = new unsigned char[len];
 
     BrotliEncoderCompress(BROTLI_DEFAULT_QUALITY,BROTLI_DEFAULT_WINDOW,BROTLI_MODE_TEXT,
                       in.length(),(const unsigned char*)in.c_str(),&len,buf);
 
     out.resize(len);
 
-    std::copy(buf,buf+len,out.begin());
+    std::copy(buf,buf+len,std::inserter<std::string>(out,out.begin()));
 
     delete[] buf;
 }
@@ -151,10 +151,12 @@ bool blogi::Template::Controller(netplus::con *curcon,libhttppp::HttpRequest *re
                     resp.setContentType("application/octet-stream");
                 }
 
-                if(!curfile->Compressed.empty() && strstr(req->getData(req->getData("accept-encoding")),"br"))
+                if( curfile->Compressed.length() >0 && strstr(req->getData(req->getData("accept-encoding")),"br") ){
+                    *resp.setData("content-encoding") << "br";
                     resp.send(curcon,curfile->Compressed.c_str(),curfile->Compressed.length());
-                else
+                }else{
                     resp.send(curcon,curfile->Content.c_str(),curfile->Content.length());
+                }
                 return true;
             }
         }
