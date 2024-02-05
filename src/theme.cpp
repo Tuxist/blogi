@@ -48,16 +48,18 @@
 template<typename T>
 void compress(const std::string in,std::string &out){
 
-    size_t len[2]={ BrotliEncoderMaxCompressedSize(in.length()),0};
+    size_t len= BrotliEncoderMaxCompressedSize(in.length());
 
-    unsigned char *buf = new unsigned char[len[0]];
+    unsigned char *buf = new unsigned char[len];
 
     BrotliEncoderCompress(BROTLI_DEFAULT_QUALITY,BROTLI_DEFAULT_WINDOW,BROTLI_MODE_TEXT,
-                      in.length(),(const unsigned char*)in.c_str(),len,buf);
+                      in.length(),(const unsigned char*)in.c_str(),&len,buf);
 
-    out.resize(len[1]);
+    out.resize(len);
 
-    std::copy(buf,buf+len[1],std::inserter<std::string>(out,out.begin()));
+    std::cerr << len << std::endl;
+
+    std::copy(buf,buf+len,std::inserter<std::string>(out,out.begin()));
 
     delete[] buf;
 }
