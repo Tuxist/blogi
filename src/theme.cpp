@@ -99,7 +99,7 @@ bool blogi::Template::Controller(netplus::con *curcon,libhttppp::HttpRequest *re
                 libhttppp::HttpResponse resp;
                 resp.setVersion(HTTPVERSION(1.1));
                 resp.setState(HTTP200);
-                *resp.setData("cache-control") << "max-age=3600";
+                *resp.setData("cache-control") << "max-age=31536000";
 
                 std::string type=curfile->first.substr(curfile->first.rfind(".")+1,
                                                        curfile->first.length()-(curfile->first.rfind(".")+1));
