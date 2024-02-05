@@ -26,7 +26,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 *******************************************************************************/
 
 #include <string>
-#include <map>
+#include <vector>
 
 #include <netplus/socket.h>
 #include <netplus/connection.h>
@@ -41,6 +41,21 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #pragma once
 
 namespace blogi {
+    enum TemplateFilesTypes {
+        GENERIC=0,
+        TEXT=3,
+        IMAGE=4,
+        JAVASCRIPT=5
+    };
+
+    struct TemplateFiles{
+        std::string Path;
+        std::string Content;
+        std::string Ending;
+        int         Type;
+        bool        Compress;
+    };
+
     struct TemplateConfig{
         std::string Theme;
         Database   *TDatabase;
@@ -58,7 +73,7 @@ namespace blogi {
 
         void printSite(std::string &output,libhtmlpp::HtmlElement index,const char *crrurl,bool login,const char *meta=nullptr);
     private:
-        TemplateConfig                    _Config;
-        std::map<std::string,std::string> _PublicFiles;
+        TemplateConfig             _Config;
+        std::vector<TemplateFiles> _PublicFiles;
     };
 };

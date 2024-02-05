@@ -70,7 +70,26 @@ blogi::Template::Template(blogi::TemplateConfig& config){
                     fs.read(tmp,BLOCKSIZE);
                     buf.append(tmp,fs.gcount());
                 }
-                _PublicFiles.insert(std::pair<std::string,std::string>(std::string("/theme/public/").append(direntStruct->d_name),buf));
+                TemplateFiles tfile;
+
+                tfile.Path=std::string("/theme/public/").append(direntStruct->d_name);
+                tfile.Content=buf;
+                tfile.Compress=false;
+
+                std::string fname=direntStruct->d_name;
+                tfile.Ending=fname.substr(fname.rfind(".")+1,fname.length()-(fname.rfind(".")+1));
+
+                if(tfile.Ending=="png" || tfile.Ending=="jpg" || tfile.Ending=="webp"){
+                    tfile.Type=TemplateFilesTypes::IMAGE;
+                }else if(tfile.Ending=="css" || tfile.Ending=="html"){
+                    tfile.Type=TemplateFilesTypes::TEXT;
+                }else if(tfile.Ending=="js"){
+                    tfile.Type=TemplateFilesTypes::JAVASCRIPT;
+                }else{
+                    tfile.Type=TemplateFilesTypes::GENERIC;
+                }
+
+                _PublicFiles.push_back(tfile);
 
                 fs.close();
             }
@@ -95,26 +114,24 @@ bool blogi::Template::Controller(netplus::con *curcon,libhttppp::HttpRequest *re
     std::string publicf = req->getRequestURL();
     if(publicf.length() >strlen(_Config.config->getprefix()) && publicf.compare(strlen(_Config.config->getprefix()),13,"/theme/public/",13)==0){
         for(auto curfile=_PublicFiles.begin(); curfile!=_PublicFiles.end(); curfile++){
-            if(publicf.compare(strlen(_Config.config->getprefix()),curfile->first.length(),curfile->first,0,curfile->first.length())==0){
+            if(publicf.compare(strlen(_Config.config->getprefix()),curfile->Path.length(),curfile->Path,0,curfile->Path.length())==0){
                 libhttppp::HttpResponse resp;
                 resp.setVersion(HTTPVERSION(1.1));
                 resp.setState(HTTP200);
                 *resp.setData("cache-control") << "max-age=31536000";
 
-                std::string type=curfile->first.substr(curfile->first.rfind(".")+1,
-                                                       curfile->first.length()-(curfile->first.rfind(".")+1));
 
-                if(type=="png" || type=="jpg" || type=="webp"){
-                    resp.setContentType(std::string("image/").append(type).c_str());
-                }else if(type=="css" || type=="html"){
-                    resp.setContentType(std::string("text/").append(type).c_str());
-                }else if(type=="js"){
+                if(curfile->Type==TemplateFilesTypes::IMAGE){
+                    resp.setContentType(std::string("image/").append(curfile->Ending).c_str());
+                }else if(curfile->Type==TemplateFilesTypes::TEXT){
+                    resp.setContentType(std::string("text/").append(curfile->Ending).c_str());
+                }else if(curfile->Type==TemplateFilesTypes::JAVASCRIPT){
                     resp.setContentType("application/javascript");
-                }else{
+                }else if(curfile->Type==TemplateFilesTypes::GENERIC){
                     resp.setContentType("application/octet-stream");
                 }
 
-                resp.send(curcon,curfile->second.c_str(),curfile->second.length());
+                resp.send(curcon,curfile->Content.c_str(),curfile->Content.length());
                 return true;
             }
         }
