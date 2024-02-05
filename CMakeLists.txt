@@ -13,6 +13,7 @@ find_package(SQLite3 REQUIRED)
 find_package(OpenLDAP)
 find_package(Hiredis REQUIRED)
 find_package(libsecureid REQUIRED)
+find_package(Brotli REQUIRED)
 
 include_directories(
     ${NETPLUS_INCLUDE_DIRS}

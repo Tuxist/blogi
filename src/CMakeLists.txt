@@ -25,6 +25,7 @@ target_link_libraries(blogidev
     ${PostgreSQL_LIBRARIES}
     ${SQLite3_LIBRARIES}
     ${OPENLDAP_LIBRARIES}
+    ${BROTLI_LIBRARIES}
     confplus
 )
 
@@ -40,6 +41,7 @@ add_executable(blogi
 include_directories(
     ${CMAKE_SOURCE_DIR}/data
     ${CMAKE_SOURCE_DIR}/src/database
+    ${BROTLI_INCLUDE_DIRS}
 )
 
 

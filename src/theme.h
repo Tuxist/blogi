@@ -52,8 +52,8 @@ namespace blogi {
         std::string Path;
         std::string Content;
         std::string Ending;
+        std::string Compressed;
         int         Type;
-        bool        Compress;
     };
 
     struct TemplateConfig{

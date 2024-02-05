@@ -25,7 +25,9 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *******************************************************************************/
 
+#include <algorithm>
 #include <iostream>
+#include <cstring>
 #include <fstream>
 #include <compare>
 
@@ -34,12 +36,29 @@
 #include <unistd.h>
 #include <sys/stat.h>
 
+#include <brotli/encode.h>
+
 #include <httppp/exception.h>
 
 #include <htmlpp/exception.h>
 
 #include "theme.h"
 #include "conf.h"
+
+template<typename T>
+void compress(const std::string in,std::string &out){
+    size_t len=0;
+    unsigned char *buf = new unsigned char[BrotliEncoderMaxCompressedSize(in.length())];
+
+    BrotliEncoderCompress(BROTLI_DEFAULT_QUALITY,BROTLI_DEFAULT_WINDOW,BROTLI_MODE_TEXT,
+                      in.length(),(const unsigned char*)in.c_str(),&len,buf);
+
+    out.resize(len);
+
+    std::copy(buf,buf+len,out.begin());
+
+    delete[] buf;
+}
 
 blogi::Template::Template(blogi::TemplateConfig& config){
     _Config=config;
@@ -74,7 +93,6 @@ blogi::Template::Template(blogi::TemplateConfig& config){
 
                 tfile.Path=std::string("/theme/public/").append(direntStruct->d_name);
                 tfile.Content=buf;
-                tfile.Compress=false;
 
                 std::string fname=direntStruct->d_name;
                 tfile.Ending=fname.substr(fname.rfind(".")+1,fname.length()-(fname.rfind(".")+1));
@@ -82,9 +100,12 @@ blogi::Template::Template(blogi::TemplateConfig& config){
                 if(tfile.Ending=="png" || tfile.Ending=="jpg" || tfile.Ending=="webp"){
                     tfile.Type=TemplateFilesTypes::IMAGE;
                 }else if(tfile.Ending=="css" || tfile.Ending=="html"){
+                    compress<std::string>(tfile.Content,tfile.Compressed);
                     tfile.Type=TemplateFilesTypes::TEXT;
                 }else if(tfile.Ending=="js"){
+                    compress<std::string>(tfile.Content,tfile.Compressed);
                     tfile.Type=TemplateFilesTypes::JAVASCRIPT;
+
                 }else{
                     tfile.Type=TemplateFilesTypes::GENERIC;
                 }
@@ -120,7 +141,6 @@ bool blogi::Template::Controller(netplus::con *curcon,libhttppp::HttpRequest *re
                 resp.setState(HTTP200);
                 *resp.setData("cache-control") << "max-age=31536000";
 
-
                 if(curfile->Type==TemplateFilesTypes::IMAGE){
                     resp.setContentType(std::string("image/").append(curfile->Ending).c_str());
                 }else if(curfile->Type==TemplateFilesTypes::TEXT){
@@ -131,7 +151,10 @@ bool blogi::Template::Controller(netplus::con *curcon,libhttppp::HttpRequest *re
                     resp.setContentType("application/octet-stream");
                 }
 
-                resp.send(curcon,curfile->Content.c_str(),curfile->Content.length());
+                if(!curfile->Compressed.empty() && strstr(req->getData(req->getData("accept-encoding")),"br"))
+                    resp.send(curcon,curfile->Compressed.c_str(),curfile->Compressed.length());
+                else
+                    resp.send(curcon,curfile->Content.c_str(),curfile->Content.length());
                 return true;
             }
         }
