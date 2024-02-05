@@ -265,14 +265,18 @@ namespace blogi {
                     std::cerr << e.what() << std::endl;
                 };
 
+                recv-=hsize;
+
                 if(!chunked){
+
                     do{
                         try{
-                            json.append(data+hsize,recv-hsize);
-                            rlen-=recv-hsize;
+                            json.append(data+cpos,recv);
+                            rlen-=recv;
                             if(rlen>0){
                                 tries=0;
                                 for(;;){
+                                    cpos=0;
                                     recv=srvsock->recvData(cltsock,data,16384);
                                     if(recv>0)
                                         break;
@@ -285,7 +289,6 @@ namespace blogi {
                                     std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
                                 }
-                                hsize=0;
                             }
                         }catch(netplus::NetException &e){
                             libhttppp::HTTPException ee;
@@ -305,6 +308,8 @@ namespace blogi {
                                         netplus::NetException e;
                                         e[netplus::NetException::Error] << "nginxfiler: can't reach nginx server !";
                                         throw e;
+                                    }else if(recv !=0 ){
+                                        break;
                                     }
                                     ++tries;
                                     std::this_thread::sleep_for(std::chrono::milliseconds(100));
@@ -385,8 +390,6 @@ namespace blogi {
 
             memcpy(value,data+start,pos-start);
             value[pos-start]='\0';
-
-            std::cout << value << std::endl;
 
             return Hex2Int(value,nullptr);
         }
