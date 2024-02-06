@@ -132,7 +132,27 @@ void blogi::Template::renderPage(const char *name,libhtmlpp::HtmlPage& page, lib
     std::string htmlfile=_Config.Theme;
     htmlfile.append("/");
     htmlfile.append(name);
-    index=page.loadFile(htmlfile.c_str());
+
+    std::ifstream fhfile(htmlfile);
+    std::string temp,line;
+
+    if (fhfile.is_open()){
+        while ( getline (fhfile,line) ){
+            temp.append(line);
+        }
+        fhfile.close();
+    }else{
+        return;
+    }
+
+    size_t pos=0;
+
+    while( (pos=temp.find("${prefix}",pos)) < temp.length()){
+        temp.replace(pos,9,_Config.config->getprefix());
+        ++pos;
+    }
+
+    index=page.loadString(temp);
 }
 
 bool blogi::Template::Controller(netplus::con *curcon,libhttppp::HttpRequest *req){
