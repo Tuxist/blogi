@@ -57,8 +57,6 @@ void compress(const std::string in,std::string &out){
 
     out.resize(len);
 
-    std::cerr << len << std::endl;
-
     std::copy(buf,buf+len,std::inserter<std::string>(out,out.begin()));
 
     delete[] buf;
@@ -101,7 +99,7 @@ blogi::Template::Template(blogi::TemplateConfig& config){
                 std::string fname=direntStruct->d_name;
                 tfile.Ending=fname.substr(fname.rfind(".")+1,fname.length()-(fname.rfind(".")+1));
 
-                if(tfile.Ending=="png" || tfile.Ending=="jpg" || tfile.Ending=="webp"){
+                if(tfile.Ending=="png" || tfile.Ending=="jpg" || tfile.Ending=="webp" || tfile.Ending=="ico"){
                     tfile.Type=TemplateFilesTypes::IMAGE;
                 }else if(tfile.Ending=="css" || tfile.Ending=="html"){
                     compress<std::string>(tfile.Content,tfile.Compressed);
