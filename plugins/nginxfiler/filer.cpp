@@ -29,6 +29,7 @@
 #include <chrono>
 #include <thread>
 #include <cstring>
+#include <cmath>
 #include <string>
 #include <vector>
 
@@ -49,30 +50,6 @@
 
 
 namespace blogi {
-    template<typename T = size_t>
-    T Hex2Int(const char* const hexstr, bool* overflow=nullptr)
-    {
-        if (!hexstr)
-            return false;
-        if (overflow)
-            *overflow = false;
-
-        auto between = [](char val, char c1, char c2) { return val >= c1 && val <= c2; };
-        size_t len = strlen(hexstr);
-        T result = 0;
-
-        for (size_t i = 0, offset = sizeof(T) << 3; i < len && (int)offset > 0; i++)
-        {
-            if (between(hexstr[i], '0', '9'))
-                result = result << 4 ^ (hexstr[i] - '0');
-            else if (between(tolower(hexstr[i]), 'a', 'f'))
-                result = result << 4 ^ (tolower(hexstr[i]) - ('a' - 10)); // Remove the decimal part;
-            offset -= 4;
-        }
-        if (((len + ((len % 2) != 0)) << 2) > (sizeof(T) << 3) && overflow)
-            *overflow = true;
-        return result;
-    }
 
     class NginxFiler : public PluginApi {
     public:
@@ -253,22 +230,9 @@ namespace blogi {
 
                 tries=0;
 
-                try {
-                    if(strcmp(res.getTransferEncoding(),"chunked")==0){
-                        chunklen=readchunk(data,recv,cpos);
-                        chunked=true;
-                    }else{
-                        rlen=res.getContentLength();
-                        json.resize(rlen);
-                    }
-                }catch(libhttppp::HTTPException &e){
-                    std::cerr << e.what() << std::endl;
-                };
-
                 recv-=hsize;
 
                 if(!chunked){
-
                     do{
                         try{
                             json.append(data+cpos,recv);
@@ -297,14 +261,15 @@ namespace blogi {
                         }
                     }while(rlen>0);
                 }else{
+                    std::cout << chunklen << std::endl;
                     for(;;){
-                        if(recv == 0){
+                        if(recv <= 0){
                             try{
                                 tries=0;
                                 for(;;){
                                     recv=srvsock->recvData(cltsock,data,16384);
                                     cpos=0;
-                                    if(recv ==0 && tries>5){
+                                    if(recv ==0 && tries>15){
                                         netplus::NetException e;
                                         e[netplus::NetException::Error] << "nginxfiler: can't reach nginx server !";
                                         throw e;
@@ -334,16 +299,15 @@ namespace blogi {
                             chunklen=0;
                         }
 
-                        if( (chunklen=readchunk(data,recv,cpos)) == 0 )
+                        if( (chunklen=readchunk(data,recv,--cpos)) == 0 )
                            break;
                     };
-
                 }
-
-                std::cout << json << std::endl;
 
                 struct json_object *ndir;
                 ndir = json_tokener_parse(json.c_str());
+
+                std::cout << json << std::endl;
 
                 if(!ndir){
                     libhttppp::HTTPException e;
@@ -377,8 +341,8 @@ namespace blogi {
             return true;
         }
     private:
-        size_t readchunk(const char *data,size_t datasize,size_t &pos){
-            size_t start=pos;
+        int readchunk(const char *data,size_t datasize,size_t &pos){
+            int start=pos;
             while( (pos < datasize) && data[++pos]!='\r');
             char value[512];
 
@@ -389,9 +353,24 @@ namespace blogi {
             }
 
             memcpy(value,data+start,pos-start);
-            value[pos-start]='\0';
 
-            return Hex2Int(value,nullptr);
+            int len=pos-start;
+
+            size_t ret=0;
+
+            if (len < 1) {
+                return 0;
+            }
+
+            int result=0;
+
+            for(int i=0; i<len; ++i){
+                char d = value[i];
+                int val = (d > 57) ? d - ('a' - 10) : d - '0';
+                int tmp = val * pow(16, (len - 1));
+                result += tmp;
+            }
+            return result;
         }
 
         std::string _NHost;
