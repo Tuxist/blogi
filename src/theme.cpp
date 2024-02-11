@@ -36,31 +36,14 @@
 #include <unistd.h>
 #include <sys/stat.h>
 
-#include <brotli/encode.h>
-
 #include <httppp/exception.h>
 
 #include <htmlpp/exception.h>
 
 #include "theme.h"
 #include "conf.h"
+#include "compress.h"
 
-template<typename T>
-void compress(const std::string in,std::string &out){
-
-    size_t len= BrotliEncoderMaxCompressedSize(in.length());
-
-    unsigned char *buf = new unsigned char[len];
-
-    BrotliEncoderCompress(BROTLI_DEFAULT_QUALITY,BROTLI_DEFAULT_WINDOW,BROTLI_MODE_TEXT,
-                      in.length(),(const unsigned char*)in.c_str(),&len,buf);
-
-    out.resize(len);
-
-    std::copy(buf,buf+len,std::inserter<std::string>(out,out.begin()));
-
-    delete[] buf;
-}
 
 blogi::Template::Template(blogi::TemplateConfig& config){
     _Config=config;
