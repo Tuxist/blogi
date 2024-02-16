@@ -140,7 +140,8 @@ void blogi::Blogi::loginPage(netplus::con*curcon,libhttppp::HttpRequest *curreq)
                << "</form>"
                << "</div>";
 
-        index.getElementbyID("main")->insertChild(condat.parse());
+        if(index.getElementbyID("main"))
+            index.getElementbyID("main")->insertChild(condat.parse());
 
         for(blogi::Plugin::PluginData *curplg=BlogiPlg->getFirstPlugin(); curplg; curplg=curplg->getNextPlg()){
             curplg->getInstace()->Rendering(curreq,index);

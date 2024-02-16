@@ -193,7 +193,7 @@ namespace blogi {
                             e[netplus::NetException::Error] << "nginxfiler: can't reach nginx server !";
                             throw e;
                         }
-                        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                        std::this_thread::sleep_for(std::chrono::milliseconds(5*tries));
                         ++tries;
                     }
                 }catch(netplus::NetException &e){
@@ -214,7 +214,12 @@ namespace blogi {
 
                 hsize=res.parse(data,len);
 
-                cpos=hsize;
+                size_t pos = hsize;
+                --hsize;
+
+                memmove(data,data+pos,recv-hsize);
+                recv-=hsize;
+                cpos=0;
 
                 try{
                     if(strcmp(res.getTransferEncoding(),"chunked")==0){
@@ -229,8 +234,6 @@ namespace blogi {
                 }
 
                 tries=0;
-
-                recv-=hsize;
 
                 if(!chunked){
                     do{
@@ -261,15 +264,15 @@ namespace blogi {
                         }
                     }while(rlen>0);
                 }else{
-                    std::cout << chunklen << std::endl;
                     for(;;){
-                        if(recv <= 0){
+                        std::cout << recv << chunklen << std::endl;
+                        if(recv == 0){
                             try{
                                 tries=0;
                                 for(;;){
                                     recv=srvsock->recvData(cltsock,data,16384);
                                     cpos=0;
-                                    if(recv ==0 && tries>15){
+                                    if(recv == 0 && tries>10){
                                         netplus::NetException e;
                                         e[netplus::NetException::Error] << "nginxfiler: can't reach nginx server !";
                                         throw e;
@@ -277,7 +280,7 @@ namespace blogi {
                                         break;
                                     }
                                     ++tries;
-                                    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                                    std::this_thread::sleep_for(std::chrono::milliseconds(5*tries));
 
                                 }
                             }catch(netplus::NetException &e){
@@ -287,27 +290,35 @@ namespace blogi {
                             }
                         }
 
-                        if( recv < chunklen ){
-                            json.append(data+cpos,recv);
-                            cpos+=recv-1;
-                            chunklen-=recv;
-                            recv=0;
-                        } else {
-                            json.append(data+cpos,chunklen);
-                            cpos+=chunklen-1;
-                            recv-=chunklen;
-                            chunklen=0;
+                        if(chunklen==0){
+                            if( (chunklen=readchunk(data,recv,cpos)) == 0 ){
+                                std::cout << chunklen << std::endl;
+                                break;
+                            }
                         }
 
-                        if( (chunklen=readchunk(data,recv,--cpos)) == 0 )
-                           break;
+                        int len = recv-cpos;
+                        --len;
+
+                        if( len >= chunklen ){
+                            json.append(data+cpos,chunklen);
+                            cpos+=chunklen;
+                            recv-=chunklen;
+                            chunklen=0;
+                        } else{
+                            json.append(data+cpos,len);
+                            cpos+=len;
+                            chunklen-=len;
+                            recv=0;
+                        }
+
                     };
                 }
 
+                std::cout << json << std::endl;
+
                 struct json_object *ndir;
                 ndir = json_tokener_parse(json.c_str());
-
-                std::cout << json << std::endl;
 
                 if(!ndir){
                     libhttppp::HTTPException e;
@@ -343,7 +354,8 @@ namespace blogi {
     private:
         int readchunk(const char *data,size_t datasize,size_t &pos){
             int start=pos;
-            while( (pos < datasize) && data[++pos]!='\r');
+            while( (pos < datasize) && data[pos++]!='\r');
+
             char value[512];
 
             if(pos-start > 512){
@@ -354,22 +366,19 @@ namespace blogi {
 
             memcpy(value,data+start,pos-start);
 
-            int len=pos-start;
+            value[pos-start]='\0';
 
-            size_t ret=0;
+            int len=pos-start;
 
             if (len < 1) {
                 return 0;
             }
 
-            int result=0;
+            int result=strtol(value, NULL, 16);
+            ++pos;
 
-            for(int i=0; i<len; ++i){
-                char d = value[i];
-                int val = (d > 57) ? d - ('a' - 10) : d - '0';
-                int tmp = val * pow(16, (len - 1));
-                result += tmp;
-            }
+            std::cout << "Result: " << " Raw: " << value << " Final: " << result << std::endl;
+
             return result;
         }
 
