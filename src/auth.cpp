@@ -41,6 +41,7 @@
 blogi::Auth::Auth(blogi::Database *pcon,blogi::Session *session,blogi::Config *cfg){
     _dbconn=pcon;
     _session=session;
+    _config=cfg;
     blogi::SQL sql;
     blogi::DBResult res;
     sql << "CREATE TABLE IF NOT EXISTS users ("
@@ -98,13 +99,13 @@ bool blogi::Auth::ldapLogin(const char *username,const char *password,std::strin
     int ldap_vers = LDAP_VERSION3;
     ldap_set_option(userldap, LDAP_OPT_PROTOCOL_VERSION, &ldap_vers);
 
-    // ulerr = ldap_start_tls_s(userldap, &userserverctls, &userclientctls);
-    //
-    // if (ulerr != LDAP_SUCCESS) {
-    //     excep[libhttppp::HTTPException::Critical] << "User Ldap Tls failed: "
-    //     << ldap_err2string(ulerr);
-    //     throw excep;
-    // }
+    ulerr = ldap_start_tls_s(userldap, &userserverctls, &userclientctls);
+
+    if (ulerr != LDAP_SUCCESS) {
+         excep[libhttppp::HTTPException::Critical] << "User Ldap Tls failed: "
+         << ldap_err2string(ulerr);
+         throw excep;
+    }
 
     berval cred, * servercred;
     cred.bv_val = (char*)password;
