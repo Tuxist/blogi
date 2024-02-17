@@ -171,9 +171,25 @@ void blogi::Blogi::loginPage(netplus::con*curcon,libhttppp::HttpRequest *curreq)
         curres.setContentType("text/html");
         curres.send(curcon, nullptr, 0);
     }else{
-        libhttppp::HTTPException err;
-        err[libhttppp::HTTPException::Error] << "Login Failed!";
-        throw err;
+        char tmp[512];
+        libhttppp::HttpResponse curres;
+        libhttppp::HttpCookie cookie;
+        curres.setState(HTTP403);
+        curres.setVersion(HTTPVERSION(1.1));
+        curres.setContentType("text/html");
+
+        libhtmlpp::HtmlString condat;
+        condat << "<div id=\"content\">"
+               << "<span>Reason: Wrong Username or Password !</span>"
+               << "<span>Login</span>"
+               << "<form action=\""<< PlgArgs->config->buildurl("login",url,512) << "\" method=\"post\">"
+               << "username:<br> <input type=\"text\" name=\"username\" value=\"\"><br>"
+               << "password:<br> <input type=\"password\" name=\"password\" value=\"\"><br>"
+               << "<button type=\"submit\">Submit</button>"
+               << "</form>"
+               << "</div>";
+
+        curres.send(curcon, condat.c_str(), condat.length());
     }
 }
 

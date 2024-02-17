@@ -170,6 +170,7 @@ bool blogi::Auth::ldapLogin(const char *username,const char *password,std::strin
     ldap_memfree(dn);
     ldap_msgfree(answer);
     ldap_unbind_ext_s(userldap, &userserverctls, &userclientctls);
+
     return false;
 
 
