@@ -109,7 +109,7 @@ bool blogi::Auth::ldapLogin(const char *username,const char *password,std::strin
     berval cred, * servercred;
     cred.bv_val = (char*)password;
     cred.bv_len = strlen(password);
-    ulerr = ldap_sasl_bind_s(userldap, username, LDAP_SASL_AUTOMATIC,
+    ulerr = ldap_sasl_bind_s(userldap, username, nullptr,
                              &cred, &userserverctls, &userclientctls, &servercred);
 
     if (ulerr != LDAP_SUCCESS) {

@@ -171,7 +171,6 @@ void blogi::Blogi::loginPage(netplus::con*curcon,libhttppp::HttpRequest *curreq)
         curres.setContentType("text/html");
         curres.send(curcon, nullptr, 0);
     }else{
-        char tmp[512];
         libhttppp::HttpResponse curres;
         libhttppp::HttpCookie cookie;
         curres.setState(HTTP403);
