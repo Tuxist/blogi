@@ -111,10 +111,12 @@ namespace blogi {
                 }
                 char url[512];
                 if(ntype==0)
-                    out << "<li class=\"file\" ><a href=\"http://" << _NHost << ":" << _NPort << "/"
+                    out << "<li class=\"file\" ><img alt=\"file\" src=\""<< Args->config->buildurl("theme/public/file.webp",url,512) << "\" >"
+                        << "<a href=\"http://" << _NHost << ":" << _NPort << "/"
                         << _NPrefix << path << name <<"\" >" << name << "</a></li>";
                 else if(ntype==1)
-                    out << "<li class=\"dir\" ><a href=\""<< Args->config->buildurl("nginxfiler",url,512)
+                    out << "<li class=\"dir\" ><img alt=\"folder\" src=\""<< Args->config->buildurl("theme/public/folder.webp",url,512) << "\" >"
+                        << "<a href=\""<< Args->config->buildurl("nginxfiler",url,512)
                         << path << name << "\" >" << name << "</a></li>";
             }
             if(path!=_NPrefix){
@@ -269,8 +271,6 @@ namespace blogi {
                     for(;;){
                         if(recv - cpos > 0){
 
-                            std::cout << readed << ": " << chunklen << std::endl;
-
                             if(readed==chunklen){
                                 if( (chunklen=readchunk(data,recv,cpos)) == 0 ){
                                     break;
@@ -308,8 +308,6 @@ namespace blogi {
                         }
                     };
                 }
-
-                std::cout << json << std::endl;
 
                 struct json_object *ndir;
                 ndir = json_tokener_parse(json.c_str());
