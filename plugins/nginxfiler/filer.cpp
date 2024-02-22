@@ -206,19 +206,18 @@ namespace blogi {
 
                 std::string json;
                 libhttppp::HttpResponse res;
-                size_t len=recv,hsize=0,cpos;
+                size_t hsize=0,cpos;
                 bool chunked=false;
 
                 int rlen=0;
 
 
-                hsize=res.parse(data,len);
+                hsize=res.parse(data,recv);
 
-                size_t pos = hsize;
-                --hsize;
-
-                memmove(data,data+pos,recv-hsize);
                 recv-=hsize;
+
+                memmove(data,data+hsize,recv);
+
                 cpos=0;
 
                 try{
@@ -264,9 +263,27 @@ namespace blogi {
                         }
                     }while(rlen>0);
                 }else{
+
+                    size_t readed=0;
+
                     for(;;){
-                        std::cout << recv << chunklen << std::endl;
-                        if(recv == 0){
+                        if(recv - cpos > 0){
+
+                            std::cout << readed << ": " << chunklen << std::endl;
+
+                            if(readed==chunklen){
+                                if( (chunklen=readchunk(data,recv,cpos)) == 0 ){
+                                    break;
+                                }
+                                readed=0;
+                            }
+
+                            size_t len = chunklen - readed < recv - cpos ? chunklen - readed  : recv - cpos;
+
+                            json.append(data+cpos,len);
+                            cpos+=len;
+                            readed+=len;
+                        }else{
                             try{
                                 tries=0;
                                 for(;;){
@@ -289,29 +306,6 @@ namespace blogi {
                                 throw ee;
                             }
                         }
-
-                        if(chunklen==0){
-                            if( (chunklen=readchunk(data,recv,cpos)) == 0 ){
-                                std::cout << chunklen << std::endl;
-                                break;
-                            }
-                        }
-
-                        int len = recv-cpos;
-                        --len;
-
-                        if( len >= chunklen ){
-                            json.append(data+cpos,chunklen);
-                            cpos+=chunklen;
-                            recv-=chunklen;
-                            chunklen=0;
-                        } else{
-                            json.append(data+cpos,len);
-                            cpos+=len;
-                            chunklen-=len;
-                            recv=0;
-                        }
-
                     };
                 }
 
@@ -354,28 +348,34 @@ namespace blogi {
     private:
         int readchunk(const char *data,size_t datasize,size_t &pos){
             int start=pos;
-            while( (pos < datasize) && data[pos++]!='\r');
+
+            std::cout << "len: "<< datasize <<std::endl;
+
+            while( (pos < datasize) && data[++pos]!='\r'){
+                std::cout << data[pos] <<std::endl;
+            };
 
             char value[512];
 
-            if(pos-start > 512){
+            int len=pos-start;
+
+            if(len > 512){
                 libhttppp::HTTPException ee;
-                ee[libhttppp::HTTPException::Error] << "nginxfiler: chunck size: " << pos-start << " to big aborting !";
+                ee[libhttppp::HTTPException::Error] << "nginxfiler: chunck size: " << len << " to big aborting !";
                 throw ee;
             }
 
-            memcpy(value,data+start,pos-start);
+            memcpy(value,data+start,len);
 
-            value[pos-start]='\0';
-
-            int len=pos-start;
+            value[len]='\0';
 
             if (len < 1) {
                 return 0;
             }
 
             int result=strtol(value, NULL, 16);
-            ++pos;
+
+            pos+=2;
 
             std::cout << "Result: " << " Raw: " << value << " Final: " << result << std::endl;
 
