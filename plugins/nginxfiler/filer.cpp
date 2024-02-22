@@ -326,8 +326,11 @@ namespace blogi {
 
                 try{
                     RenderUI(path,ndir,fileHtml);
-                    if(page.getElementbyID("main"))
-                        page.getElementbyID("main")->appendChild(fileHtml.parse());
+
+                    libhtmlpp::HtmlElement *fel=fileHtml.parse();
+
+                    if(page.getElementbyID("main") && fel)
+                        page.getElementbyID("main")->appendChild(fel);
 
                 }catch(libhtmlpp::HTMLException &e){
                     libhttppp::HTTPException ee;
