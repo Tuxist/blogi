@@ -278,7 +278,7 @@ namespace blogi {
                                 readed=0;
                             }
 
-                            size_t len = chunklen - readed < recv - cpos ? chunklen - readed  : recv - cpos;
+                            size_t len = (chunklen - readed) < (recv - cpos) ? (chunklen - readed)  : (recv - cpos);
 
                             json.append(data+cpos,len);
                             cpos+=len;
