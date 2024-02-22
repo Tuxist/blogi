@@ -323,7 +323,8 @@ namespace blogi {
                 RenderUI(path,ndir,fileHtml);
 
                 std::string out,sid;
-                page.getElementbyID("main")->appendChild(fileHtml.parse());
+                if(page.getElementbyID("main"))
+                    page.getElementbyID("main")->appendChild(fileHtml.parse());
 
                 Args->theme->printSite(out,page,req->getRequestURL(),Args->auth->isLoggedIn(req,sid));
 
@@ -374,8 +375,6 @@ namespace blogi {
             int result=strtol(value, NULL, 16);
 
             pos+=2;
-
-            std::cout << "Result: " << " Raw: " << value << " Final: " << result << std::endl;
 
             return result;
         }
