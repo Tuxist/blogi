@@ -322,11 +322,10 @@ namespace blogi {
                 }
 
                 libhtmlpp::HtmlString fileHtml;
+                std::string out,sid;
 
                 try{
                     RenderUI(path,ndir,fileHtml);
-
-                    std::string out,sid;
                     if(page.getElementbyID("main"))
                         page.getElementbyID("main")->appendChild(fileHtml.parse());
 
