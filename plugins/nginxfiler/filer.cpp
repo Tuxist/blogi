@@ -44,6 +44,9 @@
 #include <httppp/http.h>
 #include <httppp/exception.h>
 
+#include <htmlpp/html.h>
+#include <htmlpp/exception.h>
+
 #include <netplus/exception.h>
 
 #include <confplus/exception.h>
@@ -320,11 +323,18 @@ namespace blogi {
 
                 libhtmlpp::HtmlString fileHtml;
 
-                RenderUI(path,ndir,fileHtml);
+                try{
+                    RenderUI(path,ndir,fileHtml);
 
-                std::string out,sid;
-                if(page.getElementbyID("main"))
-                    page.getElementbyID("main")->appendChild(fileHtml.parse());
+                    std::string out,sid;
+                    if(page.getElementbyID("main"))
+                        page.getElementbyID("main")->appendChild(fileHtml.parse());
+
+                }catch(libhtmlpp::HTMLException &e){
+                    libhttppp::HTTPException ee;
+                    ee[libhttppp::HTTPException::Error] << e.what();
+                    throw ee;
+                }
 
                 Args->theme->printSite(out,page,req->getRequestURL(),Args->auth->isLoggedIn(req,sid));
 
