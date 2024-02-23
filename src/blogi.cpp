@@ -121,9 +121,9 @@ void blogi::Blogi::loginPage(netplus::con*curcon,libhttppp::HttpRequest *curreq)
              }
     }
 
-    std::string out;
+    std::string *out=new std::string;
 
-    libhtmlpp::HtmlElement index;
+    libhtmlpp::HtmlElement *index = new libhtmlpp::HtmlElement;
     if(curreq->isMobile())
         index=&MIndex;
     else
@@ -140,11 +140,11 @@ void blogi::Blogi::loginPage(netplus::con*curcon,libhttppp::HttpRequest *curreq)
                << "</form>"
                << "</div>";
 
-        if(index.getElementbyID("main"))
-            index.getElementbyID("main")->insertChild(condat.parse());
+        if(index->getElementbyID("main"))
+            index->getElementbyID("main")->insertChild(condat.parse());
 
         for(blogi::Plugin::PluginData *curplg=BlogiPlg->getFirstPlugin(); curplg; curplg=curplg->getNextPlg()){
-            curplg->getInstace()->Rendering(curreq,index);
+            curplg->getInstace()->Rendering(curreq,*index);
         }
 
         PlgArgs->theme->printSite(out,index,curreq->getRequestURL(),false);
@@ -152,7 +152,9 @@ void blogi::Blogi::loginPage(netplus::con*curcon,libhttppp::HttpRequest *curreq)
         curres.setState(HTTP200);
         curres.setVersion(HTTPVERSION(1.1));
         curres.setContentType("text/html");
-        curres.send(curcon,out.c_str(),out.length());
+        curres.send(curcon,out->c_str(),out->length());
+        delete index;
+        delete out;
         return;
     }
 
@@ -220,7 +222,7 @@ void blogi::Blogi::settingsPage(netplus::con* curcon, libhttppp::HttpRequest* cu
         throw err;
     }
 
-    std::string out;
+    std::string *out=new std::string;;
     libhtmlpp::HtmlString setgui;
     char url[512];
 
@@ -242,16 +244,16 @@ void blogi::Blogi::settingsPage(netplus::con* curcon, libhttppp::HttpRequest* cu
 
     setgui << "</td></tr></table></div>";
 
-    libhtmlpp::HtmlElement index;
+    libhtmlpp::HtmlElement *index;
     if(curreq->isMobile())
-        index=&MIndex;
+        index= new libhtmlpp::HtmlElement(MIndex);
     else
-        index=&Index;
+        index= new libhtmlpp::HtmlElement(Index);
 
-    index.getElementbyID("main")->appendChild(setgui.parse());
+    index->getElementbyID("main")->appendChild(setgui.parse());
 
     for(blogi::Plugin::PluginData *curplg=BlogiPlg->getFirstPlugin(); curplg; curplg=curplg->getNextPlg()){
-        curplg->getInstace()->Rendering(curreq,index);
+        curplg->getInstace()->Rendering(curreq,*index);
     }
 
     PlgArgs->theme->printSite(out,index,curreq->getRequestURL(),false);
@@ -259,7 +261,9 @@ void blogi::Blogi::settingsPage(netplus::con* curcon, libhttppp::HttpRequest* cu
     curres.setState(HTTP200);
     curres.setVersion(HTTPVERSION(1.1));
     curres.setContentType("text/html");
-    curres.send(curcon,out.c_str(),out.length());
+    curres.send(curcon,out->c_str(),out->length());
+    delete index;
+    delete out;
 }
 
 
@@ -336,19 +340,20 @@ RETRY_REQUEST:
                 }
 
 
-                std::string output;
+                std::string *output=new std::string;
                 libhtmlpp::HtmlString err;
                 err << "<!DOCTYPE html><html><body style=\"color:rgb(238, 238, 238); background:rgb(35, 38, 39);\"><span>"
                 << "Seite oder Inhalt nicht gefudnen"
                 << "</span><br/><a style=\"text-decoration: none; color: rgb(58,212, 58);\" href=\""
                 <<  PlgArgs->config->getstartpage()
                 << "\" >Zur&uuml;ck zur Startseite</a></body></html>";
-                libhtmlpp::print(err.parse(),nullptr,output);
+                libhtmlpp::print(err.parse(),output);
                 libhttppp::HttpResponse resp;
                 resp.setVersion(HTTPVERSION(1.1));
                 resp.setState(HTTP404);
                 resp.setContentType("text/html");
-                resp.send(curcon,output.c_str(),output.length());
+                resp.send(curcon,output->c_str(),output->length());
+                delete output;
             }
         }catch(libhttppp::HTTPException &e){
             if(!PlgArgs->database->isConnected()){
@@ -362,20 +367,21 @@ RETRY_REQUEST:
     }catch(libhttppp::HTTPException &e){
         if(e.getErrorType() == libhttppp::HTTPException::Note || e.getErrorType() == libhttppp::HTTPException::Warning)
             return;
-        std::string output;
+        std::string *output=new std::string;
         libhtmlpp::HtmlString err,hreason;
-        libhtmlpp::HtmlEncode(e.what(),hreason);
+        libhtmlpp::HtmlEncode(e.what(),&hreason);
         err << "<!DOCTYPE html><html><body style=\"color:rgb(238, 238, 238); background:rgb(35, 38, 39);\"><span>"
         << hreason
         << "</span><br/><a style=\"text-decoration: none; color: rgb(58,212, 58);\" href=\""
         <<  PlgArgs->config->getstartpage()
         << "\" >Zur&uuml;ck zur Startseite</a></body></html>";
-        libhtmlpp::print(err.parse(),nullptr,output);
+        libhtmlpp::print(err.parse(),output);
         libhttppp::HttpResponse resp;
         resp.setVersion(HTTPVERSION(1.1));
         resp.setState(HTTP500);
         resp.setContentType("text/html");
-        resp.send(curcon,output.c_str(),output.length());
+        resp.send(curcon,output->c_str(),output->length());
+        delete output;
     }
 }
 

@@ -135,10 +135,10 @@ void blogi::StaticPage::newPage(libhttppp::HttpRequest* req, libhtmlpp::HtmlStri
                       std::inserter<std::string>(data,data.begin()));
 
             if(strcmp(curctdisp->getName(),"url")==0){
-                libhtmlpp::HtmlEncode(data.c_str(),result);
+                libhtmlpp::HtmlEncode(data.c_str(),&result);
                 surl=result.c_str();
             }else if(strcmp(curctdisp->getName(),"meta")==0){
-                libhtmlpp::HtmlEncode(data.c_str(),result);
+                libhtmlpp::HtmlEncode(data.c_str(),&result);
                 meta=result.c_str();
             }else if(strcmp(curctdisp->getName(),"text")==0){
                 text=data;
@@ -257,10 +257,10 @@ void blogi::StaticPage::editPage(libhttppp::HttpRequest* req, libhtmlpp::HtmlStr
                          std::inserter<std::string>(data,data.begin()));
 
                 if(strcmp(curctdisp->getName(),"url")==0){
-                    libhtmlpp::HtmlEncode(data.c_str(),result);
+                    libhtmlpp::HtmlEncode(data.c_str(),&result);
                     sql<< "update static_content set url='" << result.c_str() << "' where id='" << id <<"'; ";
                 }else if(strcmp(curctdisp->getName(),"meta")==0){
-                    libhtmlpp::HtmlEncode(data.c_str(),result);
+                    libhtmlpp::HtmlEncode(data.c_str(),&result);
                     sql<< "update static_content set meta='" << result.c_str() << "' where id='" << id <<"'; ";
                 }else if(strcmp(curctdisp->getName(),"text")==0){
                     sql<< "update static_content set text='"; sql.escaped(data.c_str()) << "' where id='" << id <<"'; ";
@@ -351,19 +351,20 @@ bool blogi::StaticPage::Controller(netplus::con *curcon,libhttppp::HttpRequest *
             throw excep;
         }
 
-        std::string out;
+        std::string *out = new std::string;
         condat << "<div id=\"content\" class=\"staticpage\" >"
                << res[0][1]
                << "</div>";
         std::string sid;
         page.getElementbyID("main")->insertChild(condat.parse());;
 
-        Args->theme->printSite(out,page,req->getRequestURL(),Args->auth->isLoggedIn(req,sid),res[0][2]);
+        Args->theme->printSite(out,&page,req->getRequestURL(),Args->auth->isLoggedIn(req,sid),res[0][2]);
         libhttppp::HttpResponse resp;
         resp.setVersion(HTTPVERSION(1.1));
         resp.setState(HTTP200);
         resp.setContentType("text/html");
-        resp.send(curcon,out.c_str(),out.length());
+        resp.send(curcon,out->c_str(),out->length());
+        delete out;
         return true;
     }
     return false;

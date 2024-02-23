@@ -174,14 +174,14 @@ bool blogi::Template::Controller(netplus::con *curcon,libhttppp::HttpRequest *re
     return false;
 }
 
-void blogi::Template::printSite(std::string &output,libhtmlpp::HtmlElement index,const char *crrurl,bool login,const char *meta){
+void blogi::Template::printSite(std::string *output,libhtmlpp::HtmlElement *index,const char *crrurl,bool login,const char *meta){
     try{
         char url[512];
 
         std::string sessid;
 
         libhtmlpp::HtmlElement *head,*header,*main, *footernav;
-        head=index.getElementbyTag("head");
+        head=index->getElementbyTag("head");
 
         std::string hostpath;
 
@@ -203,7 +203,7 @@ void blogi::Template::printSite(std::string &output,libhtmlpp::HtmlElement index
 
 
         }
-        footernav = index.getElementbyID("footernav");
+        footernav = index->getElementbyID("footernav");
         libhtmlpp::HtmlElement contentd("div");
         libhtmlpp::HtmlString footerancor;
         footerancor << "<a class=\"footer\" href=\"" << _Config.config->buildurl("staticpage/impressum",url,512) << "\" >Impressum</a>";
@@ -216,7 +216,7 @@ void blogi::Template::printSite(std::string &output,libhtmlpp::HtmlElement index
         if(footernav)
             footernav->appendChild(footerancor.parse());
 
-        libhtmlpp::print(&index,nullptr,output);
+        libhtmlpp::print(index,output);
     }catch(libhtmlpp::HTMLException &e){
         libhttppp::HTTPException excep;
         excep[libhttppp::HTTPException::Error] << e.what();

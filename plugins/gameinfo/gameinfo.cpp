@@ -131,17 +131,18 @@ namespace blogi {
 
             condat << "</div>";
 
-            std::string out,sid;
+            std::string *out=new std::string,sid;
             page.getElementbyID("main")->insertChild(condat.parse());
 
-            Args->theme->printSite(out,page,req->getRequestURL(),
+            Args->theme->printSite(out,&page,req->getRequestURL(),
                                     Args->auth->isLoggedIn(req,sid));
 
             libhttppp::HttpResponse resp;
             resp.setVersion(HTTPVERSION(1.1));
             resp.setState(HTTP200);
             resp.setContentType("text/html");
-            resp.send(curcon,out.c_str(),out.length());
+            resp.send(curcon,out->c_str(),out->length());
+            delete out;
             return true;
 
         }

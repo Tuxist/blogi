@@ -90,15 +90,16 @@ namespace blogi {
 
             if (ncount<1) {
                 condat << " </div>";
-                std::string out;
+                std::string *out=new std::string;
                 page.getElementbyID("main")->insertChild(condat.parse());;
-                Args->theme->printSite(out,page,curreq->getRequestURL(),Args->auth->isLoggedIn(curreq,sid),meta.c_str());
+                Args->theme->printSite(out,&page,curreq->getRequestURL(),Args->auth->isLoggedIn(curreq,sid),meta.c_str());
 
                 libhttppp::HttpResponse resp;
                 resp.setVersion(HTTPVERSION(1.1));
                 resp.setState(HTTP200);
                 resp.setContentType("text/html");
-                resp.send(curcon,out.c_str(),out.length());
+                resp.send(curcon,out->c_str(),out->length());
+                delete out;
                 return;
             }
 
@@ -145,17 +146,18 @@ namespace blogi {
 
                 condat << "</ul></div>";
             }
-            std::string out;
+            std::string *out=new std::string;
 
             page.getElementbyID("main")->insertChild(condat.parse());;
 
-            Args->theme->printSite(out,page,curreq->getRequestURL(),Args->auth->isLoggedIn(curreq,sid),meta.c_str());
+            Args->theme->printSite(out,&page,curreq->getRequestURL(),Args->auth->isLoggedIn(curreq,sid),meta.c_str());
 
             libhttppp::HttpResponse resp;
             resp.setVersion(HTTPVERSION(1.1));
             resp.setState(HTTP200);
             resp.setContentType("text/html");
-            resp.send(curcon,out.c_str(),out.length());
+            resp.send(curcon,out->c_str(),out->length());
+            delete out;
         };
 
         void contentPage(netplus::con* curcon, libhttppp::HttpRequest* curreq,libhtmlpp::HtmlElement &page) {
@@ -195,22 +197,24 @@ namespace blogi {
             << "<span class=\"author\">verfasst von " << res[0][3] << " am "<< res[0][4]  <<" </span>"
             << "</div></div>";
 
-            std::string out;
+            std::string *out=new std::string;
 
             try{
                 page.getElementbyID("main")->insertChild(condat.parse());
             }catch(libhtmlpp::HTMLException &e){
+                delete out;
                 excep[libhttppp::HTTPException::Error] << e.what();
                 throw excep;
             }
 
-            Args->theme->printSite(out,page,curreq->getRequestURL(),Args->auth->isLoggedIn(curreq,sid));
+            Args->theme->printSite(out,&page,curreq->getRequestURL(),Args->auth->isLoggedIn(curreq,sid));
 
             libhttppp::HttpResponse resp;
             resp.setVersion(HTTPVERSION(1.1));
             resp.setState(HTTP200);
             resp.setContentType("text/html");
-            resp.send(curcon,out.c_str(),out.length());
+            resp.send(curcon,out->c_str(),out->length());
+            delete out;
         };
 
         void addPostPage(netplus::con *curcon,libhttppp::HttpRequest *curreq,libhtmlpp::HtmlElement &page){
@@ -347,17 +351,18 @@ namespace blogi {
             << "</form>"
             << "</div>";
 
-            std::string out;
+            std::string *out = new std::string;
 
             page.getElementbyID("main")->insertChild(condat.parse());
 
-            Args->theme->printSite(out,page,curreq->getRequestURL(),Args->auth->isLoggedIn(curreq,sid));
+            Args->theme->printSite(out,&page,curreq->getRequestURL(),Args->auth->isLoggedIn(curreq,sid));
 
             libhttppp::HttpResponse resp;
             resp.setVersion(HTTPVERSION(1.1));
             resp.setState(HTTP200);
             resp.setContentType("text/html");
-            resp.send(curcon,out.c_str(),out.length());
+            resp.send(curcon,out->c_str(),out->length());
+            delete out;
         }
 
         void delPostPage(netplus::con* curcon, libhttppp::HttpRequest* curreq,libhtmlpp::HtmlElement &page) {
@@ -394,22 +399,24 @@ namespace blogi {
 
             condat << "<span>Beitrag geloescht</span>";
 
-            std::string out;
+            std::string *out=new std::string;
 
             try{
                 page.getElementbyID("main")->insertChild(condat.parse());
             }catch(libhtmlpp::HTMLException &e){
+                delete out;
                 excep[libhttppp::HTTPException::Error] << e.what();
                 throw excep;
             }
 
-            Args->theme->printSite(out,page,curreq->getRequestURL(),Args->auth->isLoggedIn(curreq,sid));
+            Args->theme->printSite(out,&page,curreq->getRequestURL(),Args->auth->isLoggedIn(curreq,sid));
 
             libhttppp::HttpResponse resp;
             resp.setVersion(HTTPVERSION(1.1));
             resp.setState(HTTP200);
             resp.setContentType("text/html");
-            resp.send(curcon,out.c_str(),out.length());
+            resp.send(curcon,out->c_str(),out->length());
+            delete out;
 
         }
 
@@ -595,21 +602,23 @@ namespace blogi {
                 << "</form>"
                 << "</div>";
             };
-            std::string out;
+            std::string *out=new std::string;
 
             try{
                 page.getElementbyID("main")->insertChild(condat.parse());
             }catch(libhtmlpp::HTMLException &e){
+                delete out;
                 excep[libhttppp::HTTPException::Error] << e.what();
                 throw excep;
             }
-            Args->theme->printSite(out,page,curreq->getRequestURL(),Args->auth->isLoggedIn(curreq,sid));
+            Args->theme->printSite(out,&page,curreq->getRequestURL(),Args->auth->isLoggedIn(curreq,sid));
 
             libhttppp::HttpResponse resp;
             resp.setVersion(HTTPVERSION(1.1));
             resp.setState(HTTP200);
             resp.setContentType("text/html");
-            resp.send(curcon,out.c_str(),out.length());
+            resp.send(curcon,out->c_str(),out->length());
+            delete out;
         }
 
         const char *getName(){

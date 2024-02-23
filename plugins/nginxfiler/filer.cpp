@@ -322,7 +322,7 @@ namespace blogi {
                 }
 
                 libhtmlpp::HtmlString fileHtml;
-                std::string out,sid;
+                std::string *out=new std::string,sid;
 
                 try{
                     RenderUI(path,ndir,fileHtml);
@@ -338,13 +338,14 @@ namespace blogi {
                     throw ee;
                 }
 
-                Args->theme->printSite(out,page,req->getRequestURL(),Args->auth->isLoggedIn(req,sid));
+                Args->theme->printSite(out,&page,req->getRequestURL(),Args->auth->isLoggedIn(req,sid));
 
                 libhttppp::HttpResponse curres;
                 curres.setVersion(HTTPVERSION(1.1));
                 curres.setContentType("text/html");
                 curres.setState(HTTP200);
-                curres.send(curcon, out.c_str(),out.length());
+                curres.send(curcon, out->c_str(),out->length());
+                delete out;
             }catch(libhttppp::HTTPException &e){
                 libhttppp::HttpResponse curres;
                 curres.setVersion(HTTPVERSION(1.1));

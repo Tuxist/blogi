@@ -71,7 +71,7 @@ namespace blogi {
 
         bool Controller(netplus::con *curcon,libhttppp::HttpRequest *req);
 
-        void printSite(std::string &output,libhtmlpp::HtmlElement index,const char *crrurl,bool login,const char *meta=nullptr);
+        void printSite(std::string *output,libhtmlpp::HtmlElement *index,const char *crrurl,bool login,const char *meta=nullptr);
     private:
         TemplateConfig             _Config;
         std::vector<TemplateFiles> _PublicFiles;

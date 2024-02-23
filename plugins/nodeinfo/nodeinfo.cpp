@@ -114,15 +114,17 @@ namespace blogi {
             html.setAttribute("id","content");
             html.insertChild(&table);
 
-            std::string out,sid,systable;
-            libhtmlpp::print(&html,nullptr,systable);
+            std::string *out=new std::string,sid,*systable=new std::string;
+            libhtmlpp::print(&html,systable);
 
-            libhtmlpp::HtmlString condat;
-            condat << systable;
+            libhtmlpp::HtmlString *condat=new libhtmlpp::HtmlString();
+            *condat << *systable;
 
-            page.getElementbyID("main")->insertChild(condat.parse());
+            delete systable;
 
-            Args->theme->printSite(out,page,req->getRequestURL(),
+            page.getElementbyID("main")->insertChild(condat->parse());
+
+            Args->theme->printSite(out,&page,req->getRequestURL(),
                                     Args->auth->isLoggedIn(req,sid));
 
             #endif
@@ -131,7 +133,8 @@ namespace blogi {
             resp.setVersion(HTTPVERSION(1.1));
             resp.setState(HTTP200);
             resp.setContentType("text/html");
-            resp.send(curcon,out.c_str(),out.length());
+            resp.send(curcon,out->c_str(),out->length());
+            delete out;
             return true;
 
         }
