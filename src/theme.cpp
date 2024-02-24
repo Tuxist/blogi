@@ -218,7 +218,7 @@ void blogi::Template::printSite(std::string *output,libhtmlpp::HtmlElement *inde
         if(footernav)
             footernav->appendChild(footerancor.parse());
 
-        libhtmlpp::print(index,&output);
+        libhtmlpp::print(index,output);
     }catch(libhtmlpp::HTMLException &e){
         libhttppp::HTTPException excep;
         excep[libhttppp::HTTPException::Error] << e.what();

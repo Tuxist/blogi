@@ -115,7 +115,7 @@ namespace blogi {
             html.insertChild(&table);
 
             std::string *out=new std::string,sid,*systable=new std::string;
-            libhtmlpp::print(&html,&systable);
+            libhtmlpp::print(&html,systable);
 
             libhtmlpp::HtmlString *condat=new libhtmlpp::HtmlString();
             *condat << *systable;
