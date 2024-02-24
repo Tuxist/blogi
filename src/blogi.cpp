@@ -74,7 +74,9 @@ blogi::Blogi::Blogi(Config *blgcfg,netplus::socket *serversocket) : event(server
 
     PlgArgs->theme=new Template(tplcfg);
 
+    Page = new libhtmlpp::HtmlPage;
     PlgArgs->theme->renderPage("index.html",Page,Index);
+    MPage = new libhtmlpp::HtmlPage;
     PlgArgs->theme->renderPage("mobile.html",MPage,MIndex);
 
     BlogiPlg = new Plugin();
@@ -91,6 +93,8 @@ blogi::Blogi::~Blogi(){
     delete PlgArgs->database;
     delete BlogiPlg;
     delete PlgArgs;
+    delete Page;
+    delete MPage;
 }
 
 void blogi::Blogi::loginPage(netplus::con*curcon,libhttppp::HttpRequest *curreq){
@@ -125,9 +129,9 @@ void blogi::Blogi::loginPage(netplus::con*curcon,libhttppp::HttpRequest *curreq)
 
     libhtmlpp::HtmlElement *index = new libhtmlpp::HtmlElement;
     if(curreq->isMobile())
-        index=&MIndex;
+        index=MIndex;
     else
-        index=&Index;
+        index=Index;
 
     if (!username || !password) {
         libhtmlpp::HtmlString condat;
@@ -316,16 +320,16 @@ RETRY_REQUEST:
                 return;
             }
 
-            libhtmlpp::HtmlElement index;
+            libhtmlpp::HtmlElement *index;
             if(req.isMobile())
-                index=&MIndex;
+                index= new libhtmlpp::HtmlElement(MIndex);
             else
-                index=&Index;
+                index= new libhtmlpp::HtmlElement(Index);;
 
             if(!PlgArgs->theme->Controller(curcon,&req)){
 
                 for(blogi::Plugin::PluginData *curplg=BlogiPlg->getFirstPlugin(); curplg; curplg=curplg->getNextPlg()){
-                    curplg->getInstace()->Rendering(&req,index);
+                    curplg->getInstace()->Rendering(&req,*index);
                 }
 
                 for(blogi::Plugin::PluginData *curplg=BlogiPlg->getFirstPlugin(); curplg; curplg=curplg->getNextPlg()){
@@ -334,11 +338,13 @@ RETRY_REQUEST:
                     url+="/";
                     url+=api->getName();
                     if(strncmp(req.getRequestURL(),url.c_str(),url.length())==0){
-                        if(api->Controller(curcon,&req,index))
+                        if(api->Controller(curcon,&req,index)){
+                            delete index;
                             return;
+                        }
                     }
                 }
-
+                delete index;
 
                 std::string *output=new std::string;
                 libhtmlpp::HtmlString err;

@@ -109,31 +109,33 @@ blogi::Template::~Template(){
 
 }
 
-void blogi::Template::renderPage(const char *name,libhtmlpp::HtmlPage& page, libhtmlpp::HtmlElement& index){
+void blogi::Template::renderPage(const char *name,libhtmlpp::HtmlPage* page, libhtmlpp::HtmlElement* index){
     std::string htmlfile=_Config.Theme;
     htmlfile.append("/");
     htmlfile.append(name);
 
     std::ifstream fhfile(htmlfile);
-    std::string temp,line;
+    std::string *temp=new std::string,line;
 
     if (fhfile.is_open()){
         while ( getline (fhfile,line) ){
-            temp.append(line);
+            temp->append(line);
         }
         fhfile.close();
     }else{
+        delete temp;
         return;
     }
 
     size_t pos=0;
 
-    while( (pos=temp.find("${prefix}",pos)) < temp.length()){
-        temp.replace(pos,9,_Config.config->getprefix());
+    while( (pos=temp->find("${prefix}",pos)) < temp->length()){
+        temp->replace(pos,9,_Config.config->getprefix());
         ++pos;
     }
 
-    index=page.loadString(temp);
+    index=page->loadString(temp);
+    delete temp;
 }
 
 bool blogi::Template::Controller(netplus::con *curcon,libhttppp::HttpRequest *req){

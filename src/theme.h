@@ -67,7 +67,7 @@ namespace blogi {
         Template(TemplateConfig &config);
         ~Template();
 
-        void renderPage(const char *name,libhtmlpp::HtmlPage &page,libhtmlpp::HtmlElement &index);
+        void renderPage(const char *name,libhtmlpp::HtmlPage *page,libhtmlpp::HtmlElement *index);
 
         bool Controller(netplus::con *curcon,libhttppp::HttpRequest *req);
 
