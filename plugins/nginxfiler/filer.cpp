@@ -146,7 +146,7 @@ namespace blogi {
             out<<"</ul></div>";
         }
 
-        bool Controller(netplus::con *curcon,libhttppp::HttpRequest *req,libhtmlpp::HtmlElement page){
+        bool Controller(netplus::con *curcon,libhttppp::HttpRequest *req,libhtmlpp::HtmlElement *page){
             char url[512];
             if(strncmp(req->getRequestURL(),Args->config->buildurl("nginxfiler",url,512),strlen(Args->config->buildurl("nginxfiler",url,512)))!=0){
                 return false;
@@ -329,8 +329,8 @@ namespace blogi {
 
                     libhtmlpp::HtmlElement *fel=fileHtml.parse();
 
-                    if(page.getElementbyID("main") && fel)
-                        page.getElementbyID("main")->appendChild(fel);
+                    if(page->getElementbyID("main") && fel)
+                        page->getElementbyID("main")->appendChild(fel);
 
                 }catch(libhtmlpp::HTMLException &e){
                     libhttppp::HTTPException ee;
@@ -338,7 +338,7 @@ namespace blogi {
                     throw ee;
                 }
 
-                Args->theme->printSite(out,&page,req->getRequestURL(),Args->auth->isLoggedIn(req,sid));
+                Args->theme->printSite(out,page,req->getRequestURL(),Args->auth->isLoggedIn(req,sid));
 
                 libhttppp::HttpResponse curres;
                 curres.setVersion(HTTPVERSION(1.1));

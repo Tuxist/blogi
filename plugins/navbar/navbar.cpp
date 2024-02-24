@@ -381,7 +381,7 @@ SETTINGSINDEX:
 
         }
 
-        bool Controller(netplus::con *curcon,libhttppp::HttpRequest *req,libhtmlpp::HtmlElement page){
+        bool Controller(netplus::con *curcon,libhttppp::HttpRequest *req,libhtmlpp::HtmlElement *page){
             return false;
         }
     };

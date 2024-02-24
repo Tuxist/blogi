@@ -324,7 +324,7 @@ void blogi::StaticPage::uploadPage(libhttppp::HttpRequest* req, libhtmlpp::HtmlS
 
 
 
-bool blogi::StaticPage::Controller(netplus::con *curcon,libhttppp::HttpRequest *req,libhtmlpp::HtmlElement page){
+bool blogi::StaticPage::Controller(netplus::con *curcon,libhttppp::HttpRequest *req,libhtmlpp::HtmlElement *page){
     char url[512];
     if (strncmp(req->getRequestURL(),Args->config->buildurl("staticpage",url,512),strlen(Args->config->buildurl("staticpage",url,512)))==0){
         std::string surl=req->getRequestURL()+strlen(Args->config->buildurl("staticpage/",url,512));
@@ -356,9 +356,9 @@ bool blogi::StaticPage::Controller(netplus::con *curcon,libhttppp::HttpRequest *
                << res[0][1]
                << "</div>";
         std::string sid;
-        page.getElementbyID("main")->insertChild(condat.parse());;
+        page->getElementbyID("main")->insertChild(condat.parse());;
 
-        Args->theme->printSite(out,&page,req->getRequestURL(),Args->auth->isLoggedIn(req,sid),res[0][2]);
+        Args->theme->printSite(out,page,req->getRequestURL(),Args->auth->isLoggedIn(req,sid),res[0][2]);
         libhttppp::HttpResponse resp;
         resp.setVersion(HTTPVERSION(1.1));
         resp.setState(HTTP200);

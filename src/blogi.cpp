@@ -75,9 +75,9 @@ blogi::Blogi::Blogi(Config *blgcfg,netplus::socket *serversocket) : event(server
     PlgArgs->theme=new Template(tplcfg);
 
     Page = new libhtmlpp::HtmlPage;
-    PlgArgs->theme->renderPage("index.html",Page,Index);
+    PlgArgs->theme->renderPage("index.html",Page,&Index);
     MPage = new libhtmlpp::HtmlPage;
-    PlgArgs->theme->renderPage("mobile.html",MPage,MIndex);
+    PlgArgs->theme->renderPage("mobile.html",MPage,&MIndex);
 
     BlogiPlg = new Plugin();
 
@@ -354,7 +354,7 @@ RETRY_REQUEST:
                 << "</span><br/><a style=\"text-decoration: none; color: rgb(58,212, 58);\" href=\""
                 <<  PlgArgs->config->getstartpage()
                 << "\" >Zur&uuml;ck zur Startseite</a></body></html>";
-                libhtmlpp::print(err.parse(),output);
+                libhtmlpp::print(err.parse(),&output);
                 libhttppp::HttpResponse resp;
                 resp.setVersion(HTTPVERSION(1.1));
                 resp.setState(HTTP404);
@@ -382,7 +382,7 @@ RETRY_REQUEST:
         << "</span><br/><a style=\"text-decoration: none; color: rgb(58,212, 58);\" href=\""
         <<  PlgArgs->config->getstartpage()
         << "\" >Zur&uuml;ck zur Startseite</a></body></html>";
-        libhtmlpp::print(err.parse(),output);
+        libhtmlpp::print(err.parse(),&output);
         libhttppp::HttpResponse resp;
         resp.setVersion(HTTPVERSION(1.1));
         resp.setState(HTTP500);

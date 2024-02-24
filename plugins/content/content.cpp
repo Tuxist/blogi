@@ -49,9 +49,9 @@ namespace blogi {
         ~Content(){
         };
 
-        void contentIdxPage(netplus::con *curcon,libhttppp::HttpRequest *curreq,libhtmlpp::HtmlElement &page,const char *tag,int start,int end){
+        void contentIdxPage(netplus::con *curcon,libhttppp::HttpRequest *curreq,libhtmlpp::HtmlElement *page,const char *tag,int start,int end){
             libhttppp::HTTPException excep;
-            libhtmlpp::HtmlString condat;
+            libhtmlpp::HtmlString *condat=new libhtmlpp::HtmlString;
 
             char url[512];
             std::string sid;
@@ -63,6 +63,7 @@ namespace blogi {
             if (tag) {
                 sql = "SELECT id FROM tags where name='"; sql.escaped(tag) << "' LIMIT 1";
                 if(Args->database->exec(&sql,res)<1){
+                    delete condat;
                     excep[libhttppp::HTTPException::Critical] << "no tag data found for this name!";
                     throw excep;
                 }else {
@@ -79,9 +80,9 @@ namespace blogi {
             }
 
             std::string meta;
-            condat << "<div id=\"contentidx\">";
+            *condat << "<div id=\"contentidx\">";
             if(Args->auth->isLoggedIn(curreq,sid)){
-                condat << "<div class=\"blog_adminmenu\">"
+                *condat << "<div class=\"blog_adminmenu\">"
                 << "<ul>"
                 << "<li><a href=\""<< Args->config->buildurl("content/addpost",url,512) <<"\">Addpost</a></li>"
                 << "</ul>"
@@ -89,10 +90,10 @@ namespace blogi {
             }
 
             if (ncount<1) {
-                condat << " </div>";
+                *condat << " </div>";
                 std::string *out=new std::string;
-                page.getElementbyID("main")->insertChild(condat.parse());;
-                Args->theme->printSite(out,&page,curreq->getRequestURL(),Args->auth->isLoggedIn(curreq,sid),meta.c_str());
+                page->getElementbyID("main")->insertChild(condat->parse());;
+                Args->theme->printSite(out,page,curreq->getRequestURL(),Args->auth->isLoggedIn(curreq,sid),meta.c_str());
 
                 libhttppp::HttpResponse resp;
                 resp.setVersion(HTTPVERSION(1.1));
@@ -100,11 +101,12 @@ namespace blogi {
                 resp.setContentType("text/html");
                 resp.send(curcon,out->c_str(),out->length());
                 delete out;
+                delete condat;
                 return;
             }
 
             for (int i = 0; i < ncount; i++) {
-                condat << "<div class=\"blog_entry\">"
+                *condat << "<div class=\"blog_entry\">"
                 << "<span class=\"title\">" << res[i][1] << "</span>"
                 << "<div  class=\"entry_text\">" << res[i][2] << "</div>"
                 << "<span><a href=\""<< Args->config->buildurl("content/read/",url,512) << res[i][0] << "\">Weiterlesen</a> </span>"
@@ -117,15 +119,15 @@ namespace blogi {
                 meta.append(" ");
             }
 
-            condat << "<div id=\"pager\">";
+            *condat << "<div id=\"pager\">";
 
             if((start - end) >= 0)
-                condat << "<a href=\"" << curreq->getRequestURL() << "?start=" << (start- end) <<"\" > Zur&uuml;ck </a>";
+                *condat << "<a href=\"" << curreq->getRequestURL() << "?start=" << (start- end) <<"\" > Zur&uuml;ck </a>";
 
             if((ncount -10) >= 0 )
-                condat << "<a href=\"" << curreq->getRequestURL() << "?start=" << start+10 <<"\" > Weiter </a>";
+                *condat << "<a href=\"" << curreq->getRequestURL() << "?start=" << start+10 <<"\" > Weiter </a>";
 
-            condat << " </div> </div>";
+            *condat << " </div> </div>";
 
             sql="SELECT name,id FROM tags";
 
@@ -133,24 +135,27 @@ namespace blogi {
 
 
             if (tcount>0) {
-                condat << "<div id=\"idxtags\"><ul>";
+                *condat << "<div id=\"idxtags\"><ul>";
 
                 for (int i = 0; i < tcount; i++) {
                     sql="select tag_id FROM tags_content where tag_id = '";
                     sql << res[i][1] << "'";
                     blogi::DBResult rescnt;
-                    condat << "<li><a href=\""
+                    *condat << "<li><a href=\""
                     << Args->config->buildurl("content/tag/",url,512) << res[i][0] << "\">" << res[i][0] << "(" << Args->database->exec(&sql,rescnt) << ")" << "</a></li>";
 
                 }
 
-                condat << "</ul></div>";
+                *condat << "</ul></div>";
             }
             std::string *out=new std::string;
 
-            page.getElementbyID("main")->insertChild(condat.parse());;
 
-            Args->theme->printSite(out,&page,curreq->getRequestURL(),Args->auth->isLoggedIn(curreq,sid),meta.c_str());
+            page->getElementbyID("main")->insertChild(condat->parse());
+
+            delete condat;
+
+            Args->theme->printSite(out,page,curreq->getRequestURL(),Args->auth->isLoggedIn(curreq,sid),meta.c_str());
 
             libhttppp::HttpResponse resp;
             resp.setVersion(HTTPVERSION(1.1));
@@ -162,7 +167,7 @@ namespace blogi {
 
         void contentPage(netplus::con* curcon, libhttppp::HttpRequest* curreq,libhtmlpp::HtmlElement &page) {
             libhttppp::HTTPException excep;
-            libhtmlpp::HtmlString condat;
+            libhtmlpp::HtmlString *condat = new libhtmlpp::HtmlString;
 
             char url[512];
             std::string sid;
@@ -178,20 +183,21 @@ namespace blogi {
 
 
             if(Args->database->exec(&sql,res)<1){
+                delete condat;
                 excep[libhttppp::HTTPException::Critical] << "No entry found for content id: " << cid;
                 throw excep;
             }
 
-            condat << "<div id=\"content\">";
+            *condat << "<div id=\"content\">";
             if (Args->auth->isLoggedIn(curreq,sid)) {
-                condat << "<div class=\"blog_adminmenu\">"
+                *condat << "<div class=\"blog_adminmenu\">"
                 << "<ul>"
                 << "<li><a href=\"" << Args->config->buildurl("content/edit/",url,512) << cid << "\">Bearbeiten</a></li>"
                 << "<li><a href=\"" << Args->config->buildurl("content/del/",url,512) << cid << "\">Loeschen</a></li>"
                 << "</ul>"
                 << "</div>";
             }
-            condat << "<div class=\"blog_entry\">"
+            *condat << "<div class=\"blog_entry\">"
             << "<span class=\"title\">" << res[0][1] << "</span>"
             << "<div  class=\"text\">" << res[0][2] << "</div>"
             << "<span class=\"author\">verfasst von " << res[0][3] << " am "<< res[0][4]  <<" </span>"
@@ -200,12 +206,15 @@ namespace blogi {
             std::string *out=new std::string;
 
             try{
-                page.getElementbyID("main")->insertChild(condat.parse());
+                page.getElementbyID("main")->insertChild(condat->parse());
             }catch(libhtmlpp::HTMLException &e){
                 delete out;
+                delete condat;
                 excep[libhttppp::HTTPException::Error] << e.what();
                 throw excep;
             }
+
+            delete condat;
 
             Args->theme->printSite(out,&page,curreq->getRequestURL(),Args->auth->isLoggedIn(curreq,sid));
 
@@ -659,7 +668,7 @@ namespace blogi {
             return;
         }
 
-        bool Controller(netplus::con * curcon, libhttppp::HttpRequest * req,libhtmlpp::HtmlElement page){
+        bool Controller(netplus::con * curcon, libhttppp::HttpRequest * req,libhtmlpp::HtmlElement *page){
             char url[512];
             if(strncmp(req->getRequestURL(),Args->config->buildurl("content",url,512),strlen(Args->config->buildurl("content",url,512)))!=0){
                 return false;
@@ -674,13 +683,13 @@ namespace blogi {
             }
 
             if (strncmp(curl.c_str(),Args->config->buildurl("content/addpost",url,512),strlen(Args->config->buildurl("content/addpost",url,512)))==0){
-                    addPostPage(curcon,req,page);
+                    addPostPage(curcon,req,*page);
             }else if (strncmp(curl.c_str(), Args->config->buildurl("content/read",url,512), strlen(Args->config->buildurl("content/read",url,512))) == 0) {
-                    contentPage(curcon,req,page);
+                    contentPage(curcon,req,*page);
             }else if (strncmp(curl.c_str(), Args->config->buildurl("content/edit",url,512), strlen(Args->config->buildurl("content/edit",url,512))) == 0) {
-                    editPostPage(curcon,req,page);
+                    editPostPage(curcon,req,*page);
             }else if (strncmp(curl.c_str(), Args->config->buildurl("content/del",url,512), strlen(Args->config->buildurl("content/del",url,512))) == 0) {
-                    delPostPage(curcon, req,page);
+                    delPostPage(curcon, req,*page);
             }else{
                 int startpos = 0;
                 libhttppp::HttpForm start;

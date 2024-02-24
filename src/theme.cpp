@@ -109,7 +109,7 @@ blogi::Template::~Template(){
 
 }
 
-void blogi::Template::renderPage(const char *name,libhtmlpp::HtmlPage* page, libhtmlpp::HtmlElement* index){
+void blogi::Template::renderPage(const char *name,libhtmlpp::HtmlPage* page, libhtmlpp::HtmlElement** index){
     std::string htmlfile=_Config.Theme;
     htmlfile.append("/");
     htmlfile.append(name);
@@ -134,7 +134,7 @@ void blogi::Template::renderPage(const char *name,libhtmlpp::HtmlPage* page, lib
         ++pos;
     }
 
-    index=page->loadString(temp);
+    *index=page->loadString(temp);
     delete temp;
 }
 
@@ -182,7 +182,7 @@ void blogi::Template::printSite(std::string *output,libhtmlpp::HtmlElement *inde
 
         std::string sessid;
 
-        libhtmlpp::HtmlElement *head,*header,*main, *footernav;
+        libhtmlpp::HtmlElement *head,*footernav;
         head=index->getElementbyTag("head");
 
         std::string hostpath;
@@ -218,7 +218,7 @@ void blogi::Template::printSite(std::string *output,libhtmlpp::HtmlElement *inde
         if(footernav)
             footernav->appendChild(footerancor.parse());
 
-        libhtmlpp::print(index,output);
+        libhtmlpp::print(index,&output);
     }catch(libhtmlpp::HTMLException &e){
         libhttppp::HTTPException excep;
         excep[libhttppp::HTTPException::Error] << e.what();

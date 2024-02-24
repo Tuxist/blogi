@@ -481,7 +481,7 @@ namespace blogi {
             }
         }
 
-        bool Controller(netplus::con *curcon,libhttppp::HttpRequest *req,libhtmlpp::HtmlElement page){
+        bool Controller(netplus::con *curcon,libhttppp::HttpRequest *req,libhtmlpp::HtmlElement *page){
             char url[512];
             if (strncmp(req->getRequestURL(),Args->config->buildurl("media/getimage/",url,512),strlen(Args->config->buildurl("media/getimage",url,512)))==0){
                 int mlen=strlen(req->getRequestURL())-strlen(Args->config->buildurl("media/getimage/",url,512));
