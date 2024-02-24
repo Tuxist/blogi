@@ -148,7 +148,7 @@ void blogi::Blogi::loginPage(netplus::con*curcon,libhttppp::HttpRequest *curreq)
             index->getElementbyID("main")->insertChild(condat.parse());
 
         for(blogi::Plugin::PluginData *curplg=BlogiPlg->getFirstPlugin(); curplg; curplg=curplg->getNextPlg()){
-            curplg->getInstace()->Rendering(curreq,*index);
+            curplg->getInstace()->Rendering(curreq,index);
         }
 
         PlgArgs->theme->printSite(out,index,curreq->getRequestURL(),false);
@@ -257,7 +257,7 @@ void blogi::Blogi::settingsPage(netplus::con* curcon, libhttppp::HttpRequest* cu
     index->getElementbyID("main")->appendChild(setgui.parse());
 
     for(blogi::Plugin::PluginData *curplg=BlogiPlg->getFirstPlugin(); curplg; curplg=curplg->getNextPlg()){
-        curplg->getInstace()->Rendering(curreq,*index);
+        curplg->getInstace()->Rendering(curreq,index);
     }
 
     PlgArgs->theme->printSite(out,index,curreq->getRequestURL(),false);
@@ -272,25 +272,25 @@ void blogi::Blogi::settingsPage(netplus::con* curcon, libhttppp::HttpRequest* cu
 
 
 void blogi::Blogi::RequestEvent(netplus::con *curcon){
-    libhttppp::HttpRequest req;
+    libhttppp::HttpRequest *req=new libhttppp::HttpRequest;
     char url[512];
     try{
-        req.parse(curcon);
+        req->parse(curcon);
 
-        libhttppp::HttpHeader::HeaderData *hip=req.getData("x-real-ip");
-        libhttppp::HttpHeader::HeaderData  *useragent=req.getData("user-agent");
+        libhttppp::HttpHeader::HeaderData *hip=req->getData("x-real-ip");
+        libhttppp::HttpHeader::HeaderData  *useragent=req->getData("user-agent");
 
         if(hip)
-            std::cout <<"Request from: " << req.getData(hip) << " url: " << req.getRequestURL();
+            std::cout <<"Request from: " << req->getData(hip) << " url: " << req->getRequestURL();
         if(useragent)
-            std::cout << " agent: " << req.getData(useragent);
+            std::cout << " agent: " << req->getData(useragent);
 
         std::cout << std::endl;
 
 RETRY_REQUEST:
         try{
             /*blogi internal pages and redirections*/
-            if(strcmp(req.getRequestURL(),"/")==0 || strcmp(req.getRequestURL(),PlgArgs->config->getprefix())==0){
+            if(strcmp(req->getRequestURL(),"/")==0 || strcmp(req->getRequestURL(),PlgArgs->config->getprefix())==0){
                 libhttppp::HttpResponse curres;
                 curres.setState(HTTP307);
                 curres.setVersion(HTTPVERSION(1.1));
@@ -298,19 +298,19 @@ RETRY_REQUEST:
                 curres.setContentType("text/html");
                 curres.send(curcon, nullptr, 0);
                 return;
-            }else if(strncmp(req.getRequestURL(),PlgArgs->config->buildurl("logout",url,512),strlen(PlgArgs->config->buildurl("logout",url,512)))==0){
-                logoutPage(curcon,&req);
+            }else if(strncmp(req->getRequestURL(),PlgArgs->config->buildurl("logout",url,512),strlen(PlgArgs->config->buildurl("logout",url,512)))==0){
+                logoutPage(curcon,req);
                 return;
-            }else if(strncmp(req.getRequestURL(),PlgArgs->config->buildurl("login",url,512),strlen(PlgArgs->config->buildurl("login",url,512)))==0){
-                loginPage(curcon,&req);
+            }else if(strncmp(req->getRequestURL(),PlgArgs->config->buildurl("login",url,512),strlen(PlgArgs->config->buildurl("login",url,512)))==0){
+                loginPage(curcon,req);
                 return;
-            }else if(strncmp(req.getRequestURL(),PlgArgs->config->buildurl("settings",url,512),strlen(PlgArgs->config->buildurl("settings",url,512)))==0){
-                settingsPage(curcon,&req);
+            }else if(strncmp(req->getRequestURL(),PlgArgs->config->buildurl("settings",url,512),strlen(PlgArgs->config->buildurl("settings",url,512)))==0){
+                settingsPage(curcon,req);
                 return;
-            }else if(strncmp(req.getRequestURL(),PlgArgs->config->buildurl("editor",url,512),strlen(PlgArgs->config->buildurl("editor",url,512)))==0){
-                PlgArgs->edit->Controller(curcon,&req);
+            }else if(strncmp(req->getRequestURL(),PlgArgs->config->buildurl("editor",url,512),strlen(PlgArgs->config->buildurl("editor",url,512)))==0){
+                PlgArgs->edit->Controller(curcon,req);
                 return;
-            }else if (strstr(req.getRequestURL(),"robots.txt")){
+            }else if (strstr(req->getRequestURL(),"robots.txt")){
                 const char *robot = "user-agent: *\r\ndisallow: /blog/settings/";
                 libhttppp::HttpResponse resp;
                 resp.setVersion(HTTPVERSION(1.1));
@@ -320,16 +320,15 @@ RETRY_REQUEST:
                 return;
             }
 
-            libhtmlpp::HtmlElement *index;
-            if(req.isMobile())
-                index= new libhtmlpp::HtmlElement(MIndex);
-            else
-                index= new libhtmlpp::HtmlElement(Index);;
-
-            if(!PlgArgs->theme->Controller(curcon,&req)){
+            if(!PlgArgs->theme->Controller(curcon,req)){
+                libhtmlpp::HtmlElement *index;
+                if(req->isMobile())
+                    index= new libhtmlpp::HtmlElement(MIndex);
+                else
+                    index= new libhtmlpp::HtmlElement(Index);;
 
                 for(blogi::Plugin::PluginData *curplg=BlogiPlg->getFirstPlugin(); curplg; curplg=curplg->getNextPlg()){
-                    curplg->getInstace()->Rendering(&req,*index);
+                    curplg->getInstace()->Rendering(req,index);
                 }
 
                 for(blogi::Plugin::PluginData *curplg=BlogiPlg->getFirstPlugin(); curplg; curplg=curplg->getNextPlg()){
@@ -337,13 +336,15 @@ RETRY_REQUEST:
                     std::string url=PlgArgs->config->getprefix();
                     url+="/";
                     url+=api->getName();
-                    if(strncmp(req.getRequestURL(),url.c_str(),url.length())==0){
-                        if(api->Controller(curcon,&req,index)){
+                    if(strncmp(req->getRequestURL(),url.c_str(),url.length())==0){
+                        if(api->Controller(curcon,req,index)){
                             delete index;
+                            delete req;
                             return;
                         }
                     }
                 }
+                delete req;
                 delete index;
 
                 std::string *output=new std::string;

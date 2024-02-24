@@ -63,7 +63,7 @@ namespace blogi {
 
         virtual void Settings(libhttppp::HttpRequest *req,libhtmlpp::HtmlString &setdiv);
 
-        virtual void Rendering(libhttppp::HttpRequest *req,libhtmlpp::HtmlElement &curpage);
+        virtual void Rendering(libhttppp::HttpRequest *req,libhtmlpp::HtmlElement *curpage);
     protected:
         PluginArgs *Args;
     };

@@ -73,7 +73,7 @@ namespace blogi {
             return;
         }
 
-        void Rendering(libhttppp::HttpRequest *req,libhtmlpp::HtmlElement& curpage){
+        void Rendering(libhttppp::HttpRequest *req,libhtmlpp::HtmlElement* curpage){
             blogi::SQL sql,sql2;
             blogi::DBResult res,res2;
             sql << "select id,name,container_id from navbar";
@@ -106,8 +106,8 @@ namespace blogi {
                 buf << "</ul></div>";
 
                 sql2.clear();
-                if(curpage.getElementbyID(res[i][2]))
-                    curpage.getElementbyID(res[i][2])->appendChild(buf.parse());
+                if(curpage->getElementbyID(res[i][2]))
+                    curpage->getElementbyID(res[i][2])->appendChild(buf.parse());
             }
 
         }

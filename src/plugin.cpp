@@ -41,7 +41,7 @@ bool blogi::PluginApi::haveSettings(){
     return false;
 }
 
-void blogi::PluginApi::Rendering(libhttppp::HttpRequest *req,libhtmlpp::HtmlElement &curpage){
+void blogi::PluginApi::Rendering(libhttppp::HttpRequest *req,libhtmlpp::HtmlElement *curpage){
     return;
 }
 
