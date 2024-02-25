@@ -113,7 +113,7 @@ namespace blogi {
                 if(strcmp(curdat->getKey(),"albumid")==0)
                     id=atoi(curdat->getValue());
                 if(strcmp(curdat->getKey(),"albumname")==0)
-                    libhtmlpp::HtmlEncode(curdat->getValue(),&name);
+                    libhtmlpp::HtmlEncode(curdat->getValue(),name);
             }
 
             if(id<0){

@@ -141,12 +141,12 @@ void blogi::StaticPage::newPage(libhttppp::HttpRequest* req, libhtmlpp::HtmlStri
                 libhtmlpp::HtmlEncode(data.c_str(),&result);
                 meta=result.c_str();
             }else if(strcmp(curctdisp->getName(),"text")==0){
-                text=data;
+                text=&data;
             }
         }
     }catch(...){};
 
-    if(!surl.empty() && ( !text.empty() && text.validate(err) ) ){
+    if(!surl.empty() && ( !text.empty() && text.validate(&err) ) ){
         sql << "INSERT INTO static_content (url,meta,text) VALUES('";
         sql.escaped(surl.c_str()) << "','";
         sql.escaped(meta.c_str()) << "','";
@@ -351,7 +351,7 @@ bool blogi::StaticPage::Controller(netplus::con *curcon,libhttppp::HttpRequest *
             throw excep;
         }
 
-        std::string *out = new std::string;
+        std::string out;
         condat << "<div id=\"content\" class=\"staticpage\" >"
                << res[0][1]
                << "</div>";
@@ -363,8 +363,7 @@ bool blogi::StaticPage::Controller(netplus::con *curcon,libhttppp::HttpRequest *
         resp.setVersion(HTTPVERSION(1.1));
         resp.setState(HTTP200);
         resp.setContentType("text/html");
-        resp.send(curcon,out->c_str(),out->length());
-        delete out;
+        resp.send(curcon,out.c_str(),out.length());
         return true;
     }
     return false;

@@ -176,7 +176,7 @@ bool blogi::Template::Controller(netplus::con *curcon,libhttppp::HttpRequest *re
     return false;
 }
 
-void blogi::Template::printSite(std::string *output,libhtmlpp::HtmlElement *index,const char *crrurl,bool login,const char *meta){
+void blogi::Template::printSite(std::string &output,libhtmlpp::HtmlElement *index,const char *crrurl,bool login,const char *meta){
     try{
         char url[512];
 
