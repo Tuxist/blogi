@@ -91,7 +91,7 @@ namespace blogi {
 
             if (ncount<1) {
                 *condat << " </div>";
-                std::string out;
+                libhtmlpp::HtmlString out;
                 page->getElementbyID("main")->insertChild(condat->parse());;
                 Args->theme->printSite(out,page,curreq->getRequestURL(),Args->auth->isLoggedIn(curreq,sid),meta.c_str());
 
@@ -99,7 +99,7 @@ namespace blogi {
                 resp.setVersion(HTTPVERSION(1.1));
                 resp.setState(HTTP200);
                 resp.setContentType("text/html");
-                resp.send(curcon,out.c_str(),out.length());
+                resp.send(curcon,out.c_str(),out.size());
 
                 delete condat;
                 return;
@@ -148,7 +148,7 @@ namespace blogi {
 
                 *condat << "</ul></div>";
             }
-            std::string out;
+            libhtmlpp::HtmlString out;
 
 
             page->getElementbyID("main")->insertChild(condat->parse());
@@ -161,7 +161,7 @@ namespace blogi {
             resp.setVersion(HTTPVERSION(1.1));
             resp.setState(HTTP200);
             resp.setContentType("text/html");
-            resp.send(curcon,out.c_str(),out.length());
+            resp.send(curcon,out.c_str(),out.size());
             out;
         };
 
@@ -203,7 +203,7 @@ namespace blogi {
             << "<span class=\"author\">verfasst von " << res[0][3] << " am "<< res[0][4]  <<" </span>"
             << "</div></div>";
 
-            std::string out;
+            libhtmlpp::HtmlString out;
 
             try{
                 page.getElementbyID("main")->insertChild(condat->parse());
@@ -221,7 +221,7 @@ namespace blogi {
             resp.setVersion(HTTPVERSION(1.1));
             resp.setState(HTTP200);
             resp.setContentType("text/html");
-            resp.send(curcon,out.c_str(),out.length());
+            resp.send(curcon,out.c_str(),out.size());
         };
 
         void addPostPage(netplus::con *curcon,libhttppp::HttpRequest *curreq,libhtmlpp::HtmlElement &page){
@@ -358,7 +358,7 @@ namespace blogi {
             << "</form>"
             << "</div>";
 
-            std::string out;
+            libhtmlpp::HtmlString out;
 
             page.getElementbyID("main")->insertChild(condat.parse());
 
@@ -368,7 +368,7 @@ namespace blogi {
             resp.setVersion(HTTPVERSION(1.1));
             resp.setState(HTTP200);
             resp.setContentType("text/html");
-            resp.send(curcon,out.c_str(),out.length());
+            resp.send(curcon,out.c_str(),out.size());
         }
 
         void delPostPage(netplus::con* curcon, libhttppp::HttpRequest* curreq,libhtmlpp::HtmlElement &page) {
@@ -405,7 +405,7 @@ namespace blogi {
 
             condat << "<span>Beitrag geloescht</span>";
 
-            std::string out;
+            libhtmlpp::HtmlString out;
 
             try{
                 page.getElementbyID("main")->insertChild(condat.parse());
@@ -420,7 +420,7 @@ namespace blogi {
             resp.setVersion(HTTPVERSION(1.1));
             resp.setState(HTTP200);
             resp.setContentType("text/html");
-            resp.send(curcon,out.c_str(),out.length());
+            resp.send(curcon,out.c_str(),out.size());
 
         }
 
@@ -606,7 +606,7 @@ namespace blogi {
                 << "</form>"
                 << "</div>";
             };
-            std::string out;
+            libhtmlpp::HtmlString out;
 
             try{
                 page.getElementbyID("main")->insertChild(condat.parse());
@@ -620,7 +620,7 @@ namespace blogi {
             resp.setVersion(HTTPVERSION(1.1));
             resp.setState(HTTP200);
             resp.setContentType("text/html");
-            resp.send(curcon,out.c_str(),out.length());
+            resp.send(curcon,out.c_str(),out.size());
         }
 
         const char *getName(){

@@ -114,7 +114,8 @@ namespace blogi {
             html.setAttribute("id","content");
             html.insertChild(&table);
 
-            std::string out,sid,systable;
+            libhtmlpp::HtmlString out,systable;
+            std::string sid;
             libhtmlpp::print(&html,systable);
 
             libhtmlpp::HtmlString condat;
@@ -132,7 +133,7 @@ namespace blogi {
             resp.setVersion(HTTPVERSION(1.1));
             resp.setState(HTTP200);
             resp.setContentType("text/html");
-            resp.send(curcon,out.c_str(),out.length());
+            resp.send(curcon,out.c_str(),out.size());
             return true;
 
         }

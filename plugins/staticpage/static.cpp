@@ -351,7 +351,7 @@ bool blogi::StaticPage::Controller(netplus::con *curcon,libhttppp::HttpRequest *
             throw excep;
         }
 
-        std::string out;
+        libhtmlpp::HtmlString out;
         condat << "<div id=\"content\" class=\"staticpage\" >"
                << res[0][1]
                << "</div>";
@@ -363,7 +363,7 @@ bool blogi::StaticPage::Controller(netplus::con *curcon,libhttppp::HttpRequest *
         resp.setVersion(HTTPVERSION(1.1));
         resp.setState(HTTP200);
         resp.setContentType("text/html");
-        resp.send(curcon,out.c_str(),out.length());
+        resp.send(curcon,out.c_str(),out.size());
         return true;
     }
     return false;

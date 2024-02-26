@@ -125,7 +125,7 @@ void blogi::Blogi::loginPage(netplus::con*curcon,libhttppp::HttpRequest *curreq)
              }
     }
 
-    std::string out;
+    libhtmlpp::HtmlString out;
 
     libhtmlpp::HtmlElement *index = new libhtmlpp::HtmlElement;
     if(curreq->isMobile())
@@ -156,7 +156,7 @@ void blogi::Blogi::loginPage(netplus::con*curcon,libhttppp::HttpRequest *curreq)
         curres.setState(HTTP200);
         curres.setVersion(HTTPVERSION(1.1));
         curres.setContentType("text/html");
-        curres.send(curcon,out.c_str(),out.length());
+        curres.send(curcon,out.c_str(),out.size());
         delete index;
         return;
     }
@@ -225,7 +225,7 @@ void blogi::Blogi::settingsPage(netplus::con* curcon, libhttppp::HttpRequest* cu
         throw err;
     }
 
-    std::string out;
+    libhtmlpp::HtmlString out;
     libhtmlpp::HtmlString setgui;
     char url[512];
 
@@ -264,7 +264,7 @@ void blogi::Blogi::settingsPage(netplus::con* curcon, libhttppp::HttpRequest* cu
     curres.setState(HTTP200);
     curres.setVersion(HTTPVERSION(1.1));
     curres.setContentType("text/html");
-    curres.send(curcon,out.c_str(),out.length());
+    curres.send(curcon,out.c_str(),out.size());
     delete index;
 }
 
@@ -345,7 +345,7 @@ RETRY_REQUEST:
                 delete req;
                 delete index;
 
-                std::string output;
+                libhtmlpp::HtmlString output;
                 libhtmlpp::HtmlString err;
                 err << "<!DOCTYPE html><html><body style=\"color:rgb(238, 238, 238); background:rgb(35, 38, 39);\"><span>"
                 << "Seite oder Inhalt nicht gefudnen"
@@ -357,7 +357,7 @@ RETRY_REQUEST:
                 resp.setVersion(HTTPVERSION(1.1));
                 resp.setState(HTTP404);
                 resp.setContentType("text/html");
-                resp.send(curcon,output.c_str(),output.length());
+                resp.send(curcon,output.c_str(),output.size());
             }
         }catch(libhttppp::HTTPException &e){
             if(!PlgArgs->database->isConnected()){
@@ -371,7 +371,7 @@ RETRY_REQUEST:
     }catch(libhttppp::HTTPException &e){
         if(e.getErrorType() == libhttppp::HTTPException::Note || e.getErrorType() == libhttppp::HTTPException::Warning)
             return;
-        std::string output;
+        libhtmlpp::HtmlString output;
         libhtmlpp::HtmlString err,hreason;
         libhtmlpp::HtmlEncode(e.what(),&hreason);
         err << "<!DOCTYPE html><html><body style=\"color:rgb(238, 238, 238); background:rgb(35, 38, 39);\"><span>"
@@ -384,7 +384,7 @@ RETRY_REQUEST:
         resp.setVersion(HTTPVERSION(1.1));
         resp.setState(HTTP500);
         resp.setContentType("text/html");
-        resp.send(curcon,output.c_str(),output.length());
+        resp.send(curcon,output.c_str(),output.size());
     }
 }
 

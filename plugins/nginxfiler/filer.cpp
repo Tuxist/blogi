@@ -321,8 +321,8 @@ namespace blogi {
                     throw e;
                 }
 
-                libhtmlpp::HtmlString fileHtml;
-                std::string out,sid;
+                libhtmlpp::HtmlString fileHtml,out;
+                std::string sid;
 
                 try{
                     RenderUI(path,ndir,fileHtml);
@@ -344,7 +344,7 @@ namespace blogi {
                 curres.setVersion(HTTPVERSION(1.1));
                 curres.setContentType("text/html");
                 curres.setState(HTTP200);
-                curres.send(curcon, out.c_str(),out.length());
+                curres.send(curcon, out.c_str(),out.size());
             }catch(libhttppp::HTTPException &e){
                 libhttppp::HttpResponse curres;
                 curres.setVersion(HTTPVERSION(1.1));
