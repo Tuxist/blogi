@@ -54,7 +54,6 @@ namespace blogi {
             }
 
             ~Icons(){
-                delete _nextIcon;
             }
 
             std::string  _Icon;

@@ -51,7 +51,7 @@ namespace blogi {
 
         void contentIdxPage(netplus::con *curcon,libhttppp::HttpRequest *curreq,libhtmlpp::HtmlElement *page,const char *tag,int start,int end){
             libhttppp::HTTPException excep;
-            libhtmlpp::HtmlString *condat=new libhtmlpp::HtmlString;
+            libhtmlpp::HtmlString condat;
 
             char url[512];
             std::string sid;
@@ -63,7 +63,6 @@ namespace blogi {
             if (tag) {
                 sql = "SELECT id FROM tags where name='"; sql.escaped(tag) << "' LIMIT 1";
                 if(Args->database->exec(&sql,res)<1){
-                    delete condat;
                     excep[libhttppp::HTTPException::Critical] << "no tag data found for this name!";
                     throw excep;
                 }else {
@@ -80,9 +79,9 @@ namespace blogi {
             }
 
             std::string meta;
-            *condat << "<div id=\"contentidx\">";
+            condat << "<div id=\"contentidx\">";
             if(Args->auth->isLoggedIn(curreq,sid)){
-                *condat << "<div class=\"blog_adminmenu\">"
+                condat << "<div class=\"blog_adminmenu\">"
                 << "<ul>"
                 << "<li><a href=\""<< Args->config->buildurl("content/addpost",url,512) <<"\">Addpost</a></li>"
                 << "</ul>"
@@ -90,9 +89,9 @@ namespace blogi {
             }
 
             if (ncount<1) {
-                *condat << " </div>";
+                condat << " </div>";
                 libhtmlpp::HtmlString out;
-                page->getElementbyID("main")->insertChild(condat->parse());;
+                page->getElementbyID("main")->insertChild(condat.parse());
                 Args->theme->printSite(out,page,curreq->getRequestURL(),Args->auth->isLoggedIn(curreq,sid),meta.c_str());
 
                 libhttppp::HttpResponse resp;
@@ -101,12 +100,11 @@ namespace blogi {
                 resp.setContentType("text/html");
                 resp.send(curcon,out.c_str(),out.size());
 
-                delete condat;
                 return;
             }
 
             for (int i = 0; i < ncount; i++) {
-                *condat << "<div class=\"blog_entry\">"
+                condat << "<div class=\"blog_entry\">"
                 << "<span class=\"title\">" << res[i][1] << "</span>"
                 << "<div  class=\"entry_text\">" << res[i][2] << "</div>"
                 << "<span><a href=\""<< Args->config->buildurl("content/read/",url,512) << res[i][0] << "\">Weiterlesen</a> </span>"
@@ -119,15 +117,15 @@ namespace blogi {
                 meta.append(" ");
             }
 
-            *condat << "<div id=\"pager\">";
+            condat << "<div id=\"pager\">";
 
             if((start - end) >= 0)
-                *condat << "<a href=\"" << curreq->getRequestURL() << "?start=" << (start- end) <<"\" > Zur&uuml;ck </a>";
+                condat << "<a href=\"" << curreq->getRequestURL() << "?start=" << (start- end) <<"\" > Zur&uuml;ck </a>";
 
             if((ncount -10) >= 0 )
-                *condat << "<a href=\"" << curreq->getRequestURL() << "?start=" << start+10 <<"\" > Weiter </a>";
+                condat << "<a href=\"" << curreq->getRequestURL() << "?start=" << start+10 <<"\" > Weiter </a>";
 
-            *condat << " </div> </div>";
+            condat << " </div> </div>";
 
             sql="SELECT name,id FROM tags";
 
@@ -135,25 +133,23 @@ namespace blogi {
 
 
             if (tcount>0) {
-                *condat << "<div id=\"idxtags\"><ul>";
+                condat << "<div id=\"idxtags\"><ul>";
 
                 for (int i = 0; i < tcount; i++) {
                     sql="select tag_id FROM tags_content where tag_id = '";
                     sql << res[i][1] << "'";
                     blogi::DBResult rescnt;
-                    *condat << "<li><a href=\""
+                    condat << "<li><a href=\""
                     << Args->config->buildurl("content/tag/",url,512) << res[i][0] << "\">" << res[i][0] << "(" << Args->database->exec(&sql,rescnt) << ")" << "</a></li>";
 
                 }
 
-                *condat << "</ul></div>";
+                condat << "</ul></div>";
             }
             libhtmlpp::HtmlString out;
 
 
-            page->getElementbyID("main")->insertChild(condat->parse());
-
-            delete condat;
+            page->getElementbyID("main")->insertChild(condat.parse());
 
             Args->theme->printSite(out,page,curreq->getRequestURL(),Args->auth->isLoggedIn(curreq,sid),meta.c_str());
 

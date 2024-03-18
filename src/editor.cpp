@@ -35,8 +35,6 @@ blogi::Editor::Editor(Config *conf)
 }
 
 blogi::Editor::~Editor(){
-    delete _firstIcon;
-    delete _lastIcon;
 }
 
 void blogi::Editor::addIcon(const unsigned char* icon, size_t iconsize,const char *name,const char *type, const char* description){

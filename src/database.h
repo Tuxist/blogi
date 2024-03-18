@@ -72,8 +72,6 @@ namespace blogi {
             }
 
             virtual ~Data(){
-                delete Column;
-                delete nextData;
             }
 
             int         row;
