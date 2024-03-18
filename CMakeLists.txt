@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.18)
 
 project(blogi)
 
-SET(CMAKE_CXX_FLAGS "-fPIC -Wall -fstack-check -fstack-protector -fsanitize=address")
+SET(CMAKE_CXX_FLAGS "-fPIC -Wall")
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
 
