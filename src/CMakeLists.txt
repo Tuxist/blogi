@@ -51,7 +51,6 @@ include_directories(
 target_link_libraries(blogi
     stdc++
     blogidev
-    asan
 )
 
 install(
