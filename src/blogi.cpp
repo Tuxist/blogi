@@ -127,7 +127,7 @@ void blogi::Blogi::loginPage(netplus::con*curcon,libhttppp::HttpRequest *curreq)
 
     libhtmlpp::HtmlString out;
 
-    libhtmlpp::HtmlElement *index = new libhtmlpp::HtmlElement;
+    libhtmlpp::HtmlElement index;
     if(curreq->isMobile())
         index=MIndex;
     else
@@ -144,20 +144,19 @@ void blogi::Blogi::loginPage(netplus::con*curcon,libhttppp::HttpRequest *curreq)
                << "</form>"
                << "</div>";
 
-        if(index->getElementbyID("main"))
-            index->getElementbyID("main")->insertChild(condat.parse());
+        if(index.getElementbyID("main"))
+            index.getElementbyID("main")->insertChild(condat.parse());
 
         for(blogi::Plugin::PluginData *curplg=BlogiPlg->getFirstPlugin(); curplg; curplg=curplg->getNextPlg()){
-            curplg->getInstace()->Rendering(curreq,index);
+            curplg->getInstace()->Rendering(curreq,&index);
         }
 
-        PlgArgs->theme->printSite(out,index,curreq->getRequestURL(),false);
+        PlgArgs->theme->printSite(out,&index,curreq->getRequestURL(),false);
         libhttppp::HttpResponse curres;
         curres.setState(HTTP200);
         curres.setVersion(HTTPVERSION(1.1));
         curres.setContentType("text/html");
         curres.send(curcon,out.c_str(),out.size());
-        delete index;
         return;
     }
 
