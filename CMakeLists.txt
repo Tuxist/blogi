@@ -7,7 +7,6 @@ SET(CMAKE_CXX_FLAGS "-fPIC -Wall")
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
 
 find_package(libnetplus REQUIRED)
-find_package(libcryptplus REQUIRED)
 find_package(htmlpp REQUIRED)
 find_package(httppp REQUIRED)
 find_package(PostgreSQL REQUIRED)

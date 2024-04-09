@@ -92,11 +92,11 @@ blogi::Config::Config(const char *path) : confplus::Config(path){
         _StartPage=getValue(getKey("/BLOGI/STARTPAGE"),0);
 
     try{
-        if(getKey("/BLOGI/SSLCERTPATH"))
-            _SSLCertpath=getValue(getKey("/BLOGI/SSLCERTPATH"),0);
+        if(getKey("/BLOGI/HTTP/SSLCERTPATH"))
+            _SSLCertpath=getValue(getKey("/BLOGI/HTTP/SSLCERTPATH"),0);
 
-        if(getKey("/BLOGI/SSLKEYPATH"))
-            _SSLKeypath=getValue(getKey("/BLOGI/SSLKEYPATH"),0);
+        if(getKey("/BLOGI/HTTP/SSLKEYPATH"))
+            _SSLKeypath=getValue(getKey("/BLOGI/HTTP/SSLKEYPATH"),0);
     }catch(...){
     }
 }
