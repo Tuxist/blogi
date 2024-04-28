@@ -403,7 +403,7 @@ public:
                 std::cerr << e.what() << std::endl;
             }
         }catch(netplus::NetException &e){
-            std::cout << e.what() << std::endl;
+            std::cerr << e.what() << std::endl;
         }
     };
 };
@@ -438,8 +438,13 @@ int main(int argc, char** argv){
     if(!cins)
         return -1;
 
-    HttpConD blogiD(cins);
-
+    try{
+        HttpConD blogiD(cins);
+    }catch(libhttppp::HTTPException &e){
+        std::cerr << e.what() << std::endl;
+        return -1;
+    }
+    return 0;
     // delete cins;
 }
 

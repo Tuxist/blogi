@@ -160,12 +160,12 @@ namespace blogi {
             path+="/";
 
             netplus::tcp *srvsock=nullptr;
-            netplus::socket *cltsock=nullptr;
+            netplus::socket *cltsock=new netplus::tcp();
             try{
                 try{
                     srvsock= new netplus::tcp(_NHost.c_str(),_NPort,1,0);
                     srvsock->setnonblocking();
-                    cltsock=srvsock->connect();
+                    srvsock->connect(cltsock);
                     cltsock->setnonblocking();
                 }catch(netplus::NetException &e){
                     libhttppp::HTTPException he;
@@ -360,13 +360,9 @@ namespace blogi {
         int readchunk(const char *data,size_t datasize,size_t &pos){
             int start=pos;
 
-            std::cout << "len: "<< datasize <<std::endl;
-
-            while( (pos < datasize) && data[++pos]!='\r'){
-                std::cout << data[pos] <<std::endl;
-            };
-
             char value[512];
+
+            while( (pos < datasize) && data[++pos]!='\r'){};
 
             int len=pos-start;
 
