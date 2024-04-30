@@ -159,11 +159,12 @@ namespace blogi {
 
             path+="/";
 
-            netplus::tcp *srvsock=nullptr;
-            netplus::socket *cltsock=new netplus::tcp();
+            std::shared_ptr<netplus::tcp> srvsock;
+            std::shared_ptr<netplus::socket> cltsock;
             try{
                 try{
-                    srvsock= new netplus::tcp(_NHost.c_str(),_NPort,1,0);
+                    srvsock=std::make_shared<netplus::tcp>(_NHost.c_str(),_NPort,1,0);
+                    cltsock=std::make_shared<netplus::tcp>();
                     srvsock->setnonblocking();
                     srvsock->connect(cltsock);
                     cltsock->setnonblocking();
@@ -352,8 +353,6 @@ namespace blogi {
                 curres.setState(HTTP500);
                 curres.send(curcon, e.what(),strlen(e.what()));
             }
-            delete cltsock;
-            delete srvsock;
             return true;
         }
     private:

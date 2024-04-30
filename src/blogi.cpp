@@ -35,8 +35,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <netplus/eventapi.h>
 #include <netplus/exception.h>
 
-#include <cryptplus/cryptplus.h>
-
 #include <httppp/exception.h>
 #include <httppp/http.h>
 #include <httppp/httpd.h>

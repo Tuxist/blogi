@@ -141,9 +141,11 @@ namespace blogi {
             int rlen=0;
 
             try{
-                netplus::ssl ysock("www.googleapis.com",443,1,0,GOOGLECA,1966),ycsock;
-                ysock.connect(&ycsock);
-                ycsock.setnonblocking();
+                std::shared_ptr<netplus::ssl> ysock=std::make_shared<netplus::ssl>("www.googleapis.com",443,1,0,GOOGLECA,1966);
+		std::shared_ptr<netplus::ssl> ycsock=std::make_shared<netplus::ssl>();
+                
+                ysock->connect(ycsock);
+                ycsock->setnonblocking();
 
                 for(auto channel : channels){
                     libhttppp::HttpRequest nreq;
@@ -156,13 +158,13 @@ namespace blogi {
                     *nreq.setData("host")  << "www.googleapis.com" << ":" << 443;
                     *nreq.setData("accept") << "text/json";
                     *nreq.setData("user-agent") << "blogi/1.0 (Alpha Version 0.1)";
-                    nreq.send(&ycsock,&ysock);
+                    nreq.send(ycsock,ysock);
 
                     char data[16384];
                     int recv,tries=0,chunklen=0;
                     try{
                         for(;;){
-                            recv=ysock.recvData(&ycsock,data,16384);
+                            recv=ysock->recvData(ycsock,data,16384);
                             if(recv>0)
                                 break;
                             // if(tries>5){
@@ -209,7 +211,7 @@ namespace blogi {
                                     tries=0;
                                     for(;;){
                                         cpos=0;
-                                        recv=ysock.recvData(&ycsock,data,16384);
+                                        recv=ysock->recvData(ycsock,data,16384);
                                         if(recv>0)
                                             break;
                                         // if(tries>5){
@@ -251,7 +253,7 @@ namespace blogi {
                                 try{
                                     tries=0;
                                     for(;;){
-                                        recv=ysock.recvData(&ycsock,data,16384);
+                                        recv=ysock->recvData(ycsock,data,16384);
                                         cpos=0;
                                         if(recv == 0 && tries>10){
                                             netplus::NetException e;
