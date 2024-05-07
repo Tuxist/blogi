@@ -191,16 +191,17 @@ namespace blogi {
 
                 try{
                     for(;;){
-                        recv=srvsock->recvData(cltsock,data,16384);
-                        if(recv>0)
-                                break;
-                        if(tries>5){
-                            netplus::NetException e;
+                        try{
+                            recv=srvsock->recvData(cltsock,data,16384);
+                            break;
+                        }catch(netplus::NetException &e){
+                            if(e.getErrorType()==netplus::NetException::Note){
+                                std::this_thread::sleep_for(std::chrono::milliseconds(10));
+                                continue;
+                            }
                             e[netplus::NetException::Error] << "nginxfiler: can't reach nginx server !";
                             throw e;
                         }
-                        std::this_thread::sleep_for(std::chrono::milliseconds(5*tries));
-                        ++tries;
                     }
                 }catch(netplus::NetException &e){
                     libhttppp::HTTPException he;
@@ -246,20 +247,19 @@ namespace blogi {
                             json.append(data+cpos,recv);
                             rlen-=recv;
                             if(rlen>0){
-                                tries=0;
                                 for(;;){
                                     cpos=0;
-                                    recv=srvsock->recvData(cltsock,data,16384);
-                                    if(recv>0)
+                                    try{
+                                        recv=srvsock->recvData(cltsock,data,16384);
                                         break;
-                                    if(tries>5){
-                                        netplus::NetException e;
+                                    }catch(netplus::NetException &e){
+                                        if(e.getErrorType()==netplus::NetException::Note){
+                                            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+                                            continue;
+                                        }
                                         e[netplus::NetException::Error] << "nginxfiler: can't reach nginx server !";
                                         throw e;
                                     }
-                                    ++tries;;
-                                    std::this_thread::sleep_for(std::chrono::milliseconds(100));
-
                                 }
                             }
                         }catch(netplus::NetException &e){
@@ -289,20 +289,19 @@ namespace blogi {
                             readed+=len;
                         }else{
                             try{
-                                tries=0;
                                 for(;;){
-                                    recv=srvsock->recvData(cltsock,data,16384);
                                     cpos=0;
-                                    if(recv == 0 && tries>10){
-                                        netplus::NetException e;
+                                    try{
+                                        recv=srvsock->recvData(cltsock,data,16384);
+                                        break;
+                                    }catch(netplus::NetException &e){
+                                        if(e.getErrorType()==netplus::NetException::Note){
+                                            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+                                            continue;
+                                        }
                                         e[netplus::NetException::Error] << "nginxfiler: can't reach nginx server !";
                                         throw e;
-                                    }else if(recv !=0 ){
-                                        break;
                                     }
-                                    ++tries;
-                                    std::this_thread::sleep_for(std::chrono::milliseconds(5*tries));
-
                                 }
                             }catch(netplus::NetException &e){
                                 libhttppp::HTTPException ee;
