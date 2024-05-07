@@ -44,7 +44,7 @@ namespace blogi {
 
         void displayEditor(const char *inputname,const char *value,libhtmlpp::HtmlString &target);
 
-        void Controller(netplus::con *curcon,libhttppp::HttpRequest *req);
+        void Controller(libhttppp::HttpRequest *req);
 
     private:
         class Icons {

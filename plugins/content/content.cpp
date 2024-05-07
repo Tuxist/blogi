@@ -49,7 +49,7 @@ namespace blogi {
         ~Content(){
         };
 
-        void contentIdxPage(netplus::con *curcon,libhttppp::HttpRequest *curreq,libhtmlpp::HtmlElement *page,const char *tag,int start,int end){
+        void contentIdxPage(libhttppp::HttpRequest *curreq,libhtmlpp::HtmlElement *page,const char *tag,int start,int end){
             libhttppp::HTTPException excep;
             libhtmlpp::HtmlString condat;
 
@@ -98,7 +98,7 @@ namespace blogi {
                 resp.setVersion(HTTPVERSION(1.1));
                 resp.setState(HTTP200);
                 resp.setContentType("text/html");
-                resp.send(curcon,out.c_str(),out.size());
+                resp.send(curreq,out.c_str(),out.size());
 
                 return;
             }
@@ -157,11 +157,10 @@ namespace blogi {
             resp.setVersion(HTTPVERSION(1.1));
             resp.setState(HTTP200);
             resp.setContentType("text/html");
-            resp.send(curcon,out.c_str(),out.size());
-            out;
+            resp.send(curreq,out.c_str(),out.size());
         };
 
-        void contentPage(netplus::con* curcon, libhttppp::HttpRequest* curreq,libhtmlpp::HtmlElement &page) {
+        void contentPage(libhttppp::HttpRequest* curreq,libhtmlpp::HtmlElement &page) {
             libhttppp::HTTPException excep;
             libhtmlpp::HtmlString *condat = new libhtmlpp::HtmlString;
 
@@ -217,10 +216,10 @@ namespace blogi {
             resp.setVersion(HTTPVERSION(1.1));
             resp.setState(HTTP200);
             resp.setContentType("text/html");
-            resp.send(curcon,out.c_str(),out.size());
+            resp.send(curreq,out.c_str(),out.size());
         };
 
-        void addPostPage(netplus::con *curcon,libhttppp::HttpRequest *curreq,libhtmlpp::HtmlElement &page){
+        void addPostPage(libhttppp::HttpRequest *curreq,libhtmlpp::HtmlElement &page){
             std::string sid;
             char url[512];
 
@@ -339,7 +338,7 @@ namespace blogi {
                 resp.setState(HTTP307);
                 resp.setContentType("text/html");
                 *resp.setData("Location") << ccurl;
-                resp.send(curcon,nullptr,0);
+                resp.send(curreq,nullptr,0);
                 return;
             }
 
@@ -364,10 +363,10 @@ namespace blogi {
             resp.setVersion(HTTPVERSION(1.1));
             resp.setState(HTTP200);
             resp.setContentType("text/html");
-            resp.send(curcon,out.c_str(),out.size());
+            resp.send(curreq,out.c_str(),out.size());
         }
 
-        void delPostPage(netplus::con* curcon, libhttppp::HttpRequest* curreq,libhtmlpp::HtmlElement &page) {
+        void delPostPage(libhttppp::HttpRequest* curreq,libhtmlpp::HtmlElement &page) {
             std::string sid;
             char url[512];
 
@@ -416,7 +415,7 @@ namespace blogi {
             resp.setVersion(HTTPVERSION(1.1));
             resp.setState(HTTP200);
             resp.setContentType("text/html");
-            resp.send(curcon,out.c_str(),out.size());
+            resp.send(curreq,out.c_str(),out.size());
 
         }
 
@@ -458,7 +457,7 @@ namespace blogi {
             }
         }
 
-        void editPostPage(netplus::con* curcon, libhttppp::HttpRequest* curreq,libhtmlpp::HtmlElement &page) {
+        void editPostPage(libhttppp::HttpRequest* curreq,libhtmlpp::HtmlElement &page) {
             std::string sid;
             char url[512];
             if (!Args->auth->isLoggedIn(curreq,sid)) {
@@ -616,7 +615,7 @@ namespace blogi {
             resp.setVersion(HTTPVERSION(1.1));
             resp.setState(HTTP200);
             resp.setContentType("text/html");
-            resp.send(curcon,out.c_str(),out.size());
+            resp.send(curreq,out.c_str(),out.size());
         }
 
         const char *getName(){
@@ -657,7 +656,7 @@ namespace blogi {
             return;
         }
 
-        bool Controller(netplus::con * curcon, libhttppp::HttpRequest * req,libhtmlpp::HtmlElement *page){
+        bool Controller(libhttppp::HttpRequest * req,libhtmlpp::HtmlElement *page){
             char url[512];
             if(strncmp(req->getRequestURL(),Args->config->buildurl("content",url,512),strlen(Args->config->buildurl("content",url,512)))!=0){
                 return false;
@@ -672,13 +671,13 @@ namespace blogi {
             }
 
             if (strncmp(curl.c_str(),Args->config->buildurl("content/addpost",url,512),strlen(Args->config->buildurl("content/addpost",url,512)))==0){
-                    addPostPage(curcon,req,*page);
+                    addPostPage(req,*page);
             }else if (strncmp(curl.c_str(), Args->config->buildurl("content/read",url,512), strlen(Args->config->buildurl("content/read",url,512))) == 0) {
-                    contentPage(curcon,req,*page);
+                    contentPage(req,*page);
             }else if (strncmp(curl.c_str(), Args->config->buildurl("content/edit",url,512), strlen(Args->config->buildurl("content/edit",url,512))) == 0) {
-                    editPostPage(curcon,req,*page);
+                    editPostPage(req,*page);
             }else if (strncmp(curl.c_str(), Args->config->buildurl("content/del",url,512), strlen(Args->config->buildurl("content/del",url,512))) == 0) {
-                    delPostPage(curcon, req,*page);
+                    delPostPage(req,*page);
             }else{
                 int startpos = 0;
                 libhttppp::HttpForm start;
@@ -691,9 +690,9 @@ namespace blogi {
                 std::cerr << startpos << std::endl;
                 if (strcmp(curl.c_str(),Args->config->buildurl("content/tag",url,512))>0){
                     size_t len = strlen(Args->config->buildurl("content/tag/",url,512));
-                    contentIdxPage(curcon,req,page,curl.substr(len,curl.length()-len).c_str(),startpos,SITELIMIT);
+                    contentIdxPage(req,page,curl.substr(len,curl.length()-len).c_str(),startpos,SITELIMIT);
                  }else{
-                    contentIdxPage(curcon,req,page,nullptr,startpos,SITELIMIT);
+                    contentIdxPage(req,page,nullptr,startpos,SITELIMIT);
                  }
             }
             return true;

@@ -127,7 +127,7 @@ namespace blogi {
             }
         }
 
-        bool Controller(netplus::con * curcon, libhttppp::HttpRequest * req,libhtmlpp::HtmlElement *page){
+        bool Controller(libhttppp::HttpRequest * req,libhtmlpp::HtmlElement *page){
             char url[512];
             if(strncmp(req->getRequestURL(),Args->config->buildurl("youtube",url,512),strlen(Args->config->buildurl("youtube",url,512)))!=0){
                 return false;
@@ -352,7 +352,7 @@ namespace blogi {
             curres.setVersion(HTTPVERSION(1.1));
             curres.setContentType("text/html");
             curres.setState(HTTP200);
-            curres.send(curcon, out.c_str(),out.size());
+            curres.send(req, out.c_str(),out.size());
 
             return true;
         }

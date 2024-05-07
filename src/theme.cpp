@@ -143,7 +143,7 @@ void blogi::Template::renderPage(const char *name,libhtmlpp::HtmlPage* page, lib
 
 }
 
-bool blogi::Template::Controller(netplus::con *curcon,libhttppp::HttpRequest *req){
+bool blogi::Template::Controller(libhttppp::HttpRequest *req){
     std::string publicf = req->getRequestURL();
     if(publicf.length() >strlen(_Config.config->getprefix()) && publicf.compare(strlen(_Config.config->getprefix()),13,"/theme/public/",13)==0){
         for(auto curfile=_PublicFiles.begin(); curfile!=_PublicFiles.end(); curfile++){
@@ -166,9 +166,9 @@ bool blogi::Template::Controller(netplus::con *curcon,libhttppp::HttpRequest *re
                 if( curfile->Compressed.length() >0 && req->getData("accept-encoding")
                     && strstr(req->getData(req->getData("accept-encoding")),"br") ){
                     *resp.setData("content-encoding") << "br";
-                    resp.send(curcon,curfile->Compressed.c_str(),curfile->Compressed.length());
+                    resp.send(req,curfile->Compressed.c_str(),curfile->Compressed.length());
                 }else{
-                    resp.send(curcon,curfile->Content.c_str(),curfile->Content.length());
+                    resp.send(req,curfile->Content.c_str(),curfile->Content.length());
                 }
                 return true;
             }

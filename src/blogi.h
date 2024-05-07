@@ -25,7 +25,7 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 *******************************************************************************/
 
-#include <netplus/eventapi.h>
+#include <httppp//httpd.h>
 
 #include "theme.h"
 #include "plugin.h"
@@ -33,14 +33,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #pragma once
 
 namespace blogi {
-    class Blogi : public netplus::event  {
+    class Blogi : public libhttppp::HttpEvent  {
     public:
         Blogi(Config *blgcfg,netplus::socket *serversocket);
         ~Blogi();
-        void loginPage(netplus::con*curcon,libhttppp::HttpRequest *curreq);
-        void logoutPage(netplus::con *curcon,libhttppp::HttpRequest *curreq);
-        void settingsPage(netplus::con *curcon,libhttppp::HttpRequest *curreq);
-        void RequestEvent(netplus::con *curcon);
+        void loginPage(libhttppp::HttpRequest *curreq);
+        void logoutPage(libhttppp::HttpRequest *curreq);
+        void settingsPage(libhttppp::HttpRequest *curreq);
+        void RequestEvent(libhttppp::HttpRequest *curreq);
     private:
         Plugin                 *BlogiPlg;
         PluginArgs             *PlgArgs;

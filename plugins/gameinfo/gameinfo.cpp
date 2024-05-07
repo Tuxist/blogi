@@ -91,7 +91,7 @@ namespace blogi {
             }
         }
 
-        bool Controller(netplus::con *curcon,libhttppp::HttpRequest *req,libhtmlpp::HtmlElement *page){
+        bool Controller(libhttppp::HttpRequest *req,libhtmlpp::HtmlElement *page){
             char url[512];
             if(strncmp(req->getRequestURL(),Args->config->buildurl("gamestatus",url,512),strlen(Args->config->buildurl("gamestatus",url,512)))!=0){
                 return false;
@@ -142,7 +142,7 @@ namespace blogi {
             resp.setVersion(HTTPVERSION(1.1));
             resp.setState(HTTP200);
             resp.setContentType("text/html");
-            resp.send(curcon,out.c_str(),out.size());
+            resp.send(req,out.c_str(),out.size());
             return true;
 
         }

@@ -481,7 +481,7 @@ namespace blogi {
             }
         }
 
-        bool Controller(netplus::con *curcon,libhttppp::HttpRequest *req,libhtmlpp::HtmlElement *page){
+        bool Controller(libhttppp::HttpRequest *req,libhtmlpp::HtmlElement *page){
             char url[512];
             if (strncmp(req->getRequestURL(),Args->config->buildurl("media/getimage/",url,512),strlen(Args->config->buildurl("media/getimage",url,512)))==0){
                 int mlen=strlen(req->getRequestURL())-strlen(Args->config->buildurl("media/getimage/",url,512));
@@ -513,14 +513,14 @@ namespace blogi {
                         _store->load(suuid,value);
                         curres.setContentType(res[0][0]);
                         curres.setState(HTTP200);
-                        curres.send(curcon, value.c_str(), value.length());
+                        curres.send(req, value.c_str(), value.length());
                     }catch(...){
                         curres.setState(HTTP404);
-                        curres.send(curcon,nullptr,0);
+                        curres.send(req,nullptr,0);
                     }
                 }else{
                     curres.setState(HTTP404);
-                    curres.send(curcon,nullptr,0);
+                    curres.send(req,nullptr,0);
                 }
                 return true;
             }

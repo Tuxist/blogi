@@ -32,7 +32,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <string.h>
 #include <errno.h>
 
-#include <netplus/eventapi.h>
 #include <netplus/exception.h>
 
 #include <httppp/exception.h>
@@ -54,7 +53,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "pgsql.cpp"
 #include "sqlite.cpp"
 
-blogi::Blogi::Blogi(Config *blgcfg,netplus::socket *serversocket) : event(serversocket){
+blogi::Blogi::Blogi(Config *blgcfg,netplus::socket *serversocket) : HttpEvent(serversocket){
 
     PlgArgs = new PluginArgs;
     PlgArgs->config=blgcfg;
@@ -96,7 +95,7 @@ blogi::Blogi::~Blogi(){
     delete MPage;
 }
 
-void blogi::Blogi::loginPage(netplus::con*curcon,libhttppp::HttpRequest *curreq){
+void blogi::Blogi::loginPage(libhttppp::HttpRequest *curreq){
     char url[512];
     libhttppp::HTTPException excep;
     std::string sessid;
@@ -155,7 +154,7 @@ void blogi::Blogi::loginPage(netplus::con*curcon,libhttppp::HttpRequest *curreq)
         curres.setState(HTTP200);
         curres.setVersion(HTTPVERSION(1.1));
         curres.setContentType("text/html");
-        curres.send(curcon,out.c_str(),out.size());
+        curres.send(curreq,out.c_str(),out.size());
         return;
     }
 
@@ -172,7 +171,7 @@ void blogi::Blogi::loginPage(netplus::con*curcon,libhttppp::HttpRequest *curreq)
         curres.setVersion(HTTPVERSION(1.1));
         *curres.setData("Location") << PlgArgs->config->getstartpage();
         curres.setContentType("text/html");
-        curres.send(curcon, nullptr, 0);
+        curres.send(curreq, nullptr, 0);
     }else{
         libhttppp::HttpResponse curres;
         libhttppp::HttpCookie cookie;
@@ -191,11 +190,11 @@ void blogi::Blogi::loginPage(netplus::con*curcon,libhttppp::HttpRequest *curreq)
                << "</form>"
                << "</div>";
 
-        curres.send(curcon, condat.c_str(), condat.size());
+        curres.send(curreq, condat.c_str(), condat.size());
     }
 }
 
-void blogi::Blogi::logoutPage(netplus::con *curcon,libhttppp::HttpRequest *curreq){
+void blogi::Blogi::logoutPage(libhttppp::HttpRequest *curreq){
     const char *host;
     for(libhttppp::HttpHeader::HeaderData *preq = curreq->getfirstHeaderData(); preq; preq=curreq->nextHeaderData(preq)){
         if(strncmp(curreq->getKey(preq),"Host",4)==0)
@@ -209,10 +208,10 @@ void blogi::Blogi::logoutPage(netplus::con *curcon,libhttppp::HttpRequest *curre
     *curres.setData("Location") << PlgArgs->config->getstartpage();
     curres.setContentType("text/html");
     curres.setContentLength(0);
-    curres.send(curcon,nullptr,0);
+    curres.send(curreq,nullptr,0);
 }
 
-void blogi::Blogi::settingsPage(netplus::con* curcon, libhttppp::HttpRequest* curreq){
+void blogi::Blogi::settingsPage(libhttppp::HttpRequest* curreq){
     libhttppp::HttpCookie cookie;
     cookie.parse(curreq);
     std::string sessid;
@@ -262,69 +261,66 @@ void blogi::Blogi::settingsPage(netplus::con* curcon, libhttppp::HttpRequest* cu
     curres.setState(HTTP200);
     curres.setVersion(HTTPVERSION(1.1));
     curres.setContentType("text/html");
-    curres.send(curcon,out.c_str(),out.size());
+    curres.send(curreq,out.c_str(),out.size());
     delete index;
 }
 
 
-void blogi::Blogi::RequestEvent(netplus::con *curcon){
-    libhttppp::HttpRequest *req=new libhttppp::HttpRequest;
+void blogi::Blogi::RequestEvent(libhttppp::HttpRequest *curreq){
     char url[512];
-    try{
-        req->parse(curcon);
-
-        libhttppp::HttpHeader::HeaderData *hip=req->getData("x-real-ip");
-        libhttppp::HttpHeader::HeaderData  *useragent=req->getData("user-agent");
+    try{;
+        libhttppp::HttpHeader::HeaderData *hip=curreq->getData("x-real-ip");
+        libhttppp::HttpHeader::HeaderData  *useragent=curreq->getData("user-agent");
 
         if(hip)
-            std::cout <<"Request from: " << req->getData(hip) << " url: " << req->getRequestURL();
+            std::cout <<"Request from: " << curreq->getData(hip) << " url: " << curreq->getRequestURL();
         if(useragent)
-            std::cout << " agent: " << req->getData(useragent);
+            std::cout << " agent: " << curreq->getData(useragent);
 
         std::cout << std::endl;
 
 RETRY_REQUEST:
         try{
             /*blogi internal pages and redirections*/
-            if(strcmp(req->getRequestURL(),"/")==0 || strcmp(req->getRequestURL(),PlgArgs->config->getprefix())==0){
+            if(strcmp(curreq->getRequestURL(),"/")==0 || strcmp(curreq->getRequestURL(),PlgArgs->config->getprefix())==0){
                 libhttppp::HttpResponse curres;
                 curres.setState(HTTP307);
                 curres.setVersion(HTTPVERSION(1.1));
                 *curres.setData("Location") << PlgArgs->config->buildurl("content/tag",url,512);
                 curres.setContentType("text/html");
-                curres.send(curcon, nullptr, 0);
+                curres.send(curreq, nullptr, 0);
                 return;
-            }else if(strncmp(req->getRequestURL(),PlgArgs->config->buildurl("logout",url,512),strlen(PlgArgs->config->buildurl("logout",url,512)))==0){
-                logoutPage(curcon,req);
+            }else if(strncmp(curreq->getRequestURL(),PlgArgs->config->buildurl("logout",url,512),strlen(PlgArgs->config->buildurl("logout",url,512)))==0){
+                logoutPage(curreq);
                 return;
-            }else if(strncmp(req->getRequestURL(),PlgArgs->config->buildurl("login",url,512),strlen(PlgArgs->config->buildurl("login",url,512)))==0){
-                loginPage(curcon,req);
+            }else if(strncmp(curreq->getRequestURL(),PlgArgs->config->buildurl("login",url,512),strlen(PlgArgs->config->buildurl("login",url,512)))==0){
+                loginPage(curreq);
                 return;
-            }else if(strncmp(req->getRequestURL(),PlgArgs->config->buildurl("settings",url,512),strlen(PlgArgs->config->buildurl("settings",url,512)))==0){
-                settingsPage(curcon,req);
+            }else if(strncmp(curreq->getRequestURL(),PlgArgs->config->buildurl("settings",url,512),strlen(PlgArgs->config->buildurl("settings",url,512)))==0){
+                settingsPage(curreq);
                 return;
-            }else if(strncmp(req->getRequestURL(),PlgArgs->config->buildurl("editor",url,512),strlen(PlgArgs->config->buildurl("editor",url,512)))==0){
-                PlgArgs->edit->Controller(curcon,req);
+            }else if(strncmp(curreq->getRequestURL(),PlgArgs->config->buildurl("editor",url,512),strlen(PlgArgs->config->buildurl("editor",url,512)))==0){
+                PlgArgs->edit->Controller(curreq);
                 return;
-            }else if (strstr(req->getRequestURL(),"robots.txt")){
+            }else if (strstr(curreq->getRequestURL(),"robots.txt")){
                 const char *robot = "user-agent: *\r\ndisallow: /blog/settings/";
                 libhttppp::HttpResponse resp;
                 resp.setVersion(HTTPVERSION(1.1));
                 resp.setState(HTTP200);
                 resp.setContentType("text/plain");
-                resp.send(curcon,robot,strlen(robot));
+                resp.send(curreq,robot,strlen(robot));
                 return;
             }
 
-            if(!PlgArgs->theme->Controller(curcon,req)){
+            if(!PlgArgs->theme->Controller(curreq)){
                 libhtmlpp::HtmlElement *index;
-                if(req->isMobile())
+                if(curreq->isMobile())
                     index= new libhtmlpp::HtmlElement(MIndex);
                 else
                     index= new libhtmlpp::HtmlElement(Index);;
 
                 for(blogi::Plugin::PluginData *curplg=BlogiPlg->getFirstPlugin(); curplg; curplg=curplg->getNextPlg()){
-                    curplg->getInstace()->Rendering(req,index);
+                    curplg->getInstace()->Rendering(curreq,index);
                 }
 
                 for(blogi::Plugin::PluginData *curplg=BlogiPlg->getFirstPlugin(); curplg; curplg=curplg->getNextPlg()){
@@ -332,15 +328,13 @@ RETRY_REQUEST:
                     std::string url=PlgArgs->config->getprefix();
                     url+="/";
                     url+=api->getName();
-                    if(strncmp(req->getRequestURL(),url.c_str(),url.length())==0){
-                        if(api->Controller(curcon,req,index)){
+                    if(strncmp(curreq->getRequestURL(),url.c_str(),url.length())==0){
+                        if(api->Controller(curreq,index)){
                             delete index;
-                            delete req;
                             return;
                         }
                     }
                 }
-                delete req;
                 delete index;
 
                 libhtmlpp::HtmlString output;
@@ -355,7 +349,7 @@ RETRY_REQUEST:
                 resp.setVersion(HTTPVERSION(1.1));
                 resp.setState(HTTP404);
                 resp.setContentType("text/html");
-                resp.send(curcon,output.c_str(),output.size());
+                resp.send(curreq,output.c_str(),output.size());
             }
         }catch(libhttppp::HTTPException &e){
             if(!PlgArgs->database->isConnected()){
@@ -382,7 +376,7 @@ RETRY_REQUEST:
         resp.setVersion(HTTPVERSION(1.1));
         resp.setState(HTTP500);
         resp.setContentType("text/html");
-        resp.send(curcon,output.c_str(),output.size());
+        resp.send(curreq,output.c_str(),output.size());
     }
 }
 

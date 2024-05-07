@@ -158,7 +158,6 @@ namespace blogi {
         }
 
         void editNavigation(libhttppp::HttpRequest *req,libhtmlpp::HtmlString &setdiv){
-            char url[512];
             int navid=-1,rem_itemid=-1;
             blogi::SQL sql;
             blogi::DBResult res;
@@ -381,7 +380,7 @@ SETTINGSINDEX:
 
         }
 
-        bool Controller(netplus::con *curcon,libhttppp::HttpRequest *req,libhtmlpp::HtmlElement *page){
+        bool Controller(libhttppp::HttpRequest *req,libhtmlpp::HtmlElement *page){
             return false;
         }
     };

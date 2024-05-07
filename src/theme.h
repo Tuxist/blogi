@@ -69,7 +69,7 @@ namespace blogi {
 
         void renderPage(const char *name,libhtmlpp::HtmlPage *page,libhtmlpp::HtmlElement **index);
 
-        bool Controller(netplus::con *curcon,libhttppp::HttpRequest *req);
+        bool Controller(libhttppp::HttpRequest *req);
 
         void printSite(libhtmlpp::HtmlString &output,libhtmlpp::HtmlElement *index,const char *crrurl,bool login,const char *meta=nullptr);
     private:

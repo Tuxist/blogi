@@ -49,7 +49,7 @@ void blogi::PluginApi::Settings(libhttppp::HttpRequest *req,libhtmlpp::HtmlStrin
     return;
 };
 
-bool blogi::PluginApi::Controller(netplus::con *curcon,libhttppp::HttpRequest *req,libhtmlpp::HtmlElement *page){
+bool blogi::PluginApi::Controller(libhttppp::HttpRequest *req,libhtmlpp::HtmlElement *page){
     return false;
 }
 

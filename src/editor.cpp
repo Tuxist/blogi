@@ -69,7 +69,7 @@ void blogi::Editor::displayEditor(const char* inputname,const char *value, libht
     target <<"</textarea></div>";
 }
 
-void blogi::Editor::Controller(netplus::con* curcon, libhttppp::HttpRequest* req){
+void blogi::Editor::Controller(libhttppp::HttpRequest* req){
     char url[512];
     if(strncmp(req->getRequestURL(),_Config->buildurl("editor/icon/",url,512),
        strlen(_Config->buildurl("editor/icon/",url,512) ))==0){
@@ -82,7 +82,7 @@ void blogi::Editor::Controller(netplus::con* curcon, libhttppp::HttpRequest* req
                 resp.setVersion(HTTPVERSION(1.1));
                 resp.setState(HTTP200);
                 resp.setContentType(std::string("image/").append(curicon->_Type).c_str());
-                resp.send(curcon,curicon->_Icon.c_str(),curicon->_Icon.length());
+                resp.send(req,curicon->_Icon.c_str(),curicon->_Icon.length());
                 return;
             }
         }
