@@ -110,170 +110,166 @@ namespace blogi {
                 <<   "channelname character varying(255) NOT NULL,"
                 <<   "apikey character varying(255) NOT NULL,"
                 <<   "channelkey character varying(255) NOT NULL"
-                << ");";
+                << ");"
+                << " CREATE TABLE IF NOT EXISTS youtube_videos ("
+                <<   "id integer PRIMARY KEY " << Args->database->autoincrement() << ","
+                <<   "youtube_channels_pkey bigint REFERENCES youtube_channels(id),"
+                <<   "youtube_id varchar(255) NOT NULL"
+                << ")";
 
             Args->database->exec(&sql,res);
 
-            sql="select channelname,apikey,channelkey from youtube_channels";
-
-            int count = Args->database->exec(&sql,res);
-
-            for (int i = 0; i < count; i++) {
-                Channel chan;
-                chan.Name=res[i][0];
-                chan.ApiKey=res[i][1];
-                chan.Key=res[i][2];
-                channels.push_back(chan);
-            }
         }
 
-        bool Controller(libhttppp::HttpRequest * req,libhtmlpp::HtmlElement *page){
-            char url[512];
-            if(strncmp(req->getRequestURL(),Args->config->buildurl("youtube",url,512),strlen(Args->config->buildurl("youtube",url,512)))!=0){
-                return false;
-            }
-
+        void SyncYoutube(int channel_id,libhtmlpp::HtmlString &out){
             std::string json;
             libhttppp::HttpResponse res;
             size_t hsize=0,cpos;
             bool chunked=false;
+            blogi::SQL        sql;
+            blogi::DBResult   dbres;
 
             int rlen=0;
 
+            sql << "select channelname,apikey,channelkey from youtube_channels where id='" << channel_id <<"'";
+
+            int count = Args->database->exec(&sql,dbres);
+
+            if(count < 1)
+                return;
+
             try{
                 std::shared_ptr<netplus::ssl> ysock=std::make_shared<netplus::ssl>("www.googleapis.com",443,1,0,GOOGLECA,1966);
-		std::shared_ptr<netplus::ssl> ycsock=std::make_shared<netplus::ssl>();
-                
+                std::shared_ptr<netplus::ssl> ycsock=std::make_shared<netplus::ssl>();
+
                 ysock->connect(ycsock);
                 ycsock->setnonblocking();
 
-                for(auto channel : channels){
-                    libhttppp::HttpRequest nreq;
-                    nreq.setRequestType(GETREQUEST);
-                    std::string churl="/youtube/v3/search?key="; churl+= channel.ApiKey.c_str();
-                    churl+="&channelId="; churl+=channel.Key; churl+="&part=snippet,id&order=date&maxResults=20";
-                    nreq.setRequestURL(churl.c_str());
-                    nreq.setRequestVersion(HTTPVERSION(1.1));
-                    *nreq.setData("connection") << "keep-alive";
-                    *nreq.setData("host")  << "www.googleapis.com" << ":" << 443;
-                    *nreq.setData("accept") << "text/json";
-                    *nreq.setData("user-agent") << "blogi/1.0 (Alpha Version 0.1)";
-                    nreq.send(ycsock,ysock);
+                libhttppp::HttpRequest nreq;
+                nreq.setRequestType(GETREQUEST);
+                std::string churl="/youtube/v3/search?key="; churl+= dbres[0][0];
+                churl+="&channelId="; churl+=dbres[0][2]; churl+="&part=snippet,id&order=date&maxResults=20";
+                nreq.setRequestURL(churl.c_str());
+                nreq.setRequestVersion(HTTPVERSION(1.1));
+                *nreq.setData("connection") << "keep-alive";
+                *nreq.setData("host")  << "www.googleapis.com" << ":" << 443;
+                *nreq.setData("accept") << "text/json";
+                *nreq.setData("user-agent") << "blogi/1.0 (Alpha Version 0.1)";
+                nreq.send(ycsock,ysock);
 
-                    char data[16384];
-                    int recv,tries=0,chunklen=0;
-                    try{
-                        for(;;){
-                            recv=ysock->recvData(ycsock,data,16384);
-                            if(recv>0)
-                                break;
-                            // if(tries>5){
-                            //     netplus::NetException e;
-                            //     e[netplus::NetException::Error] << "youtube-pl: can't reach youtube server !";
-                            //     throw e;
-                            // }
-                            std::this_thread::sleep_for(std::chrono::milliseconds(100*tries));
-                            ++tries;
-                        }
-                    }catch(netplus::NetException &e){
-                        libhttppp::HTTPException he;
-                        he[libhttppp::HTTPException::Error] << e.what();
-                        throw he;
+                char data[16384];
+                int recv,tries=0,chunklen=0;
+                try{
+                    for(;;){
+                        recv=ysock->recvData(ycsock,data,16384);
+                        if(recv>0)
+                            break;
+                        // if(tries>5){
+                        //     netplus::NetException e;
+                        //     e[netplus::NetException::Error] << "youtube-pl: can't reach youtube server !";
+                        //     throw e;
+                        // }
+                        std::this_thread::sleep_for(std::chrono::milliseconds(100*tries));
+                        ++tries;
                     }
+                }catch(netplus::NetException &e){
+                    libhttppp::HTTPException he;
+                    he[libhttppp::HTTPException::Error] << e.what();
+                    throw he;
+                }
 
-                    hsize=res.parse(data,recv);
+                hsize=res.parse(data,recv);
 
-                    recv-=hsize;
+                recv-=hsize;
 
-                    memmove(data,data+hsize,recv);
+                memmove(data,data+hsize,recv);
 
-                    cpos=0;
-                    try{
-                        if(strcmp(res.getTransferEncoding(),"chunked")==0){
-                            chunklen=readchunk(data,recv,cpos);
-                            chunked=true;
+                cpos=0;
+                try{
+                    if(strcmp(res.getTransferEncoding(),"chunked")==0){
+                        chunklen=readchunk(data,recv,cpos);
+                        chunked=true;
+                    }else{
+                        throw;
+                    }
+                }catch(...){
+                    rlen=res.getContentLength();
+                    json.resize(rlen);
+                }
+
+                tries=0;
+
+                if(!chunked){
+                    do{
+                        try{
+                            json.append(data+cpos,recv);
+                            rlen-=recv;
+                            if(rlen>0){
+                                tries=0;
+                                for(;;){
+                                    cpos=0;
+                                    recv=ysock->recvData(ycsock,data,16384);
+                                    if(recv>0)
+                                        break;
+                                    // if(tries>5){
+                                    //     netplus::NetException e;
+                                    //     e[netplus::NetException::Error] << "nginxfiler: can't reach nginx server !";
+                                    //     throw e;
+                                    // }
+                                    ++tries;;
+                                    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+                                }
+                            }
+                        }catch(netplus::NetException &e){
+                            libhttppp::HTTPException ee;
+                            ee[libhttppp::HTTPException::Error] << e.what();
+                            throw ee;
+                        }
+                    }while(rlen>0);
+                }else{
+
+                    size_t readed=0;
+
+                    for(;;){
+                        if(recv - cpos > 0){
+
+                            if(readed==chunklen){
+                                if( (chunklen=readchunk(data,recv,cpos)) == 0 ){
+                                    break;
+                                }
+                                readed=0;
+                            }
+
+                            size_t len = (chunklen - readed) < (recv - cpos) ? (chunklen - readed)  : (recv - cpos);
+
+                            json.append(data+cpos,len);
+                            cpos+=len;
+                            readed+=len;
                         }else{
-                            throw;
-                        }
-                    }catch(...){
-                        rlen=res.getContentLength();
-                        json.resize(rlen);
-                    }
-
-                    tries=0;
-
-                    if(!chunked){
-                        do{
                             try{
-                                json.append(data+cpos,recv);
-                                rlen-=recv;
-                                if(rlen>0){
-                                    tries=0;
-                                    for(;;){
-                                        cpos=0;
-                                        recv=ysock->recvData(ycsock,data,16384);
-                                        if(recv>0)
-                                            break;
-                                        // if(tries>5){
-                                        //     netplus::NetException e;
-                                        //     e[netplus::NetException::Error] << "nginxfiler: can't reach nginx server !";
-                                        //     throw e;
-                                        // }
-                                        ++tries;;
-                                        std::this_thread::sleep_for(std::chrono::milliseconds(100));
-
+                                tries=0;
+                                for(;;){
+                                    recv=ysock->recvData(ycsock,data,16384);
+                                    cpos=0;
+                                    if(recv == 0 && tries>10){
+                                        netplus::NetException e;
+                                        e[netplus::NetException::Error] << "nginxfiler: can't reach nginx server !";
+                                        throw e;
+                                    }else if(recv !=0 ){
+                                        break;
                                     }
+                                    ++tries;
+                                    std::this_thread::sleep_for(std::chrono::milliseconds(100*tries));
+
                                 }
                             }catch(netplus::NetException &e){
                                 libhttppp::HTTPException ee;
                                 ee[libhttppp::HTTPException::Error] << e.what();
                                 throw ee;
                             }
-                        }while(rlen>0);
-                    }else{
-
-                        size_t readed=0;
-
-                        for(;;){
-                            if(recv - cpos > 0){
-
-                                if(readed==chunklen){
-                                    if( (chunklen=readchunk(data,recv,cpos)) == 0 ){
-                                        break;
-                                    }
-                                    readed=0;
-                                }
-
-                                size_t len = (chunklen - readed) < (recv - cpos) ? (chunklen - readed)  : (recv - cpos);
-
-                                json.append(data+cpos,len);
-                                cpos+=len;
-                                readed+=len;
-                            }else{
-                                try{
-                                    tries=0;
-                                    for(;;){
-                                        recv=ysock->recvData(ycsock,data,16384);
-                                        cpos=0;
-                                        if(recv == 0 && tries>10){
-                                            netplus::NetException e;
-                                            e[netplus::NetException::Error] << "nginxfiler: can't reach nginx server !";
-                                            throw e;
-                                        }else if(recv !=0 ){
-                                            break;
-                                        }
-                                        ++tries;
-                                        std::this_thread::sleep_for(std::chrono::milliseconds(100*tries));
-
-                                    }
-                                }catch(netplus::NetException &e){
-                                    libhttppp::HTTPException ee;
-                                    ee[libhttppp::HTTPException::Error] << e.what();
-                                    throw ee;
-                                }
-                            }
-                        };
-                    }
+                        }
+                    };
                 }
             }catch(netplus::NetException &e){
                 libhttppp::HTTPException ee;
@@ -295,8 +291,6 @@ namespace blogi {
                 throw e;
             }
 
-            libhtmlpp::HtmlString cHtml;
-
             try{
                 enum json_type type = json_object_get_type(youindex);
 
@@ -313,35 +307,71 @@ namespace blogi {
                                 struct json_object *yid;
                                 yid = json_object_object_get(ytems,"videoID");
                                 if(yid){
-                                    cHtml << "<li><iframe id=\"ytplayer\" type=\"text/html\" width=\"640\" height=\"360\" src=\"http://www.youtube.com/embed/"
+                                    sql.clear();
+                                    sql << "<li><iframe id=\"ytplayer\" type=\"text/html\" width=\"640\" height=\"360\" src=\"http://www.youtube.com/embed/"
                                     << json_object_get_string(yid)  << "?autoplay=1\" frameborder=\"0\" allowFullscreen> </iframe></li>";
                                 }
                             }
                         }
                     }
-
-                    if(!cHtml.empty()){
-                        libhtmlpp::HtmlElement *fel=cHtml.parse();
-
-                        if(fel)
-                            youmain.appendChild(fel);
-                    }
-
+                    out << "<span>" << fcount << " videos added !" << "</span>";
                 }
             }catch(libhtmlpp::HTMLException &e){
                 libhttppp::HTTPException ee;
                 ee[libhttppp::HTTPException::Error] << e.what();
                 throw ee;
             }
+        }
 
-
+        bool Controller(libhttppp::HttpRequest * req,libhtmlpp::HtmlElement *page){
+            char url[512];
             libhtmlpp::HtmlString out;
-            std::string sid;
-
             libhtmlpp::HtmlElement *hmain, youdiv("div");
+
             youdiv.setAttribute("id","youtube-pl");
 
-            youdiv.appendChild(&youmain);
+            std::string sid;
+            if(strncmp(req->getRequestURL(),Args->config->buildurl("youtube",url,512),strlen(Args->config->buildurl("youtube",url,512)))!=0){
+                return false;
+            }
+
+            if(strcmp(req->getRequestURL(),Args->config->buildurl("youtube/sync/",url,512))>0){
+                SyncYoutube( atoi( req->getRequestURL()+strlen(Args->config->buildurl("youtube/sync/",url,512)) ),out);
+
+                youdiv.appendChild(out.parse());
+
+                if( (hmain=page->getElementbyID("main")) )
+                    hmain->appendChild(&youdiv);
+
+                Args->theme->printSite(out,page,req->getRequestURL(),Args->auth->isLoggedIn(req,sid));
+                libhttppp::HttpResponse curres;
+                curres.setVersion(HTTPVERSION(1.1));
+                curres.setContentType("text/html");
+                curres.setState(HTTP200);
+                curres.send(req, out.c_str(),out.size());
+                return true;
+            }
+
+            blogi::SQL        sql;
+            blogi::DBResult   dbres;
+
+            sql << "SELECT youtube_channels.channelname,youtube_videos.youtube_id "
+                << "FROM youtube_channels LEFT JOIN youtube_videos ON youtube_channels.id = youtube_videos.id;";
+
+            int count = Args->database->exec(&sql,dbres);
+
+            if(count < 1){
+                libhttppp::HTTPException ee;
+                ee[libhttppp::HTTPException::Error] << "no youtube channels or videos found please sync!";
+                throw ee;
+            }
+
+            for(int i=0; i<count; ++i){
+                libhtmlpp::HtmlString youmain;
+                youmain << "<li><iframe id=\"ytplayer\" type=\"text/html\" width=\"640\" height=\"360\" src=\"http://www.youtube.com/embed/"
+                        << dbres[0][1]  << "?autoplay=1\" frameborder=\"0\" allowFullscreen> </iframe></li>";
+                youdiv.appendChild(youmain.parse());
+            }
 
             if( (hmain=page->getElementbyID("main")) )
                 hmain->appendChild(&youdiv);
@@ -386,14 +416,6 @@ namespace blogi {
 
             return result;
         }
-
-        struct Channel {
-            std::string Name;
-            std::string ApiKey;
-            std::string Key;
-        };
-
-        std::vector<Channel> channels;
     };
 };
 
