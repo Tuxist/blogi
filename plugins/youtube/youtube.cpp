@@ -49,39 +49,39 @@
 
 #include <iostream>
 
-const unsigned char GOOGLECA[]=\
-"-----BEGIN CERTIFICATE-----\n\
-MIIFljCCA36gAwIBAgINAgO8U1lrNMcY9QFQZjANBgkqhkiG9w0BAQsFADBHMQsw\n\
+const unsigned char GOOGLECA[]="\
+-----BEGIN CERTIFICATE-----\n\
+MIIFVzCCAz+gAwIBAgINAgPlk28xsBNJiGuiFzANBgkqhkiG9w0BAQwFADBHMQsw\n\
 CQYDVQQGEwJVUzEiMCAGA1UEChMZR29vZ2xlIFRydXN0IFNlcnZpY2VzIExMQzEU\n\
-MBIGA1UEAxMLR1RTIFJvb3QgUjEwHhcNMjAwODEzMDAwMDQyWhcNMjcwOTMwMDAw\n\
-MDQyWjBGMQswCQYDVQQGEwJVUzEiMCAGA1UEChMZR29vZ2xlIFRydXN0IFNlcnZp\n\
-Y2VzIExMQzETMBEGA1UEAxMKR1RTIENBIDFDMzCCASIwDQYJKoZIhvcNAQEBBQAD\n\
-ggEPADCCAQoCggEBAPWI3+dijB43+DdCkH9sh9D7ZYIl/ejLa6T/belaI+KZ9hzp\n\
-kgOZE3wJCor6QtZeViSqejOEH9Hpabu5dOxXTGZok3c3VVP+ORBNtzS7XyV3NzsX\n\
-lOo85Z3VvMO0Q+sup0fvsEQRY9i0QYXdQTBIkxu/t/bgRQIh4JZCF8/ZK2VWNAcm\n\
-BA2o/X3KLu/qSHw3TT8An4Pf73WELnlXXPxXbhqW//yMmqaZviXZf5YsBvcRKgKA\n\
-gOtjGDxQSYflispfGStZloEAoPtR28p3CwvJlk/vcEnHXG0g/Zm0tOLKLnf9LdwL\n\
-tmsTDIwZKxeWmLnwi/agJ7u2441Rj72ux5uxiZ0CAwEAAaOCAYAwggF8MA4GA1Ud\n\
-DwEB/wQEAwIBhjAdBgNVHSUEFjAUBggrBgEFBQcDAQYIKwYBBQUHAwIwEgYDVR0T\n\
-AQH/BAgwBgEB/wIBADAdBgNVHQ4EFgQUinR/r4XN7pXNPZzQ4kYU83E1HScwHwYD\n\
-VR0jBBgwFoAU5K8rJnEaK0gnhS9SZizv8IkTcT4waAYIKwYBBQUHAQEEXDBaMCYG\n\
-CCsGAQUFBzABhhpodHRwOi8vb2NzcC5wa2kuZ29vZy9ndHNyMTAwBggrBgEFBQcw\n\
-AoYkaHR0cDovL3BraS5nb29nL3JlcG8vY2VydHMvZ3RzcjEuZGVyMDQGA1UdHwQt\n\
-MCswKaAnoCWGI2h0dHA6Ly9jcmwucGtpLmdvb2cvZ3RzcjEvZ3RzcjEuY3JsMFcG\n\
-A1UdIARQME4wOAYKKwYBBAHWeQIFAzAqMCgGCCsGAQUFBwIBFhxodHRwczovL3Br\n\
-aS5nb29nL3JlcG9zaXRvcnkvMAgGBmeBDAECATAIBgZngQwBAgIwDQYJKoZIhvcN\n\
-AQELBQADggIBAIl9rCBcDDy+mqhXlRu0rvqrpXJxtDaV/d9AEQNMwkYUuxQkq/BQ\n\
-cSLbrcRuf8/xam/IgxvYzolfh2yHuKkMo5uhYpSTld9brmYZCwKWnvy15xBpPnrL\n\
-RklfRuFBsdeYTWU0AIAaP0+fbH9JAIFTQaSSIYKCGvGjRFsqUBITTcFTNvNCCK9U\n\
-+o53UxtkOCcXCb1YyRt8OS1b887U7ZfbFAO/CVMkH8IMBHmYJvJh8VNS/UKMG2Yr\n\
-PxWhu//2m+OBmgEGcYk1KCTd4b3rGS3hSMs9WYNRtHTGnXzGsYZbr8w0xNPM1IER\n\
-lQCh9BIiAfq0g3GvjLeMcySsN1PCAJA/Ef5c7TaUEDu9Ka7ixzpiO2xj2YC/WXGs\n\
-Yye5TBeg2vZzFb8q3o/zpWwygTMD0IZRcZk0upONXbVRWPeyk+gB9lm+cZv9TSjO\n\
-z23HFtz30dZGm6fKa+l3D/2gthsjgx0QGtkJAITgRNOidSOzNIb2ILCkXhAd4FJG\n\
-AJ2xDx8hcFH1mt0G/FX0Kw4zd8NLQsLxdxP8c4CU6x+7Nz/OAipmsHMdMqUybDKw\n\
-juDEI/9bfU1lcKwrmz3O2+BtjjKAvpafkmO8l7tdufThcV4q5O8DIrGKZTqPwJNl\n\
-1IXNDw9bg1kWRxYtnCQ6yICmJhSFm/Y3m6xv+cXDBlHz4n/FsRC6UfTd\n\
------END CERTIFICATE-----\0";
+MBIGA1UEAxMLR1RTIFJvb3QgUjEwHhcNMTYwNjIyMDAwMDAwWhcNMzYwNjIyMDAw\n\
+MDAwWjBHMQswCQYDVQQGEwJVUzEiMCAGA1UEChMZR29vZ2xlIFRydXN0IFNlcnZp\n\
+Y2VzIExMQzEUMBIGA1UEAxMLR1RTIFJvb3QgUjEwggIiMA0GCSqGSIb3DQEBAQUA\n\
+A4ICDwAwggIKAoICAQC2EQKLHuOhd5s73L+UPreVp0A8of2C+X0yBoJx9vaMf/vo\n\
+27xqLpeXo4xL+Sv2sfnOhB2x+cWX3u+58qPpvBKJXqeqUqv4IyfLpLGcY9vXmX7w\n\
+Cl7raKb0xlpHDU0QM+NOsROjyBhsS+z8CZDfnWQpJSMHobTSPS5g4M/SCYe7zUjw\n\
+TcLCeoiKu7rPWRnWr4+wB7CeMfGCwcDfLqZtbBkOtdh+JhpFAz2weaSUKK0Pfybl\n\
+qAj+lug8aJRT7oM6iCsVlgmy4HqMLnXWnOunVmSPlk9orj2XwoSPwLxAwAtcvfaH\n\
+szVsrBhQf4TgTM2S0yDpM7xSma8ytSmzJSq0SPly4cpk9+aCEI3oncKKiPo4Zor8\n\
+Y/kB+Xj9e1x3+naH+uzfsQ55lVe0vSbv1gHR6xYKu44LtcXFilWr06zqkUspzBmk\n\
+MiVOKvFlRNACzqrOSbTqn3yDsEB750Orp2yjj32JgfpMpf/VjsPOS+C12LOORc92\n\
+wO1AK/1TD7Cn1TsNsYqiA94xrcx36m97PtbfkSIS5r762DL8EGMUUXLeXdYWk70p\n\
+aDPvOmbsB4om3xPXV2V4J95eSRQAogB/mqghtqmxlbCluQ0WEdrHbEg8QOB+DVrN\n\
+VjzRlwW5y0vtOUucxD/SVRNuJLDWcfr0wbrM7Rv1/oFB2ACYPTrIrnqYNxgFlQID\n\
+AQABo0IwQDAOBgNVHQ8BAf8EBAMCAYYwDwYDVR0TAQH/BAUwAwEB/zAdBgNVHQ4E\n\
+FgQU5K8rJnEaK0gnhS9SZizv8IkTcT4wDQYJKoZIhvcNAQEMBQADggIBAJ+qQibb\n\
+C5u+/x6Wki4+omVKapi6Ist9wTrYggoGxval3sBOh2Z5ofmmWJyq+bXmYOfg6LEe\n\
+QkEzCzc9zolwFcq1JKjPa7XSQCGYzyI0zzvFIoTgxQ6KfF2I5DUkzps+GlQebtuy\n\
+h6f88/qBVRRiClmpIgUxPoLW7ttXNLwzldMXG+gnoot7TiYaelpkttGsN/H9oPM4\n\
+7HLwEXWdyzRSjeZ2axfG34arJ45JK3VmgRAhpuo+9K4l/3wV3s6MJT/KYnAK9y8J\n\
+ZgfIPxz88NtFMN9iiMG1D53Dn0reWVlHxYciNuaCp+0KueIHoI17eko8cdLiA6Ef\n\
+MgfdG+RCzgwARWGAtQsgWSl4vflVy2PFPEz0tv/bal8xa5meLMFrUKTX5hgUvYU/\n\
+Z6tGn6D/Qqc6f1zLXbBwHSs09dR2CQzreExZBfMzQsNhFRAbd03OIozUhfJFfbdT\n\
+6u9AWpQKXCBfTkBdYiJ23//OYb2MI3jSNwLgjt7RETeJ9r/tSQdirpLsQBqvFAnZ\n\
+0E6yove+7u7Y/9waLd64NnHi/Hm3lCXRSHNboTXns5lndcEZOitHTtNCjv0xyBZm\n\
+2tIMPNuzjsmhDYAPexZ3FL//2wmUspO8IFgV6dtxQ/PeEMMA3KgqlbbC1j+Qa3bb\n\
+bP6MvPJwNQzcmRk13NfIRmPVNnGuV/u3gm3c\n\
+-----END CERTIFICATE-----\n\
+\0";
 
 namespace blogi {
     class Youtube : public PluginApi {
@@ -135,8 +135,11 @@ namespace blogi {
 
             int count = Args->database->exec(&sql,dbres);
 
-            if(count < 1)
-                return;
+            if(count < 1){
+                libhttppp::HTTPException he;
+                he[libhttppp::HTTPException::Error] << "Youtube channel id not found in database !";
+                throw he;
+            }
 
             try{
                 std::shared_ptr<netplus::ssl> ysock=std::make_shared<netplus::ssl>("www.googleapis.com",443,1,0,GOOGLECA,1966);
@@ -147,8 +150,8 @@ namespace blogi {
 
                 libhttppp::HttpRequest nreq;
                 nreq.setRequestType(GETREQUEST);
-                std::string churl="/youtube/v3/search?key="; churl+= dbres[0][0];
-                churl+="&channelId="; churl+=dbres[0][2]; churl+="&part=snippet,id&order=date&maxResults=20";
+                std::string churl="/youtube/v3/search?key="; churl+= dbres[0][1];
+                churl+="&channelId="; churl+=dbres[0][2]; churl+="&part=snippet,id&order=date";
                 nreq.setRequestURL(churl.c_str());
                 nreq.setRequestVersion(HTTPVERSION(1.1));
                 *nreq.setData("connection") << "keep-alive";
@@ -159,18 +162,18 @@ namespace blogi {
 
                 char data[16384];
                 int recv,tries=0,chunklen=0;
+
                 try{
                     for(;;){
-                        recv=ysock->recvData(ycsock,data,16384);
-                        if(recv>0)
+                        try{
+                            recv=ysock->recvData(ycsock,data,16384);
                             break;
-                        // if(tries>5){
-                        //     netplus::NetException e;
-                        //     e[netplus::NetException::Error] << "youtube-pl: can't reach youtube server !";
-                        //     throw e;
-                        // }
-                        std::this_thread::sleep_for(std::chrono::milliseconds(100*tries));
-                        ++tries;
+                        }catch(netplus::NetException &re){
+                            if(re.getErrorType()!=netplus::NetException::Note)
+                                throw re;
+                            else
+                                continue;
+                        }
                     }
                 }catch(netplus::NetException &e){
                     libhttppp::HTTPException he;
@@ -208,17 +211,17 @@ namespace blogi {
                                 tries=0;
                                 for(;;){
                                     cpos=0;
-                                    recv=ysock->recvData(ycsock,data,16384);
-                                    if(recv>0)
-                                        break;
-                                    // if(tries>5){
-                                    //     netplus::NetException e;
-                                    //     e[netplus::NetException::Error] << "nginxfiler: can't reach nginx server !";
-                                    //     throw e;
-                                    // }
-                                    ++tries;;
-                                    std::this_thread::sleep_for(std::chrono::milliseconds(100));
-
+                                    for(;;){
+                                        try{
+                                            recv=ysock->recvData(ycsock,data,16384);
+                                            break;
+                                        }catch(netplus::NetException &re){
+                                            if(re.getErrorType()!=netplus::NetException::Note)
+                                                throw re;
+                                            else
+                                                continue;
+                                        }
+                                    }
                                 }
                             }
                         }catch(netplus::NetException &e){
@@ -247,26 +250,20 @@ namespace blogi {
                             cpos+=len;
                             readed+=len;
                         }else{
-                            try{
-                                tries=0;
-                                for(;;){
+                            cpos=0;
+                            for(;;){
+                                try{
                                     recv=ysock->recvData(ycsock,data,16384);
-                                    cpos=0;
-                                    if(recv == 0 && tries>10){
-                                        netplus::NetException e;
-                                        e[netplus::NetException::Error] << "nginxfiler: can't reach nginx server !";
-                                        throw e;
-                                    }else if(recv !=0 ){
-                                        break;
+                                    break;
+                                }catch(netplus::NetException &e){
+                                    if(e.getErrorType()!=netplus::NetException::Note){
+                                        libhttppp::HTTPException ee;
+                                        ee[libhttppp::HTTPException::Error] << e.what();
+                                        throw ee;
+                                    }else{
+                                        continue;
                                     }
-                                    ++tries;
-                                    std::this_thread::sleep_for(std::chrono::milliseconds(100*tries));
-
                                 }
-                            }catch(netplus::NetException &e){
-                                libhttppp::HTTPException ee;
-                                ee[libhttppp::HTTPException::Error] << e.what();
-                                throw ee;
                             }
                         }
                     };
@@ -293,29 +290,29 @@ namespace blogi {
 
             try{
                 enum json_type type = json_object_get_type(youindex);
+                struct json_object *ytems;
+                ytems = json_object_object_get(youindex,"items");
+                int fcount = json_object_array_length(ytems);
 
-                if(type==json_type_array){
+                sql << "delete from youtube_videos where channel_id='" << channel_id <<"';";
+                Args->database->exec(&sql,dbres);
 
-                    struct json_object *ytems;
-                    ytems = json_object_object_get(youindex,"items");
-                    int fcount = json_object_array_length(ytems);
-
-                    for(int i =0; i<fcount; ++i) {
-                        int ntype=-1;
-                        json_object_object_foreach(json_object_array_get_idx(ytems,i), key, val) {
-                            if(strcmp(key,"id")==0 && val){
-                                struct json_object *yid;
-                                yid = json_object_object_get(ytems,"videoID");
-                                if(yid){
-                                    sql.clear();
-                                    sql << "<li><iframe id=\"ytplayer\" type=\"text/html\" width=\"640\" height=\"360\" src=\"http://www.youtube.com/embed/"
-                                    << json_object_get_string(yid)  << "?autoplay=1\" frameborder=\"0\" allowFullscreen> </iframe></li>";
-                                }
+                for(int i =0; i<fcount; ++i) {
+                    int ii=0;
+                    json_object_object_foreach(json_object_array_get_idx(ytems,i), key, val) {
+                        if(strcmp(key,"id")==0 && val){
+                            struct json_object *yid;
+                            yid = json_object_object_get(val,"videoId");
+                            if(yid){
+                                sql.clear();
+                                sql << "INSERT INTO youtube_videos (youtube_channels_pkey,youtube_id) VALUES ('" << channel_id << "','" << json_object_get_string(yid) << "')";
+                                Args->database->exec(&sql,dbres);
                             }
                         }
                     }
-                    out << "<span>" << fcount << " videos added !" << "</span>";
                 }
+                out << "<span>" << fcount << " videos added !" << "</span>";
+                return;
             }catch(libhtmlpp::HTMLException &e){
                 libhttppp::HTTPException ee;
                 ee[libhttppp::HTTPException::Error] << e.what();
@@ -336,13 +333,24 @@ namespace blogi {
             }
 
             if(strcmp(req->getRequestURL(),Args->config->buildurl("youtube/sync/",url,512))>0){
-                SyncYoutube( atoi( req->getRequestURL()+strlen(Args->config->buildurl("youtube/sync/",url,512)) ),out);
-
-                youdiv.appendChild(out.parse());
-
+                if(Args->auth->isLoggedIn(req,sid)){
+                    try{
+                        SyncYoutube( atoi( req->getRequestURL()+strlen(Args->config->buildurl("youtube/sync/",url,512)) ),out);
+                        youdiv.appendChild(out.parse());
+                    }catch(libhttppp::HTTPException &e){
+                        std::string error;
+                        libhtmlpp::HtmlString msg;
+                        libhtmlpp::HtmlEncode(e.what(),error);
+                        msg << "<span>" << error << "</span>";
+                        youdiv.appendChild(msg.parse());
+                    }
+                }else{
+                        libhtmlpp::HtmlString msg;
+                        msg << "<span> Insufficient rights can't sync youtube videos ! </span>";
+                        youdiv.appendChild(msg.parse());
+                }
                 if( (hmain=page->getElementbyID("main")) )
-                    hmain->appendChild(&youdiv);
-
+                        hmain->appendChild(&youdiv);
                 Args->theme->printSite(out,page,req->getRequestURL(),Args->auth->isLoggedIn(req,sid));
                 libhttppp::HttpResponse curres;
                 curres.setVersion(HTTPVERSION(1.1));
@@ -350,13 +358,13 @@ namespace blogi {
                 curres.setState(HTTP200);
                 curres.send(req, out.c_str(),out.size());
                 return true;
-            }
 
+            }
             blogi::SQL        sql;
             blogi::DBResult   dbres;
 
             sql << "SELECT youtube_channels.channelname,youtube_videos.youtube_id "
-                << "FROM youtube_channels LEFT JOIN youtube_videos ON youtube_channels.id = youtube_videos.id;";
+                << "FROM youtube_channels LEFT JOIN youtube_videos ON youtube_channels.id = youtube_videos.youtube_channels_pkey;";
 
             int count = Args->database->exec(&sql,dbres);
 
@@ -366,12 +374,16 @@ namespace blogi {
                 throw ee;
             }
 
+            libhtmlpp::HtmlElement youul("ul");
+
             for(int i=0; i<count; ++i){
                 libhtmlpp::HtmlString youmain;
-                youmain << "<li><iframe id=\"ytplayer\" type=\"text/html\" width=\"640\" height=\"360\" src=\"http://www.youtube.com/embed/"
-                        << dbres[0][1]  << "?autoplay=1\" frameborder=\"0\" allowFullscreen> </iframe></li>";
-                youdiv.appendChild(youmain.parse());
+                youmain << "<li><iframe class=\"ytplayer\" width=\"640\" height=\"360\" src=\"http://www.youtube.com/embed/"
+                        << dbres[i][1]  << "?autoplay=1&hd=1\" frameborder=\"0\" allowFullscreen> </iframe></li>";
+                youul.appendChild(youmain.parse());
             }
+
+            youdiv.appendChild(&youul);
 
             if( (hmain=page->getElementbyID("main")) )
                 hmain->appendChild(&youdiv);
