@@ -376,10 +376,16 @@ namespace blogi {
 
             libhtmlpp::HtmlElement youul("ul");
 
+            libhtmlpp::HtmlString head;
+
+            head << "<span class=\"<youtiem_head\">" << dbres[0][0] << "</span>";
+
+            youdiv.appendChild(head.parse());
+
             for(int i=0; i<count; ++i){
                 libhtmlpp::HtmlString youmain;
-                youmain << "<li><iframe class=\"ytplayer\" width=\"640\" height=\"360\" src=\"http://www.youtube.com/embed/"
-                        << dbres[i][1]  << "?autoplay=1&hd=1\" frameborder=\"0\" allowFullscreen> </iframe></li>";
+                youmain << "<li><iframe class=\"ytplayer\" width=\"640\" height=\"360\" src=\"https://www.youtube.com/embed/"
+                        << dbres[i][1]  << "?autoplay=1&hd=1&origin=" << Args->config->getsiteurl() << "\" frameborder=\"0\" allowFullscreen> </iframe></li>";
                 youul.appendChild(youmain.parse());
             }
 
