@@ -378,7 +378,7 @@ namespace blogi {
 
             libhtmlpp::HtmlString head;
 
-            head << "<span class=\"<youtiem_head\">" << dbres[0][0] << "</span>";
+            head << "<span class=\"youtiem_head\">" << dbres[0][0] << "</span>";
 
             youdiv.appendChild(head.parse());
 
