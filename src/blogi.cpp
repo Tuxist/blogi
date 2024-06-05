@@ -111,17 +111,16 @@ void blogi::Blogi::loginPage(libhttppp::HttpRequest *curreq){
     const char *username=nullptr;
     const char *password=nullptr;
 
-    if (curform.getUrlcodedFormData()) {
-        for (libhttppp::HttpForm::UrlcodedFormData* cururlform = curform.getUrlcodedFormData(); cururlform;
-             cururlform = cururlform->nextUrlcodedFormData()) {
-            if (strcmp(cururlform->getKey(), "username") == 0) {
-                username = cururlform->getValue();
-            }
-            else if (strcmp(cururlform->getKey(), "password") == 0) {
-                password = cururlform->getValue();
-            }
-             }
+
+    for (libhttppp::HttpForm::UrlcodedForm::Data* cururlform = curform.UrlFormData.getFormData(); cururlform;
+        cururlform = cururlform->nextData()) {
+        if (strcmp(cururlform->getKey(), "username") == 0) {
+            username = cururlform->getValue();
+        }else if (strcmp(cururlform->getKey(), "password") == 0) {
+            password = cururlform->getValue();
+        }
     }
+
 
     libhtmlpp::HtmlString out;
 

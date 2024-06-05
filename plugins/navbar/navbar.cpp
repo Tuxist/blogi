@@ -124,7 +124,7 @@ namespace blogi {
             libhttppp::HttpForm form;
             form.parse(req);
 
-            for(libhttppp::HttpForm::UrlcodedFormData *cdat=form.getUrlcodedFormData(); cdat; cdat=cdat->nextUrlcodedFormData()){
+            for(libhttppp::HttpForm::UrlcodedForm::Data *cdat=form.UrlFormData.getFormData(); cdat; cdat=cdat->nextData()){
                 if(strcmp(cdat->getKey(),"navid")==0)
                     navid=atoi(cdat->getValue());
 
@@ -169,9 +169,9 @@ namespace blogi {
             libhttppp::HttpForm form;
             form.parse(req);
 
-            libhttppp::HttpForm::UrlcodedFormData *formdat= form.getUrlcodedFormData();
+            libhttppp::HttpForm::UrlcodedForm::Data *formdat= form.UrlFormData.getFormData();
 
-            for(libhttppp::HttpForm::UrlcodedFormData *cdat=formdat; cdat; cdat=cdat->nextUrlcodedFormData()){
+            for(libhttppp::HttpForm::UrlcodedForm::Data *cdat=formdat; cdat; cdat=cdat->nextData()){
                 if(strcmp(cdat->getKey(),"navid")==0)
                     navid=atoi(cdat->getValue());
                 else if(strcmp(cdat->getKey(),"navname")==0)
@@ -213,7 +213,7 @@ namespace blogi {
 
             };
 
-            for(libhttppp::HttpForm::UrlcodedFormData *cdat=formdat; cdat; cdat=cdat->nextUrlcodedFormData()){
+            for(libhttppp::HttpForm::UrlcodedForm::Data *cdat=formdat; cdat; cdat=cdat->nextData()){
                 if(strcmp(cdat->getKey(),"navitem_name_")<0)
                     changeItemName(cdat->getKey(),cdat->getValue());
                 else if(strcmp(cdat->getKey(),"navitem_url_")<0)
@@ -285,7 +285,7 @@ namespace blogi {
             libhttppp::HttpForm form;
             form.parse(req);
 
-            for(libhttppp::HttpForm::UrlcodedFormData *cdat=form.getUrlcodedFormData(); cdat; cdat=cdat->nextUrlcodedFormData()){
+            for(libhttppp::HttpForm::UrlcodedForm::Data *cdat=form.UrlFormData.getFormData(); cdat; cdat=cdat->nextData()){
                 if(strcmp(cdat->getKey(),"navname")==0)
                     navname=cdat->getValue();
                 else if(strcmp(cdat->getKey(),"navcontainer")==0)

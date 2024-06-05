@@ -75,7 +75,7 @@ namespace blogi {
 
             form.parse(req);
 
-            for(libhttppp::HttpForm::UrlcodedFormData *curdat=form.getUrlcodedFormData(); curdat; curdat=curdat->nextUrlcodedFormData()){
+            for(libhttppp::HttpForm::UrlcodedForm::Data *curdat=form.UrlFormData.getFormData(); curdat; curdat=curdat->nextData()){
                 if(strcmp(curdat->getKey(),"userid")==0)
                     id=atoi(curdat->getValue());
                 else if(strcmp(curdat->getKey(),"albumname")==0)
@@ -109,7 +109,7 @@ namespace blogi {
             form.parse(req);
             std::string name;
 
-            for(libhttppp::HttpForm::UrlcodedFormData *curdat=form.getUrlcodedFormData(); curdat; curdat=curdat->nextUrlcodedFormData()){
+            for(libhttppp::HttpForm::UrlcodedForm::Data *curdat=form.UrlFormData.getFormData(); curdat; curdat=curdat->nextData()){
                 if(strcmp(curdat->getKey(),"albumid")==0)
                     id=atoi(curdat->getValue());
                 if(strcmp(curdat->getKey(),"albumname")==0)
@@ -151,17 +151,19 @@ namespace blogi {
                    << "</div>";
         }
 
-        void uploadMedia(int id,libhttppp::HttpForm::MultipartFormData *dat,libhttppp::HttpRequest * req, libhtmlpp::HtmlString & setdiv){
+        void uploadMedia(int id,libhttppp::HttpForm::MultipartForm::Data *dat,libhttppp::HttpRequest * req, libhtmlpp::HtmlString & setdiv){
             char url[512];
             std::string mediafilename,mediafile;
 
             if(dat){
-                for (libhttppp::HttpForm::MultipartFormData *curformdat = dat; curformdat; curformdat = curformdat->nextMultipartFormData()) {
-                    libhttppp::HttpForm::MultipartFormData::ContentDisposition* curctdisp = curformdat->getContentDisposition();
-                    if(curctdisp && strcmp(curctdisp->getName(),"mediafile")==0){
-                        mediafilename=curctdisp->getFilename();
-                        mediafile.resize(curformdat->getDataSize());
-                        std::copy(curformdat->getData(),curformdat->getData()+curformdat->getDataSize(),mediafile.begin());
+                for (libhttppp::HttpForm::MultipartForm::Data *curformdat = dat; curformdat; curformdat = curformdat->nextData()) {
+                    for(libhttppp::HttpForm::MultipartForm::Data::ContentDisposition* curctdisp = curformdat->getDisposition(); curctdisp;
+                        curctdisp=curctdisp->nextContentDisposition()){
+                        if(curctdisp && strcmp(curctdisp->getValue(),"mediafile")==0){
+                            mediafile.append(curformdat->Value.data(),curformdat->Value.size());
+                        }else if(curctdisp && strcmp(curctdisp->getValue(),"mediafilename")==0){
+                            mediafilename.append(curformdat->Value.data(),curformdat->Value.size());
+                        }
                     }
                 }
 
@@ -262,27 +264,29 @@ namespace blogi {
             libhttppp::HttpForm form;
             form.parse(req);
 
-            for(libhttppp::HttpForm::UrlcodedFormData *curdat=form.getUrlcodedFormData(); curdat; curdat=curdat->nextUrlcodedFormData()){
+            for(libhttppp::HttpForm::UrlcodedForm::Data *curdat=form.UrlFormData.getFormData(); curdat; curdat=curdat->nextData()){
                 if(strcmp(curdat->getKey(),"albumid")==0)
                     id=atoi(curdat->getValue());
             }
 
-            libhttppp::HttpForm::MultipartFormData *dat=form.getMultipartFormData();
+            libhttppp::HttpForm::MultipartForm::Data *dat=form.MultipartFormData.getFormData();
 
-            for (libhttppp::HttpForm::MultipartFormData *curformdat = dat; curformdat; curformdat = curformdat->nextMultipartFormData()) {
-                libhttppp::HttpForm::MultipartFormData::ContentDisposition* curctdisp = curformdat->getContentDisposition();
-                if(curctdisp && strcmp(curctdisp->getName(),"albumid")==0){
-                    for(size_t i =0; i<curformdat->getDataSize(); ++i){
-                        if(!isdigit(curformdat->getData()[i])){
+            for (libhttppp::HttpForm::MultipartForm::Data *curformdat = dat; curformdat; curformdat = curformdat->nextData()) {
+                for(libhttppp::HttpForm::MultipartForm::Data::ContentDisposition* curctdisp = curformdat->getDisposition();
+                    curctdisp; curctdisp=curctdisp->nextContentDisposition()){
+                    if(curctdisp && strcmp(curctdisp->getValue(),"albumid")==0){
+                        for(size_t i =0; i<curformdat->Value.size(); ++i){
+                            if(!isdigit(curformdat->Value[i])){
                             libhttppp::HTTPException excep;
                             excep[libhttppp::HTTPException::Error] << "Wrong formted Pageid!";
                             throw excep;
+                            }
                         }
+                        std::string buf;
+                        buf.resize(curformdat->Value.size());
+                        std::copy(curformdat->Value.begin(),curformdat->Value.end(),buf.begin());
+                        id=atoi(buf.c_str());
                     }
-                    std::string buf;
-                    buf.resize(curformdat->getDataSize());
-                    std::copy(curformdat->getData(),curformdat->getData()+curformdat->getDataSize(),buf.begin());
-                    id=atoi(buf.c_str());
                 }
             }
 
@@ -307,7 +311,7 @@ namespace blogi {
 
             form.parse(req);
 
-            for(libhttppp::HttpForm::UrlcodedFormData *curdat=form.getUrlcodedFormData(); curdat; curdat=curdat->nextUrlcodedFormData()){
+            for(libhttppp::HttpForm::UrlcodedForm::Data *curdat=form.UrlFormData.getFormData(); curdat; curdat=curdat->nextData()){
                 if(strcmp(curdat->getKey(),"mtype")==0)
                     mtype=atoi(curdat->getValue());
                 else if(strcmp(curdat->getKey(),"mfext")==0)

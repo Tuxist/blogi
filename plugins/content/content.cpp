@@ -241,18 +241,18 @@ namespace blogi {
             std::string descrition;
 
             if(curform.getBoundary()){
-                for(libhttppp::HttpForm::MultipartFormData *curformdat=curform.getMultipartFormData(); curformdat; curformdat=curformdat->nextMultipartFormData()){
-                    libhttppp::HttpForm::MultipartFormData::ContentDisposition *curctdisp=curformdat->getContentDisposition();
-                    if(curctdisp->getName()){
-                        if (strcmp(curctdisp->getName(), "blog_title") == 0) {
-                            title.append(curformdat->getData(),curformdat->getDataSize());
-                        }else if(strcmp(curctdisp->getName(), "blog_descrition") == 0){
-                            descrition.append(curformdat->getData(), curformdat->getDataSize());
-                        }else if (strcmp(curctdisp->getName(), "blog_tags") == 0) {
-                            tags.append(curformdat->getData(), curformdat->getDataSize());
+                for(libhttppp::HttpForm::MultipartForm::Data *curformdat=curform.MultipartFormData.getFormData(); curformdat; curformdat=curformdat->nextData()){
+
+                    for(libhttppp::HttpForm::MultipartForm::Data::ContentDisposition *curctdisp=curformdat->getDisposition(); curformdat; curformdat=curformdat->nextData()){
+                        if (strcmp(curctdisp->getKey(), "blog_title") == 0) {
+                            title.append(curformdat->Value.data(),curformdat->Value.size());
+                        }else if(strcmp(curctdisp->getKey(), "blog_descrition") == 0){
+                            descrition.append(curformdat->Value.data(),curformdat->Value.size());
+                        }else if (strcmp(curctdisp->getKey(), "blog_tags") == 0) {
+                            tags.append(curformdat->Value.data(),curformdat->Value.size());
                         }
-                        else if(strcmp(curctdisp->getName(),"blog_content")==0){
-                            text.append(curformdat->getData(), curformdat->getDataSize());
+                        else if(strcmp(curctdisp->getKey(),"blog_content")==0){
+                            text.append(curformdat->Value.data(),curformdat->Value.size());
                         }
                     }
                 }
@@ -484,20 +484,21 @@ namespace blogi {
             std::string descrition;
 
             if (curform.getBoundary()) {
-                for (libhttppp::HttpForm::MultipartFormData* curformdat = curform.getMultipartFormData(); curformdat; curformdat = curformdat->nextMultipartFormData()) {
-                    libhttppp::HttpForm::MultipartFormData::ContentDisposition* curctdisp = curformdat->getContentDisposition();
-                    if (curctdisp->getName()) {
-                        if (strcmp(curctdisp->getName(), "blog_title") == 0) {
-                            title.append(curformdat->getData(), curformdat->getDataSize());
-                        }
-                        else if (strcmp(curctdisp->getName(), "blog_descrition") == 0) {
-                            descrition.append(curformdat->getData(), curformdat->getDataSize());
-                        }
-                        else if (strcmp(curctdisp->getName(), "blog_tags") == 0) {
-                            tags.append(curformdat->getData(), curformdat->getDataSize());
-                        }
-                        else if (strcmp(curctdisp->getName(), "blog_content") == 0) {
-                            text.append(curformdat->getData(), curformdat->getDataSize());;
+                for (libhttppp::HttpForm::MultipartForm::Data* curformdat = curform.MultipartFormData.getFormData(); curformdat; curformdat = curformdat->nextData()) {
+                    for(libhttppp::HttpForm::MultipartForm::Data::ContentDisposition* curctdisp = curformdat->getDisposition(); curctdisp; curctdisp=curctdisp->nextContentDisposition()){
+                        if (strcmp(curctdisp->getKey(),"name")==0) {
+                            if (strcmp(curctdisp->getValue(), "blog_title") == 0) {
+                                title.append(curformdat->Value.data(),curformdat->Value.size());
+                            }
+                            else if (strcmp(curctdisp->getValue(), "blog_descrition") == 0) {
+                                descrition.append(curformdat->Value.data(), curformdat->Value.size());
+                            }
+                            else if (strcmp(curctdisp->getValue(), "blog_tags") == 0) {
+                                tags.append(curformdat->Value.data(), curformdat->Value.size());
+                            }
+                            else if (strcmp(curctdisp->getValue(), "blog_content") == 0) {
+                                text.append(curformdat->Value.data(), curformdat->Value.size());
+                            }
                         }
                     }
                 }
@@ -682,8 +683,8 @@ namespace blogi {
                 int startpos = 0;
                 libhttppp::HttpForm start;
                 start.parse(req);
-                for (libhttppp::HttpForm::UrlcodedFormData* cururlform = start.getUrlcodedFormData(); cururlform;
-                    cururlform = cururlform->nextUrlcodedFormData()){
+                for (libhttppp::HttpForm::UrlcodedForm::Data* cururlform = start.UrlFormData.getFormData(); cururlform;
+                    cururlform = cururlform->nextData()){
                     if(strcmp(cururlform->getKey(),"start")==0)
                         startpos=atoi(cururlform->getValue());
                 }

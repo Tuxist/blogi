@@ -26,6 +26,7 @@
  *******************************************************************************/
 
 #include <iostream>
+#include <algorithm>
 
 #include <htmlpp/html.h>
 
@@ -125,23 +126,26 @@ void blogi::StaticPage::newPage(libhttppp::HttpRequest* req, libhtmlpp::HtmlStri
 
     try {
 
-        for (libhttppp::HttpForm::MultipartFormData* curformdat = form.getMultipartFormData(); curformdat; curformdat = curformdat->nextMultipartFormData()) {
-            libhttppp::HttpForm::MultipartFormData::ContentDisposition* curctdisp = curformdat->getContentDisposition();
+        for (libhttppp::HttpForm::MultipartForm::Data* curformdat = form.MultipartFormData.getFormData(); curformdat; curformdat = curformdat->nextData()) {
 
-            std::string data;
-            libhtmlpp::HtmlString result;
+            for(libhttppp::HttpForm::MultipartForm::Data::ContentDisposition* curctdisp = curformdat->getDisposition();
+                curctdisp; curctdisp=curctdisp->nextContentDisposition()){
 
-            std::copy(curformdat->getData(),curformdat->getData()+curformdat->getDataSize(),
+                std::string data;
+                libhtmlpp::HtmlString result;
+
+                std::copy(curformdat->Value.begin(),curformdat->Value.end(),
                       std::inserter<std::string>(data,data.begin()));
 
-            if(strcmp(curctdisp->getName(),"url")==0){
-                libhtmlpp::HtmlEncode(data.c_str(),&result);
-                surl=result.c_str();
-            }else if(strcmp(curctdisp->getName(),"meta")==0){
-                libhtmlpp::HtmlEncode(data.c_str(),&result);
-                meta=result.c_str();
-            }else if(strcmp(curctdisp->getName(),"text")==0){
-                text=&data;
+                if(strcmp(curctdisp->getValue(),"url")==0){
+                    libhtmlpp::HtmlEncode(data.c_str(),&result);
+                    surl=result.c_str();
+                }else if(strcmp(curctdisp->getValue(),"meta")==0){
+                    libhtmlpp::HtmlEncode(data.c_str(),&result);
+                    meta=result.c_str();
+                }else if(strcmp(curctdisp->getValue(),"text")==0){
+                    text=&data;
+                }
             }
         }
     }catch(...){};
@@ -187,7 +191,7 @@ void blogi::StaticPage::delPage(libhttppp::HttpRequest* req, libhtmlpp::HtmlStri
     libhttppp::HttpForm form;
     form.parse(req);
 
-    for(libhttppp::HttpForm::UrlcodedFormData *cdat=form.getUrlcodedFormData(); cdat; cdat=cdat->nextUrlcodedFormData()){
+    for(libhttppp::HttpForm::UrlcodedForm::Data *cdat=form.UrlFormData.getFormData(); cdat; cdat=cdat->nextData()){
         if(strcmp(cdat->getKey(),"pageid")==0){
             size_t pgidlen=strlen(cdat->getValue());
             for(size_t i =0; i<pgidlen; ++i){
@@ -227,46 +231,49 @@ void blogi::StaticPage::editPage(libhttppp::HttpRequest* req, libhtmlpp::HtmlStr
     try {
         sql.clear();
 
-        for (libhttppp::HttpForm::MultipartFormData* curformdat = form.getMultipartFormData(); curformdat; curformdat = curformdat->nextMultipartFormData()) {
-            libhttppp::HttpForm::MultipartFormData::ContentDisposition* curctdisp = curformdat->getContentDisposition();{
-                if(strcmp(curctdisp->getName(),"pageid")==0){
-                    for(size_t i =0; i<curformdat->getDataSize(); ++i){
-                        if(!isdigit(curformdat->getData()[i])){
+        for (libhttppp::HttpForm::MultipartForm::Data* curformdat = form.MultipartFormData.getFormData(); curformdat; curformdat = curformdat->nextData()) {
+            libhttppp::HttpForm::MultipartForm::Data::ContentDisposition* curctdisp = curformdat->getDisposition();{
+                if(strcmp(curctdisp->getValue(),"pageid")==0){
+                    for(size_t i =0; i<curformdat->Value.size(); ++i){
+                        if(!isdigit(curformdat->Value[i])){
                             libhttppp::HTTPException excep;
                             excep[libhttppp::HTTPException::Error] << "Wrong formted Pageid!";
                             throw excep;
                         }
                     }
-                    std::string buf;
-                    buf.resize(curformdat->getDataSize());
-                    std::copy(curformdat->getData(),curformdat->getData()+curformdat->getDataSize(),buf.begin());
-                    id=atoi(buf.c_str());
+                    std::vector<char> buf;
+                    std::copy(curformdat->Value.begin(),curformdat->Value.end(),
+                              std::inserter<std::vector<char>>(buf,buf.begin()));
+                    buf.push_back('\0');
+                    id=atoi(buf.data());
                 }
             }
         }
 
 
         if(id>=0){
-            for (libhttppp::HttpForm::MultipartFormData* curformdat = form.getMultipartFormData(); curformdat; curformdat = curformdat->nextMultipartFormData()) {
-                libhttppp::HttpForm::MultipartFormData::ContentDisposition* curctdisp = curformdat->getContentDisposition();
+            for (libhttppp::HttpForm::MultipartForm::Data* curformdat = form.MultipartFormData.getFormData(); curformdat; curformdat = curformdat->nextData()) {
+                for(libhttppp::HttpForm::MultipartForm::Data::ContentDisposition* curctdisp = curformdat->getDisposition(); curctdisp; curctdisp=curctdisp->nextContentDisposition()){
 
-                std::string data;
-                libhtmlpp::HtmlString result;
+                    std::vector<char> data;
+                    libhtmlpp::HtmlString result;
 
-                std::copy(curformdat->getData(),curformdat->getData()+curformdat->getDataSize(),
-                         std::inserter<std::string>(data,data.begin()));
+                    std::copy(curformdat->Value.begin(),curformdat->Value.end(),
+                              std::inserter<std::vector<char>>(data,data.begin()));
 
-                if(strcmp(curctdisp->getName(),"url")==0){
-                    libhtmlpp::HtmlEncode(data.c_str(),&result);
-                    sql<< "update static_content set url='" << result.c_str() << "' where id='" << id <<"'; ";
-                }else if(strcmp(curctdisp->getName(),"meta")==0){
-                    libhtmlpp::HtmlEncode(data.c_str(),&result);
-                    sql<< "update static_content set meta='" << result.c_str() << "' where id='" << id <<"'; ";
-                }else if(strcmp(curctdisp->getName(),"text")==0){
-                    sql<< "update static_content set text='"; sql.escaped(data.c_str()) << "' where id='" << id <<"'; ";
+                    data.push_back('\0');
+
+                    if(strcmp(curctdisp->getValue(),"url")==0){
+                        libhtmlpp::HtmlEncode(data.data(),&result);
+                        sql<< "update static_content set url='" << result.c_str() << "' where id='" << id <<"'; ";
+                    }else if(strcmp(curctdisp->getValue(),"meta")==0){
+                        libhtmlpp::HtmlEncode(data.data(),&result);
+                        sql<< "update static_content set meta='" << result.c_str() << "' where id='" << id <<"'; ";
+                    }else if(strcmp(curctdisp->getValue(),"text")==0){
+                        sql<< "update static_content set text='"; sql.escaped(data.data()) << "' where id='" << id <<"'; ";
+                    }
                 }
             }
-
             if(!sql.empty()){
                 Args->database->exec(&sql,res);
                 sql.clear();
@@ -276,7 +283,7 @@ void blogi::StaticPage::editPage(libhttppp::HttpRequest* req, libhtmlpp::HtmlStr
 
     if(id<0){
 
-        for(libhttppp::HttpForm::UrlcodedFormData *cdat=form.getUrlcodedFormData(); cdat; cdat=cdat->nextUrlcodedFormData()){
+        for(libhttppp::HttpForm::UrlcodedForm::Data *cdat=form.UrlFormData.getFormData(); cdat; cdat=cdat->nextData()){
             if(strcmp(cdat->getKey(),"pageid")==0){
                 size_t pgidlen=strlen(cdat->getValue());
                 for(size_t i =0; i<pgidlen; ++i){
