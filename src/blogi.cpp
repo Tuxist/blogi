@@ -94,7 +94,7 @@ blogi::Blogi::~Blogi(){
     delete Page;
     delete MPage;
 }
-
+#include <iostream>
 void blogi::Blogi::loginPage(libhttppp::HttpRequest *curreq){
     char url[512];
     libhttppp::HTTPException excep;
@@ -108,12 +108,13 @@ void blogi::Blogi::loginPage(libhttppp::HttpRequest *curreq){
     libhttppp::HttpForm curform;
     curform.parse(curreq);
 
-    const char *username=nullptr;
-    const char *password=nullptr;
+    std::string username;
+    std::string password;
 
 
     for (libhttppp::HttpForm::UrlcodedForm::Data* cururlform = curform.UrlFormData.getFormData(); cururlform;
         cururlform = cururlform->nextData()) {
+        std::cout << cururlform->getKey() <<std::endl;
         if (strcmp(cururlform->getKey(), "username") == 0) {
             username = cururlform->getValue();
         }else if (strcmp(cururlform->getKey(), "password") == 0) {
@@ -130,7 +131,7 @@ void blogi::Blogi::loginPage(libhttppp::HttpRequest *curreq){
     else
         index=Index;
 
-    if (!username || !password) {
+    if (username.empty() || password.empty()) {
         libhtmlpp::HtmlString condat;
         condat << "<div id=\"content\">"
                << "<span>Login</span>"
@@ -159,10 +160,10 @@ void blogi::Blogi::loginPage(libhttppp::HttpRequest *curreq){
 
     std::string sid;
 
-    if(PlgArgs->auth->login(username,password,sid)){
+    if(PlgArgs->auth->login(username.c_str(),password.c_str(),sid)){
         const char *sessid = PlgArgs->session->createSession(sid.c_str());
         PlgArgs->session->addSessionData(sessid,"sid",sid.c_str(),sid.length());
-        PlgArgs->session->addSessionData(sessid,"username",username, strlen(username));
+        PlgArgs->session->addSessionData(sessid,"username",username.c_str(), username.length());
         libhttppp::HttpResponse curres;
         libhttppp::HttpCookie cookie;
         cookie.setcookie(&curres, "sessionid", sessid);

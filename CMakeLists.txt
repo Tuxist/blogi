@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.18)
 
 project(blogi)
 
-SET(CMAKE_CXX_FLAGS "-fPIC -Wall")
+SET(CMAKE_CXX_FLAGS "-fPIC -Wall -std=c++17")
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
 

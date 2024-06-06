@@ -26,6 +26,7 @@
  *******************************************************************************/
 
 #include <string>
+#include <vector>
 
 #include <hiredis/hiredis.h>
 
@@ -34,14 +35,14 @@ namespace blogi {
     public:
         Store(){};
         virtual ~Store(){};
-        virtual void save(const std::string key,const std::string value)=0;
+        virtual void save(const std::string key,const std::vector<char> value)=0;
         virtual void load(const std::string key,std::string &value) =0;
     };
 
     class RedisStore : public Store {
     public:
         RedisStore(const char *host,int port,const char *password=nullptr);
-        void save(const std::string key,const std::string value) override;
+        void save(const std::string key,const std::vector<char> value) override;
         void load(const std::string key,std::string &value) override;
     private:
         bool reconnect();

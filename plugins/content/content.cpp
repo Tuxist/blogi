@@ -243,21 +243,21 @@ namespace blogi {
             if(curform.getBoundary()){
                 for(libhttppp::HttpForm::MultipartForm::Data *curformdat=curform.MultipartFormData.getFormData(); curformdat; curformdat=curformdat->nextData()){
 
-                    for(libhttppp::HttpForm::MultipartForm::Data::ContentDisposition *curctdisp=curformdat->getDisposition(); curformdat; curformdat=curformdat->nextData()){
-                        if (strcmp(curctdisp->getKey(), "blog_title") == 0) {
+                    for(libhttppp::HttpForm::MultipartForm::Data::ContentDisposition *curctdisp=curformdat->getDisposition(); curctdisp; curctdisp=curctdisp->nextContentDisposition()){
+                        if (strcmp(curctdisp->getValue(), "blog_title") == 0) {
                             title.append(curformdat->Value.data(),curformdat->Value.size());
-                        }else if(strcmp(curctdisp->getKey(), "blog_descrition") == 0){
+                        }else if(strcmp(curctdisp->getValue(), "blog_descrition") == 0){
                             descrition.append(curformdat->Value.data(),curformdat->Value.size());
-                        }else if (strcmp(curctdisp->getKey(), "blog_tags") == 0) {
+                        }else if (strcmp(curctdisp->getValue(), "blog_tags") == 0) {
                             tags.append(curformdat->Value.data(),curformdat->Value.size());
                         }
-                        else if(strcmp(curctdisp->getKey(),"blog_content")==0){
+                        else if(strcmp(curctdisp->getValue(),"blog_content")==0){
                             text.append(curformdat->Value.data(),curformdat->Value.size());
                         }
                     }
                 }
 
-                size_t content_id = -1;
+                ssize_t content_id = -1;
 
                 if(!text.empty() && !title.empty() && !descrition.empty()){
 
@@ -691,7 +691,11 @@ namespace blogi {
                 std::cerr << startpos << std::endl;
                 if (strcmp(curl.c_str(),Args->config->buildurl("content/tag",url,512))>0){
                     size_t len = strlen(Args->config->buildurl("content/tag/",url,512));
-                    contentIdxPage(req,page,curl.substr(len,curl.length()-len).c_str(),startpos,SITELIMIT);
+                    libhttppp::HttpForm dec;
+                    std::vector<char> ucurl;
+                    dec.urlDecode(curl.c_str()+len,curl.length()-len,ucurl);
+                    ucurl.push_back('\0');
+                    contentIdxPage(req,page,ucurl.data(),startpos,SITELIMIT);
                  }else{
                     contentIdxPage(req,page,nullptr,startpos,SITELIMIT);
                  }

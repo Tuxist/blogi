@@ -52,16 +52,16 @@ blogi::RedisStore::RedisStore(const char *host,int port,const char *password){
     }
 
 }
-void blogi::RedisStore::save(const std::string key, const std::string value){
+void blogi::RedisStore::save(const std::string key, const std::vector<char> value){
 REDISSAVE:
-    redisReply* reply = (redisReply*) redisCommand(_RedisCTX,"SET %s %b",key.c_str(),value.c_str(),value.length());
-    if (reply && reply->type!=REDIS_REPLY_ERROR) {
+    redisReply* reply = (redisReply*) redisCommand(_RedisCTX,"SET %s %b",key.c_str(),value.data(),value.size());
+    if (reply && reply->type==REDIS_REPLY_ERROR) {
         if(reconnect())
             goto REDISSAVE;
     }
     freeReplyObject(reply);
     reply = (redisReply*) redisCommand(_RedisCTX, "save");
-    if (reply && reply->type!=REDIS_REPLY_ERROR) {
+    if (reply && reply->type==REDIS_REPLY_ERROR) {
         if(reconnect())
             goto REDISSAVE;
     }

@@ -24,7 +24,9 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *******************************************************************************/
+#include <iostream>
 
+#include <map>
 #include <uuid/uuid.h>
 
 #include <htmlpp/html.h>
@@ -151,80 +153,95 @@ namespace blogi {
                    << "</div>";
         }
 
-        void uploadMedia(int id,libhttppp::HttpForm::MultipartForm::Data *dat,libhttppp::HttpRequest * req, libhtmlpp::HtmlString & setdiv){
+        void uploadMedia(int id,libhttppp::HttpRequest * req, libhtmlpp::HtmlString & setdiv){
             char url[512];
-            std::string mediafilename,mediafile;
+            std::map<std::vector<char>,std::vector<char>> media;
+            libhttppp::HttpForm form;
 
-            if(dat){
-                for (libhttppp::HttpForm::MultipartForm::Data *curformdat = dat; curformdat; curformdat = curformdat->nextData()) {
-                    for(libhttppp::HttpForm::MultipartForm::Data::ContentDisposition* curctdisp = curformdat->getDisposition(); curctdisp;
-                        curctdisp=curctdisp->nextContentDisposition()){
-                        if(curctdisp && strcmp(curctdisp->getValue(),"mediafile")==0){
-                            mediafile.append(curformdat->Value.data(),curformdat->Value.size());
-                        }else if(curctdisp && strcmp(curctdisp->getValue(),"mediafilename")==0){
-                            mediafilename.append(curformdat->Value.data(),curformdat->Value.size());
-                        }
-                    }
+            form.parse(req);
+
+            for (libhttppp::HttpForm::MultipartForm::Data *curformdat = form.MultipartFormData.getFormData(); curformdat; curformdat = curformdat->nextData()) {
+                for(libhttppp::HttpForm::MultipartForm::Data::ContentDisposition* curctdisp = curformdat->getDisposition(); curctdisp;
+                    curctdisp=curctdisp->nextContentDisposition()){
+                    std::vector<char> name;
+                if(strcmp(curctdisp->getKey(),"filename")==0){
+                    std::copy(curctdisp->getValue(),curctdisp->getValue()+strlen(curctdisp->getValue()),
+                              std::inserter<std::vector<char>>(name,name.begin()));
+                    name.push_back('\0');
+                    media.insert({name,curformdat->Value});
                 }
-
-                if(!mediafile.empty() && !mediafilename.empty()){
-                    std::string ext;
-                    size_t expos=mediafilename.rfind('.');
-                    if(expos==std::string::npos){
-                        libhttppp::HTTPException excep;
-                        excep[libhttppp::HTTPException::Error] << "Upload media Wrong filename!";
-                        throw excep;
                     }
-
-                    if( (++expos) > mediafilename.length()){
-                        libhttppp::HTTPException excep;
-                        excep[libhttppp::HTTPException::Error] << "Upload media Wrong filename!";
-                        throw excep;
-                    }
-
-                    ext=mediafilename.substr(expos,mediafilename.length()-expos);
-
-                    blogi::SQL sql;
-                    blogi::DBResult res;
-
-                    sql << "SELECT id FROM media_type where ext='"; sql.escaped(ext.c_str()) <<"' LIMIT 1";
-
-                    int n = Args->database->exec(&sql,res);
-
-                    if(n<1){
-                        libhttppp::HTTPException excep;
-                        excep[libhttppp::HTTPException::Error] << "media type: " << ext.c_str() << " not found in Database aborting!";
-                        throw excep;
-                    }
-
-                    int tid=atoi(res[0][0]);
-
-                    sql.clear();
-
-                    sql << "INSERT INTO media_items (album_id,name) VALUES('" << id << "','"; sql.escaped(mediafilename.substr(0,expos).c_str()) << "') RETURNING id";
-
-                    Args->database->exec(&sql,res);
-                    sql.clear();
-
-                    int mid=atoi(res[0][0]);
-
-                    uuid_t fuuid;
-                    char   cfuuid[512];
-
-                    uuid_generate(fuuid);
-                    uuid_unparse(fuuid,cfuuid);
-                    uuid_clear(fuuid);
-
-                    sql << "INSERT INTO media_items_files (media_items_id,redis_uuid,media_type_id,public) VALUES('"
-                        << mid << "','" << cfuuid << "','" << tid << "',True)";
-
-                    Args->database->exec(&sql,res);
-                    sql.clear();
-
-                    _store->save(cfuuid,mediafile);
-                }
-
             }
+
+            for(const auto& [mediafilename, mediafile] : media){
+                std::string ext;
+                size_t expos=std::string::npos;
+
+                for(size_t im=mediafilename.size()-1; im > 0; --im){
+                    if(mediafilename[im]=='.')
+                        expos=im;
+                }
+
+                if(expos==std::string::npos){
+                    libhttppp::HTTPException excep;
+                    excep[libhttppp::HTTPException::Error] << "Upload media Wrong filename!";
+                    throw excep;
+                }
+
+                if( (++expos) > mediafilename.size()){
+                    libhttppp::HTTPException excep;
+                    excep[libhttppp::HTTPException::Error] << "Upload media Wrong filename!";
+                    throw excep;
+                }
+
+                std::copy(mediafilename.begin()+expos,mediafilename.end(),
+                          std::inserter<std::string>(ext,ext.begin()));
+
+                blogi::SQL sql;
+                blogi::DBResult res;
+
+                sql << "SELECT id FROM media_type where ext='"; sql.escaped(ext.c_str()) <<"' LIMIT 1";
+
+                int n = Args->database->exec(&sql,res);
+
+                if(n<1){
+                    libhttppp::HTTPException excep;
+                    excep[libhttppp::HTTPException::Error] << "media type: " << ext.c_str() << " not found in Database aborting!";
+                    throw excep;
+                }
+
+                int tid=atoi(res[0][0]);
+
+                sql.clear();
+
+                std::string pname;
+                std::copy(mediafilename.begin(),mediafilename.begin()+expos,
+                          std::inserter<std::string>(pname,pname.begin()));
+
+
+                sql << "INSERT INTO media_items (album_id,name) VALUES('" << id << "','"; sql.escaped(pname.c_str()) << "') RETURNING id";
+
+                Args->database->exec(&sql,res);
+                sql.clear();
+
+                int mid=atoi(res[0][0]);
+
+                uuid_t fuuid;
+                char   cfuuid[512];
+
+                uuid_generate(fuuid);
+                uuid_unparse(fuuid,cfuuid);
+                uuid_clear(fuuid);
+
+                sql << "INSERT INTO media_items_files (media_items_id,redis_uuid,media_type_id,public) VALUES('"
+                << mid << "','" << cfuuid << "','" << tid << "',True)";
+
+                Args->database->exec(&sql,res);
+                sql.clear();
+
+                _store->save(cfuuid,mediafile);
+            }
+
 
             blogi::SQL sql,sql2;
             blogi::DBResult res,res2;
@@ -237,14 +254,14 @@ namespace blogi {
 
             for(int i=0; i<n; ++i){
                 sql2 << "SELECT redis_uuid,media_type.ext,media_type.type,media_type.ctype FROM media_items_files LEFT JOIN media_type ON"
-                     << " media_items_files.media_type_id=media_type.id WHERE media_items_id='" << res[i][0] << "'";
+                << " media_items_files.media_type_id=media_type.id WHERE media_items_id='" << res[i][0] << "'";
                 int nn = Args->database->exec(&sql2,res2);
                 for(int ii=0; ii<nn; ++ii){
                     if(atoi(res2[ii][2])==blogi::MediaTypes::Picture)
                         setdiv << "<li class=\"upreview\" ><a><img src=\"" << Args->config->buildurl("media/getimage/",url,512) << res2[ii][0] << "." << res2[ii][1] << "\"></a></li>";
                     else if(atoi(res2[ii][2])==blogi::MediaTypes::Video)
                         setdiv<< "<li class=\"upreview\" ><a><video> <source src=\"" << Args->config->buildurl("media/getimage/",url,512) << res2[ii][0] << "." << res2[ii][1] << "\""
-                              << " type=\"" <<  res2[ii][3] << "\"></video></a></li>";
+                        << " type=\"" <<  res2[ii][3] << "\"></video></a></li>";
                 }
                 sql2.clear();
             }
@@ -269,23 +286,22 @@ namespace blogi {
                     id=atoi(curdat->getValue());
             }
 
-            libhttppp::HttpForm::MultipartForm::Data *dat=form.MultipartFormData.getFormData();
-
-            for (libhttppp::HttpForm::MultipartForm::Data *curformdat = dat; curformdat; curformdat = curformdat->nextData()) {
+            for (libhttppp::HttpForm::MultipartForm::Data *curformdat = form.MultipartFormData.getFormData(); curformdat; curformdat = curformdat->nextData()) {
                 for(libhttppp::HttpForm::MultipartForm::Data::ContentDisposition* curctdisp = curformdat->getDisposition();
                     curctdisp; curctdisp=curctdisp->nextContentDisposition()){
-                    if(curctdisp && strcmp(curctdisp->getValue(),"albumid")==0){
+                    if(strcmp(curctdisp->getValue(),"albumid")==0){
                         for(size_t i =0; i<curformdat->Value.size(); ++i){
                             if(!isdigit(curformdat->Value[i])){
                             libhttppp::HTTPException excep;
-                            excep[libhttppp::HTTPException::Error] << "Wrong formted Pageid!";
+                            excep[libhttppp::HTTPException::Error] << "Wrong formated Pageid!";
                             throw excep;
                             }
                         }
-                        std::string buf;
-                        buf.resize(curformdat->Value.size());
-                        std::copy(curformdat->Value.begin(),curformdat->Value.end(),buf.begin());
-                        id=atoi(buf.c_str());
+                        std::vector<char> buf;
+                        std::copy(curformdat->Value.begin(),curformdat->Value.end(),
+                                  std::inserter<std::vector<char>>(buf,buf.begin()));
+                        buf.push_back('\0');
+                        id=atoi(buf.data());
                     }
                 }
             }
@@ -297,7 +313,7 @@ namespace blogi {
             }
 
             setdiv << "<div><span>View media library</span><br>";
-            uploadMedia(id,dat,req,setdiv);
+            uploadMedia(id,req,setdiv);
             setdiv << "</div>";
         }
 
@@ -323,6 +339,8 @@ namespace blogi {
                 else if(strcmp(curdat->getKey(),"confirmed")==0 && strcmp(curdat->getValue(),"true")==0)
                     confirmed=true;
             }
+
+            std::cout << mid << std::endl;
 
             if(strncmp(req->getRequestURL()+strlen(Args->config->buildurl("settings/media/editmediatypes/",url,512)),"delmtype",8)==0){
                 if(mid>=0){
