@@ -531,11 +531,11 @@ namespace blogi {
 
                 if(n>0){
                     try{
-                        std::string value;
+                        std::vector<char> value;
                         _store->load(suuid,value);
                         curres.setContentType(res[0][0]);
                         curres.setState(HTTP200);
-                        curres.send(req, value.c_str(), value.length());
+                        curres.send(req, value.data(), value.size());
                     }catch(...){
                         curres.setState(HTTP404);
                         curres.send(req,nullptr,0);

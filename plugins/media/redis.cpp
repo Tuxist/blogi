@@ -67,12 +67,11 @@ REDISSAVE:
     }
 }
 
-void blogi::RedisStore::load(const std::string key,std::string &value) {
+void blogi::RedisStore::load(const std::string key,std::vector<char> &value) {
 REDISLOAD:
     redisReply* reply = (redisReply*) redisCommand(_RedisCTX, "GET %s",key.c_str());
     if(reply && reply->type!=REDIS_REPLY_ERROR){
-        value.resize(reply->len);
-        value.insert(0,reply->str,reply->len);
+        std::copy(reply->str,reply->str+reply->len,std::inserter<std::vector<char>>(value,value.begin()));
     }else{
         if(reconnect())
             goto REDISLOAD;

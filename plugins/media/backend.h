@@ -36,14 +36,14 @@ namespace blogi {
         Store(){};
         virtual ~Store(){};
         virtual void save(const std::string key,const std::vector<char> value)=0;
-        virtual void load(const std::string key,std::string &value) =0;
+        virtual void load(const std::string key,std::vector<char> &value) =0;
     };
 
     class RedisStore : public Store {
     public:
         RedisStore(const char *host,int port,const char *password=nullptr);
         void save(const std::string key,const std::vector<char> value) override;
-        void load(const std::string key,std::string &value) override;
+        void load(const std::string key,std::vector<char>  &value) override;
     private:
         bool reconnect();
         redisContext *_RedisCTX;
