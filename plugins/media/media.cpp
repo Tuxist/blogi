@@ -530,8 +530,6 @@ namespace blogi {
 
                 suuid.push_back('\0');
 
-                std::cout << "test:" << suuid << std::endl;
-
                 blogi::SQL sql;
                 blogi::DBResult res;
 

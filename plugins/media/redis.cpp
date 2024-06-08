@@ -53,10 +53,11 @@ blogi::RedisStore::RedisStore(const char *host,int port,const char *password){
 
 }
 void blogi::RedisStore::save(const std::string key, const std::vector<char> value){
+    int tries=0;
 REDISSAVE:
     redisReply* reply = (redisReply*) redisCommand(_RedisCTX,"SET %s %b",key.c_str(),value.data(),value.size());
     if (reply && reply->type==REDIS_REPLY_ERROR) {
-        if(reconnect())
+        if(reconnect() && ++tries < 5)
             goto REDISSAVE;
     }
     freeReplyObject(reply);
@@ -68,12 +69,13 @@ REDISSAVE:
 }
 
 void blogi::RedisStore::load(const std::string key,std::vector<char> &value) {
+    int tries=0;
 REDISLOAD:
     redisReply* reply = (redisReply*) redisCommand(_RedisCTX, "GET %s",key.c_str());
     if(reply && reply->type!=REDIS_REPLY_ERROR){
         std::copy(reply->str,reply->str+reply->len,std::inserter<std::vector<char>>(value,value.begin()));
     }else{
-        if(reconnect())
+        if(reconnect() && ++tries < 5)
             goto REDISLOAD;
         freeReplyObject(reply);
         libhttppp::HTTPException exp;
