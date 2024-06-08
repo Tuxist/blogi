@@ -540,22 +540,18 @@ namespace blogi {
 
                 libhttppp::HttpResponse curres;
                 curres.setVersion(HTTPVERSION(1.1));
+                std::vector<char> value;
 
                 if(n>0){
-                    try{
-                        std::vector<char> value;
-                        _store->load(suuid,value);
-                        curres.setContentType(res[0][0]);
-                        curres.setState(HTTP200);
-                        curres.send(req, value.data(), value.size());
-                    }catch(...){
-                        curres.setState(HTTP404);
-                        curres.send(req,nullptr,0);
-                    }
+                    _store->load(suuid,value);
+                    curres.setContentType(res[0][0]);
+                    curres.setState(HTTP200);
                 }else{
                     curres.setState(HTTP404);
                     curres.send(req,nullptr,0);
                 }
+
+                curres.send(req, value.data(), value.size());
                 return true;
             }
             return false;

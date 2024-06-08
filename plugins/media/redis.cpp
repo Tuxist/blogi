@@ -63,7 +63,7 @@ REDISSAVE:
     freeReplyObject(reply);
     reply = (redisReply*) redisCommand(_RedisCTX, "save");
     if (reply && reply->type==REDIS_REPLY_ERROR) {
-        if(reconnect())
+        if(reconnect() && ++tries < 5)
             goto REDISSAVE;
     }
 }
