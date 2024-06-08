@@ -340,8 +340,6 @@ namespace blogi {
                     confirmed=true;
             }
 
-            std::cout << mid << std::endl;
-
             if(strncmp(req->getRequestURL()+strlen(Args->config->buildurl("settings/media/editmediatypes/",url,512)),"delmtype",8)==0){
                 if(mid>=0){
                     if(confirmed){
@@ -505,18 +503,34 @@ namespace blogi {
 
         bool Controller(libhttppp::HttpRequest *req,libhtmlpp::HtmlElement *page){
             char url[512];
-            if (strncmp(req->getRequestURL(),Args->config->buildurl("media/getimage/",url,512),strlen(Args->config->buildurl("media/getimage",url,512)))==0){
-                int mlen=strlen(req->getRequestURL())-strlen(Args->config->buildurl("media/getimage/",url,512));
-                if(mlen<=0)
-                    return false;
-                std::string mpath=req->getRequestURL()+strlen(Args->config->buildurl("media/getimage/",url,512));
+            const char *ccurl=req->getRequestURL();
 
-                size_t expos=mpath.rfind('.');
+            if (strncmp(ccurl,Args->config->buildurl("media/getimage/",url,512),strlen(Args->config->buildurl("media/getimage",url,512)))==0){
+                int plen=strlen(Args->config->buildurl("media/getimage/",url,512));
+                int mlen=strlen(ccurl);
 
-                if(expos<=0)
+                if(mlen-plen<0)
                     return false;
 
-                std::string suuid=mpath.substr(0,expos);
+                std::string suuid;
+                size_t tpos=std::string::npos;
+
+                suuid.resize(mlen-plen);
+
+
+
+                for(size_t i = mlen; i>plen; --i){
+                    if(ccurl[i]=='.'){
+                        tpos=i;
+                        break;
+                    }
+                }
+
+                std::copy(ccurl+plen,ccurl+tpos,suuid.begin());
+
+                suuid.push_back('\0');
+
+                std::cout << "test:" << suuid << std::endl;
 
                 blogi::SQL sql;
                 blogi::DBResult res;
