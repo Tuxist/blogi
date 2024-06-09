@@ -29,7 +29,11 @@
 
 #include <httppp/exception.h>
 
+#include <mutex>
+
 #include "backend.h"
+
+std::mutex recon_mutex;
 
 blogi::RedisStore::RedisStore(const char *host,int port,const char *password){
     _host=host;
@@ -102,6 +106,7 @@ void blogi::RedisStore::load(const std::string key,std::vector<char> &value) {
 }
 
 void blogi::RedisStore::_reconnect(){
+    const std::lock_guard<std::mutex> lock(recon_mutex);
 
     redisReconnect(_RedisCTX);
 
