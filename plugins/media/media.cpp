@@ -238,17 +238,8 @@ namespace blogi {
 
                 Args->database->exec(&sql,res);
                 sql.clear();
+                _store->save(cfuuid,mediafile);
 
-                try{
-                    _store->save(cfuuid,mediafile);
-                }catch(libhttppp::HTTPException &e){
-                    if(Args->config->getRedisPassword()){
-                        _store = new RedisStore(Args->config->getRedisHost(),Args->config->getRedisPort(),Args->config->getRedisPassword());
-                    }else{
-                        _store = new RedisStore(Args->config->getRedisHost(),Args->config->getRedisPort());
-                    }
-                    throw e;
-                }
             }
 
 
@@ -550,23 +541,16 @@ namespace blogi {
                 libhttppp::HttpResponse curres;
                 curres.setVersion(HTTPVERSION(1.1));
                 std::vector<char> value;
-                try{
-                    if(n>0){
-                        _store->load(suuid,value);
-                        curres.setContentType(res[0][0]);
-                        curres.setState(HTTP200);
-                    }else{
-                        curres.setState(HTTP404);
-                        curres.send(req,nullptr,0);
-                    }
-                }catch(libhttppp::HTTPException &e){
-                    if(Args->config->getRedisPassword()){
-                        _store = new RedisStore(Args->config->getRedisHost(),Args->config->getRedisPort(),Args->config->getRedisPassword());
-                    }else{
-                        _store = new RedisStore(Args->config->getRedisHost(),Args->config->getRedisPort());
-                    }
-                    throw e;
+
+                if(n>0){
+                    _store->load(suuid,value);
+                    curres.setContentType(res[0][0]);
+                    curres.setState(HTTP200);
+                }else{
+                    curres.setState(HTTP404);
+                    curres.send(req,nullptr,0);
                 }
+
 
                 curres.send(req, value.data(), value.size());
                 return true;
