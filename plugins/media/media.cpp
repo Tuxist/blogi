@@ -239,7 +239,16 @@ namespace blogi {
                 Args->database->exec(&sql,res);
                 sql.clear();
 
-                _store->save(cfuuid,mediafile);
+                try{
+                    _store->save(cfuuid,mediafile);
+                }catch(libhttppp::HTTPException &e){
+                    if(Args->config->getRedisPassword()){
+                        _store = new RedisStore(Args->config->getRedisHost(),Args->config->getRedisPort(),Args->config->getRedisPassword());
+                    }else{
+                        _store = new RedisStore(Args->config->getRedisHost(),Args->config->getRedisPort());
+                    }
+                    throw e;
+                }
             }
 
 
@@ -556,8 +565,7 @@ namespace blogi {
                     }else{
                         _store = new RedisStore(Args->config->getRedisHost(),Args->config->getRedisPort());
                     }
-                    curres.setState(HTTP500);
-                    curres.send(req,e.what(),strlen(e.what()));
+                    throw e;
                 }
 
                 curres.send(req, value.data(), value.size());
