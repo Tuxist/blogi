@@ -45,7 +45,6 @@ namespace blogi {
         void save(const std::string key,const std::vector<char> value) override;
         void load(const std::string key,std::vector<char>  &value) override;
     private:
-        bool reconnect();
         redisContext *_RedisCTX;
         std::string   _pw;
     };

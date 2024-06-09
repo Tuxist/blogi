@@ -541,14 +541,23 @@ namespace blogi {
                 libhttppp::HttpResponse curres;
                 curres.setVersion(HTTPVERSION(1.1));
                 std::vector<char> value;
-
-                if(n>0){
-                    _store->load(suuid,value);
-                    curres.setContentType(res[0][0]);
-                    curres.setState(HTTP200);
-                }else{
-                    curres.setState(HTTP404);
-                    curres.send(req,nullptr,0);
+                try{
+                    if(n>0){
+                        _store->load(suuid,value);
+                        curres.setContentType(res[0][0]);
+                        curres.setState(HTTP200);
+                    }else{
+                        curres.setState(HTTP404);
+                        curres.send(req,nullptr,0);
+                    }
+                }catch(libhttppp::HTTPException &e){
+                    if(Args->config->getRedisPassword()){
+                        _store = new RedisStore(Args->config->getRedisHost(),Args->config->getRedisPort(),Args->config->getRedisPassword());
+                    }else{
+                        _store = new RedisStore(Args->config->getRedisHost(),Args->config->getRedisPort());
+                    }
+                    curres.setState(HTTP500);
+                    curres.send(req,e.what(),strlen(e.what()));
                 }
 
                 curres.send(req, value.data(), value.size());

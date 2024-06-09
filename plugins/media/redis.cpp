@@ -53,53 +53,34 @@ blogi::RedisStore::RedisStore(const char *host,int port,const char *password){
 
 }
 void blogi::RedisStore::save(const std::string key, const std::vector<char> value){
-    int tries=0;
-REDISSAVE:
+    libhttppp::HTTPException exp;
     redisReply* reply = (redisReply*) redisCommand(_RedisCTX,"SET %s %b",key.c_str(),value.data(),value.size());
     if (reply && reply->type==REDIS_REPLY_ERROR) {
-        if(reconnect() && ++tries < 5)
-            goto REDISSAVE;
+        freeReplyObject(reply);
+        libhttppp::HTTPException exp;
+        exp[libhttppp::HTTPException::Error] << "media plugin err: " << _RedisCTX->errstr;
+        throw exp;
     }
     freeReplyObject(reply);
     reply = (redisReply*) redisCommand(_RedisCTX, "save");
     if (reply && reply->type==REDIS_REPLY_ERROR) {
-        if(reconnect() && ++tries < 5)
-            goto REDISSAVE;
+        freeReplyObject(reply);
+        libhttppp::HTTPException exp;
+        exp[libhttppp::HTTPException::Error] << "media plugin err: " << _RedisCTX->errstr;
+        throw exp;
     }
 }
 
 void blogi::RedisStore::load(const std::string key,std::vector<char> &value) {
-    int tries=0;
-REDISLOAD:
     redisReply* reply = (redisReply*) redisCommand(_RedisCTX, "GET %s",key.c_str());
     if(reply && reply->type!=REDIS_REPLY_ERROR){
         std::copy(reply->str,reply->str+reply->len,std::inserter<std::vector<char>>(value,value.begin()));
     }else{
-        if(reconnect() && ++tries < 5)
-            goto REDISLOAD;
         freeReplyObject(reply);
         libhttppp::HTTPException exp;
-        exp[libhttppp::HTTPException::Warning] << "media plugin err: " << _RedisCTX->errstr;
+        exp[libhttppp::HTTPException::Error] << "media plugin err: " << _RedisCTX->errstr;
         throw exp;
     }
     freeReplyObject(reply);
-}
-
-bool blogi::RedisStore::reconnect(){
-    int c = redisReconnect(_RedisCTX);
-    if( c != REDIS_ERR ){
-        if(!_pw.empty()){
-            redisReply *reply = (redisReply*)redisCommand(_RedisCTX, "AUTH %s", _pw.c_str());
-            if (reply->type == REDIS_REPLY_ERROR) {
-                freeReplyObject(reply);
-                return false;
-            }else{
-                freeReplyObject(reply);
-                return true;
-            }
-        }
-        return true;
-    }
-    return false;
 }
 
