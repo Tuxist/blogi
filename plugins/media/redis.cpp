@@ -34,7 +34,7 @@
 blogi::RedisStore::RedisStore(const char *host,int port,const char *password){
     _host=host;
     _port=port;
-    _RedisCTX=redisConnect(host,port);
+    _RedisCTX=redisConnectNonBlock(host,port);
 
     if (_RedisCTX->err) {
         libhttppp::HTTPException exp;
