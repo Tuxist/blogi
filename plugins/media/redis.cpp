@@ -98,7 +98,7 @@ void blogi::RedisStore::load(const std::string key,std::vector<char> &value) {
 
 void blogi::RedisStore::_reconnect(){
 
-    _RedisCTX=redisConnect(_host.c_str(),_port);
+    redisReconnect(_RedisCTX);
 
     if (_RedisCTX->err) {
         libhttppp::HTTPException exp;
