@@ -25,30 +25,34 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *******************************************************************************/
 
+#pragma once
+
 #include <string>
 #include <vector>
 
 #include <hiredis/hiredis.h>
+
+#include <httppp/http.h>
 
 namespace blogi {
     class Store {
     public:
         Store(){};
         virtual ~Store(){};
-        virtual void save(const std::string key,const std::vector<char> value)=0;
-        virtual void load(const std::string key,std::vector<char> &value) =0;
+
+        virtual void save(const char *key, const char *data,size_t datalen)=0;
+        virtual void load(libhttppp::HttpRequest *req,const char *key,const char *ctype) =0;
     };
 
     class RedisStore : public Store {
     public:
         RedisStore(const char *host,int port,const char *password=nullptr);
-        void save(const std::string key,const std::vector<char> value) override;
-        void load(const std::string key,std::vector<char>  &value) override;
+        ~RedisStore();
+
+        void save(const char *key,const char *data,size_t datalen) override;
+        void load(libhttppp::HttpRequest *req,const char *key,const char *ctype) override;
     private:
-        void          _reconnect();
-        redisContext *_RedisCTX;
-        std::string   _host;
-        int           _port;
-        std::string   _pw;
+        redisContext      *_RedisCTX;
+        std::string        _RedisPassword;
     };
 };

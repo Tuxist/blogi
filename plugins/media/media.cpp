@@ -238,7 +238,7 @@ namespace blogi {
 
                 Args->database->exec(&sql,res);
                 sql.clear();
-                _store->save(cfuuid,mediafile);
+                _store->save(cfuuid,mediafile.data(),mediafile.size());
 
             }
 
@@ -512,12 +512,10 @@ namespace blogi {
                 if(mlen-plen<0)
                     return false;
 
-                std::string suuid;
+                std::vector<char> suuid;
                 size_t tpos=std::string::npos;
 
                 suuid.resize(mlen-plen);
-
-
 
                 for(size_t i = mlen; i>plen; --i){
                     if(ccurl[i]=='.'){
@@ -533,26 +531,20 @@ namespace blogi {
                 blogi::SQL sql;
                 blogi::DBResult res;
 
-                sql << "SELECT media_type.ctype from media_items_files LEFT JOIN media_type ON media_type.id=media_type.id WHERE redis_uuid='";
-                sql.escaped(suuid.c_str()) <<"'";
+                sql << "SELECT media_type.ctype from media_items_files LEFT JOIN media_type ON media_type.id=media_type.id WHERE media_items_files.redis_uuid='";
+                sql.escaped(suuid.data()) <<"'";
 
                 int n = Args->database->exec(&sql,res);
 
-                libhttppp::HttpResponse curres;
-                curres.setVersion(HTTPVERSION(1.1));
-                std::vector<char> value;
-
                 if(n>0){
-                    _store->load(suuid,value);
-                    curres.setContentType(res[0][0]);
-                    curres.setState(HTTP200);
+                    _store->load(req,suuid.data(),res[0][0]);
                 }else{
+                    libhttppp::HttpResponse curres;
+                    curres.setVersion(HTTPVERSION(1.1));
                     curres.setState(HTTP404);
-                    curres.send(req,nullptr,0);
+                    curres.send(req,nullptr,-1);
                 }
 
-
-                curres.send(req, value.data(), value.size());
                 return true;
             }
             return false;

@@ -18,6 +18,7 @@ find_package(Brotli REQUIRED)
 
 include_directories(
     ${NETPLUS_INCLUDE_DIRS}
+    ${HTTPPP_INCLUDE_DIRS}
     ${CRYPTPLUS_INCLUDE_DIRS}
     ${PostgreSQL_INCLUDE_DIRS}
     ${SQLite3_INCLUDE_DIRS}

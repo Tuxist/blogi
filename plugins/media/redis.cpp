@@ -26,24 +26,20 @@
  *******************************************************************************/
 
 #include <iostream>
+#include <algorithm>
+#include <cstring>
+#include <thread>
 
 #include <httppp/exception.h>
-
-#include <mutex>
+#include <httppp/httpd.h>
 
 #include "backend.h"
 
-std::mutex recon_mutex;
-
 blogi::RedisStore::RedisStore(const char *host,int port,const char *password){
-    _host=host;
-    _port=port;
 
-    timeval retime;
+    struct timeval timeout = { 1, 0 }; // 1.5 seconds
 
-    retime.tv_usec=100;
-
-    _RedisCTX=redisConnectWithTimeout(host,port,retime);
+    _RedisCTX=redisConnectWithTimeout(host,port,timeout);
 
     if (_RedisCTX->err) {
         libhttppp::HTTPException exp;
@@ -52,78 +48,53 @@ blogi::RedisStore::RedisStore(const char *host,int port,const char *password){
     }
 
     if(password){
-        _pw=password;
-        redisReply *reply = (redisReply*)redisCommand(_RedisCTX, "AUTH %s", password);
-        if (reply->type == REDIS_REPLY_ERROR) {
-            libhttppp::HTTPException exp;
-            exp[libhttppp::HTTPException::Error] << "media plugin err: " << _RedisCTX->errstr;
-            throw exp;
+        _RedisPassword=password;
+        redisCommand(_RedisCTX,"AUTH %s", password);
+    }
+
+}
+blogi::RedisStore::~RedisStore(){
+    redisFree(_RedisCTX);
+}
+
+void blogi::RedisStore::save(const char *key, const char *data,size_t datalen){
+    redisCommand(_RedisCTX,"SET %s %b",key,data,datalen);
+    redisCommand(_RedisCTX,"save");
+}
+
+void blogi::RedisStore::load(libhttppp::HttpRequest *req,const char *key,const char *ctype) {
+    if(strlen(ctype)>255){
+        libhttppp::HTTPException e;
+        e[libhttppp::HTTPException::Error] << "media plugin err: " << "ctype to long nor more the 255 signs are allowed !";
+        throw e;
+    }
+
+
+    std::thread t1([this,req,key,ctype](){
+        try{
+            redisReply *rep=(redisReply*)redisCommand(_RedisCTX,"GET %s",key);
+
+            if(_RedisCTX->err!=REDIS_OK){
+                libhttppp::HTTPException e;
+                e[libhttppp::HTTPException::Error] << "media plugin err: " << _RedisCTX->errstr;
+                throw e;
+            }
+
+            libhttppp::HttpResponse curres;
+            curres.setContentType(ctype);
+            curres.setState(HTTP200);
+            curres.setContentLength(rep->len);
+            curres.send(req,nullptr,-1);
+            std::copy(rep->str,rep->str+rep->len,std::inserter<std::vector<char>>(req->SendData,req->SendData.end()));
+            freeReplyObject(rep);
+            req->sending(true);
+        }catch(libhttppp::HTTPException e){
+            libhttppp::HttpResponse curres;
+            curres.setContentType(ctype);
+            curres.setState(HTTP501);
+            curres.send(req,e.what(),strlen(e.what()));
         }
-        freeReplyObject(reply);
-    }
+    });
 
-}
-
-void blogi::RedisStore::save(const std::string key, const std::vector<char> value){
-    libhttppp::HTTPException exp;
-    redisReply* reply = (redisReply*) redisCommand(_RedisCTX,"SET %s %b",key.c_str(),value.data(),value.size());
-    if (reply && reply->type==REDIS_REPLY_ERROR) {
-
-        _reconnect();
-
-        freeReplyObject(reply);
-        libhttppp::HTTPException exp;
-        exp[libhttppp::HTTPException::Error] << "media plugin err: " << _RedisCTX->errstr;
-        throw exp;
-    }
-    freeReplyObject(reply);
-    reply = (redisReply*) redisCommand(_RedisCTX, "save");
-    if (reply && reply->type==REDIS_REPLY_ERROR) {
-
-        _reconnect();
-
-        freeReplyObject(reply);
-        libhttppp::HTTPException exp;
-        exp[libhttppp::HTTPException::Error] << "media plugin err: " << _RedisCTX->errstr;
-        throw exp;
-    }
-}
-
-void blogi::RedisStore::load(const std::string key,std::vector<char> &value) {
-    redisReply* reply = (redisReply*) redisCommand(_RedisCTX, "GET %s",key.c_str());
-    if(reply && reply->type!=REDIS_REPLY_ERROR){
-        std::copy(reply->str,reply->str+reply->len,std::inserter<std::vector<char>>(value,value.begin()));
-    }else{
-        freeReplyObject(reply);
-
-        _reconnect();
-
-        libhttppp::HTTPException exp;
-        exp[libhttppp::HTTPException::Error] << "media plugin err: " << _RedisCTX->errstr;
-        throw exp;
-    }
-    freeReplyObject(reply);
-}
-
-void blogi::RedisStore::_reconnect(){
-    const std::lock_guard<std::mutex> lock(recon_mutex);
-
-    redisReconnect(_RedisCTX);
-
-    if (_RedisCTX->err) {
-        libhttppp::HTTPException exp;
-        exp[libhttppp::HTTPException::Error] << "media plugin err: " << _RedisCTX->errstr;
-        throw exp;
-    }
-
-    if(!_pw.empty()){
-        redisReply *reply = (redisReply*)redisCommand(_RedisCTX, "AUTH %s", _pw.c_str());
-        if (reply->type == REDIS_REPLY_ERROR) {
-            libhttppp::HTTPException exp;
-            exp[libhttppp::HTTPException::Error] << "media plugin err: " << _RedisCTX->errstr;
-            throw exp;
-        }
-        freeReplyObject(reply);
-    }
-
+    t1.join();
 }
