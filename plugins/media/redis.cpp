@@ -28,7 +28,6 @@
 #include <iostream>
 #include <algorithm>
 #include <cstring>
-#include <thread>
 
 #include <httppp/exception.h>
 #include <httppp/httpd.h>
@@ -69,33 +68,28 @@ void blogi::RedisStore::load(libhttppp::HttpRequest *req,const char *key,const c
         throw e;
     }
 
+    try{
+        redisReply *rep=(redisReply*)redisCommand(_RedisCTX,"GET %s",key);
 
-    std::thread t1([this,req,key,ctype](){
-        try{
-            redisReply *rep=(redisReply*)redisCommand(_RedisCTX,"GET %s",key);
-
-            if(_RedisCTX->err!=REDIS_OK){
-                libhttppp::HTTPException e;
-                e[libhttppp::HTTPException::Error] << "media plugin err: " << _RedisCTX->errstr;
-                throw e;
-            }
-
-            libhttppp::HttpResponse curres;
-            curres.setContentType(ctype);
-            curres.setState(HTTP200);
-            curres.setContentLength(rep->len);
-            curres.send(req,nullptr,-1);
-
-            req->addSendData(rep->str,rep->len);
-            freeReplyObject(rep);
-            req->sending(true);
-        }catch(libhttppp::HTTPException &e){
-            libhttppp::HttpResponse curres;
-            curres.setContentType(ctype);
-            curres.setState(HTTP501);
-            curres.send(req,e.what(),strlen(e.what()));
+        if(_RedisCTX->err!=REDIS_OK){
+            libhttppp::HTTPException e;
+            e[libhttppp::HTTPException::Error] << "media plugin err: " << _RedisCTX->errstr;
+            throw e;
         }
-    });
 
-    t1.detach();
+        libhttppp::HttpResponse curres;
+        curres.setContentType(ctype);
+        curres.setState(HTTP200);
+        curres.setContentLength(rep->len);
+        curres.send(req,nullptr,-1);
+
+        req->addSendData(rep->str,rep->len);
+        freeReplyObject(rep);
+        req->sending(true);
+    }catch(libhttppp::HTTPException &e){
+        libhttppp::HttpResponse curres;
+        curres.setContentType(ctype);
+        curres.setState(HTTP501);
+        curres.send(req,e.what(),strlen(e.what()));
+    }
 }
