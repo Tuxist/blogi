@@ -85,10 +85,11 @@ void blogi::RedisStore::load(libhttppp::HttpRequest *req,const char *key,const c
             curres.setState(HTTP200);
             curres.setContentLength(rep->len);
             curres.send(req,nullptr,-1);
-            std::copy(rep->str,rep->str+rep->len,std::inserter<std::vector<char>>(req->SendData,req->SendData.end()));
+
+            req->addSendData(rep->str,rep->len);
             freeReplyObject(rep);
             req->sending(true);
-        }catch(libhttppp::HTTPException e){
+        }catch(libhttppp::HTTPException &e){
             libhttppp::HttpResponse curres;
             curres.setContentType(ctype);
             curres.setState(HTTP501);
@@ -96,5 +97,5 @@ void blogi::RedisStore::load(libhttppp::HttpRequest *req,const char *key,const c
         }
     });
 
-    t1.join();
+    t1.detach();
 }
