@@ -38,7 +38,7 @@ blogi::RedisStore::RedisStore(const char *host,int port,const char *password){
 
     struct timeval timeout = { 1, 0 }; // 1.5 seconds
 
-    _RedisCTX=redisConnectWithTimeout(host,port,timeout);
+    _RedisCTX=redisConnect(host,port);
 
     if (_RedisCTX->err) {
         libhttppp::HTTPException exp;
@@ -80,12 +80,8 @@ void blogi::RedisStore::load(libhttppp::HttpRequest *req,const char *key,const c
         libhttppp::HttpResponse curres;
         curres.setContentType(ctype);
         curres.setState(HTTP200);
-        curres.setContentLength(rep->len);
-        curres.send(req,nullptr,-1);
-
-        req->addSendData(rep->str,rep->len);
+        curres.send(req,rep->str,rep->len);
         freeReplyObject(rep);
-        req->sending(true);
     }catch(libhttppp::HTTPException &e){
         libhttppp::HttpResponse curres;
         curres.setContentType(ctype);

@@ -531,10 +531,12 @@ namespace blogi {
                 blogi::SQL sql;
                 blogi::DBResult res;
 
-                sql << "SELECT media_type.ctype from media_items_files LEFT JOIN media_type ON media_type.id=media_type.id WHERE media_items_files.redis_uuid='";
+                sql << "SELECT media_type.ctype FROM media_items_files LEFT JOIN media_type ON media_items_files.id=media_type.id WHERE media_items_files.redis_uuid='";
                 sql.escaped(suuid.data()) <<"'";
 
                 int n = Args->database->exec(&sql,res);
+
+                std::cout << res[0][0] << std::endl;
 
                 if(n>0){
                     _store->load(req,suuid.data(),res[0][0]);
