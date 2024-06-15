@@ -509,6 +509,8 @@ namespace blogi {
                 int plen=strlen(Args->config->buildurl("media/getimage/",url,512));
                 int mlen=strlen(ccurl);
 
+                std::cout << "test" << std::endl;
+
                 if(mlen-plen<0)
                     return false;
 
@@ -528,10 +530,12 @@ namespace blogi {
 
                 suuid.push_back('\0');
 
+                std::cout << suuid.data() << std::endl;
+
                 blogi::SQL sql;
                 blogi::DBResult res;
 
-                sql << "SELECT media_type.ctype FROM media_items_files LEFT JOIN media_type ON media_items_files.id=media_type.id WHERE media_items_files.redis_uuid='";
+                sql << "SELECT media_type.ctype FROM media_items_files LEFT JOIN media_type ON media_items_files.media_Type_id=media_type.id WHERE media_items_files.redis_uuid='";
                 sql.escaped(suuid.data()) <<"'";
 
                 int n = Args->database->exec(&sql,res);
@@ -544,7 +548,7 @@ namespace blogi {
                     libhttppp::HttpResponse curres;
                     curres.setVersion(HTTPVERSION(1.1));
                     curres.setState(HTTP404);
-                    curres.send(req,nullptr,-1);
+                    curres.send(req,nullptr,0);
                 }
 
                 return true;

@@ -142,11 +142,11 @@ namespace blogi {
             }
 
             try{
-                std::shared_ptr<netplus::ssl> ysock=std::make_shared<netplus::ssl>("www.googleapis.com",443,1,0,GOOGLECA,1966);
-                std::shared_ptr<netplus::ssl> ycsock=std::make_shared<netplus::ssl>();
+                netplus::ssl ysock("www.googleapis.com",443,1,0,GOOGLECA,1966);
+                netplus::ssl ycsock;
 
-                ysock->connect(ycsock);
-                ycsock->setnonblocking();
+                ysock.connect(&ycsock);
+                ycsock.setnonblocking();
 
                 libhttppp::HttpRequest nreq;
                 nreq.setRequestType(GETREQUEST);
@@ -158,7 +158,7 @@ namespace blogi {
                 *nreq.setData("host")  << "www.googleapis.com" << ":" << 443;
                 *nreq.setData("accept") << "text/json";
                 *nreq.setData("user-agent") << "blogi/1.0 (Alpha Version 0.1)";
-                nreq.send(ycsock,ysock);
+                nreq.send(&ycsock,&ysock);
 
                 char data[16384];
                 int recv,tries=0,chunklen=0;
@@ -166,7 +166,7 @@ namespace blogi {
                 try{
                     for(;;){
                         try{
-                            recv=ysock->recvData(ycsock,data,16384);
+                            recv=ysock.recvData(&ycsock,data,16384);
                             break;
                         }catch(netplus::NetException &re){
                             if(re.getErrorType()!=netplus::NetException::Note)
@@ -213,7 +213,7 @@ namespace blogi {
                                     cpos=0;
                                     for(;;){
                                         try{
-                                            recv=ysock->recvData(ycsock,data,16384);
+                                            recv=ysock.recvData(&ycsock,data,16384);
                                             break;
                                         }catch(netplus::NetException &re){
                                             if(re.getErrorType()!=netplus::NetException::Note)
@@ -253,7 +253,7 @@ namespace blogi {
                             cpos=0;
                             for(;;){
                                 try{
-                                    recv=ysock->recvData(ycsock,data,16384);
+                                    recv=ysock.recvData(&ycsock,data,16384);
                                     break;
                                 }catch(netplus::NetException &e){
                                     if(e.getErrorType()!=netplus::NetException::Note){

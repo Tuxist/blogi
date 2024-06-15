@@ -62,12 +62,6 @@ void blogi::RedisStore::save(const char *key, const char *data,size_t datalen){
 }
 
 void blogi::RedisStore::load(libhttppp::HttpRequest *req,const char *key,const char *ctype) {
-    if(strlen(ctype)>255){
-        libhttppp::HTTPException e;
-        e[libhttppp::HTTPException::Error] << "media plugin err: " << "ctype to long nor more the 255 signs are allowed !";
-        throw e;
-    }
-
     try{
         redisReply *rep=(redisReply*)redisCommand(_RedisCTX,"GET %s",key);
 
@@ -83,9 +77,6 @@ void blogi::RedisStore::load(libhttppp::HttpRequest *req,const char *key,const c
         curres.send(req,rep->str,rep->len);
         freeReplyObject(rep);
     }catch(libhttppp::HTTPException &e){
-        libhttppp::HttpResponse curres;
-        curres.setContentType(ctype);
-        curres.setState(HTTP501);
-        curres.send(req,e.what(),strlen(e.what()));
+        throw e;
     }
 }

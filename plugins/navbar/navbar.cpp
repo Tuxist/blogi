@@ -78,7 +78,7 @@ namespace blogi {
             blogi::DBResult res,res2;
             sql << "select id,name,container_id from navbar";
 
-            std::string turl=req->getRequestURL();
+            std::string turl=req->getRequest();
             if(turl.rfind('?')>0){
                 turl=turl.substr(0,turl.rfind('?'));
             }
