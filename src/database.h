@@ -25,8 +25,10 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *******************************************************************************/
 
+#include <algorithm>
 #include <cstring>
 #include <string>
+#include <vector>
 
 #pragma once
 
@@ -65,19 +67,19 @@ namespace blogi {
             Data(int crow,int ccol,const char *value, int len){
                 row=crow;
                 col=ccol;
-                Column=new char[len+1];
-                memcpy(Column,value,len);
-                Column[len]='\0';
+                std::copy(value,value+len,
+                          std::inserter<std::vector<char>>(Column,Column.begin()));
+                Column.push_back('\0');
                 nextData=nullptr;
             }
 
             virtual ~Data(){
             }
 
-            int         row;
-            int         col;
-            char       *Column;
-            Data       *nextData;
+            int               row;
+            int               col;
+            std::vector<char> Column;
+            Data             *nextData;
             friend class DBResult;
         };
         Data          *firstRow;
@@ -95,7 +97,7 @@ namespace blogi {
         const char *operator[](int value2){
             for(DBResult::Data *pos=result->firstRow; pos; pos=pos->nextData){
                 if( row==pos->row &&  pos->col==value2){
-                    return pos->Column;
+                    return pos->Column.data();
                 }
             }
             return nullptr;
