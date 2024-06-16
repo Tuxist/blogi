@@ -25,6 +25,8 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *******************************************************************************/
 
+#include <mutex>
+
 #include <httppp/exception.h>
 
 #include <libpq-fe.h>
@@ -32,6 +34,9 @@
 #include "../database.h"
 
 namespace blogi {
+
+    std::mutex g_lock_mutex;
+
     class Postgresql : public Database{
     public:
         Postgresql(const char *constr) : Database (constr) {
@@ -59,12 +64,9 @@ namespace blogi {
                  throw exp;
             }
 
-            if(res.firstRow){
-                delete res.firstRow;
-            }
+            res.clear();
 
-            res.firstRow=nullptr;
-            DBResult::Data *lastdat;
+            DBResult::Data *lastdat=nullptr;
 
             int rcount=PQntuples(pres);
 
@@ -94,13 +96,15 @@ namespace blogi {
         }
 
         bool isConnected() override{
+            const std::lock_guard<std::mutex> lock(g_lock_mutex);
             if(PQstatus(_dbconn)==CONNECTION_OK)
                 return true;
             return false;
         }
 
         void reset() override{
-            // PQresetStart(_dbconn);
+            const std::lock_guard<std::mutex> lock(g_lock_mutex);
+            PQreset(_dbconn);
         }
 
     private:

@@ -95,9 +95,6 @@ blogi::DBResult::DBResult(){
     firstRow=nullptr;
 }
 
-blogi::DBResult::~DBResult(){
-}
-
 blogi::DBResult2 blogi::DBResult::operator[](int value){
     DBResult2 result(this,value);
     return result;

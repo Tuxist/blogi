@@ -65,11 +65,8 @@ namespace blogi {
             sqlite3_stmt *prep;
             int rcount = 0;
 
-            if(res.firstRow){
-                delete res.firstRow;
-            }
+            res.clear();
 
-            res.firstRow=nullptr;
             DBResult::Data *lastdat;
 
             const char *cssql=ssql;

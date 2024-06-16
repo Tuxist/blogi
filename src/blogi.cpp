@@ -31,6 +31,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <signal.h>
 #include <string.h>
 #include <errno.h>
+#include <thread>
 
 #include <netplus/exception.h>
 
@@ -52,6 +53,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "pgsql.cpp"
 #include "sqlite.cpp"
+
 
 blogi::Blogi::Blogi(Config *blgcfg,netplus::socket *serversocket) : HttpEvent(serversocket){
 
@@ -354,9 +356,7 @@ RETRY_REQUEST:
         }catch(libhttppp::HTTPException &e){
             if(!PlgArgs->database->isConnected()){
                 PlgArgs->database->reset();
-                if(PlgArgs->database->isConnected()){
-                    goto RETRY_REQUEST;
-                }
+                goto RETRY_REQUEST;
             }
             throw e;
         }

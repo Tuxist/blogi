@@ -59,7 +59,21 @@ namespace blogi {
     class DBResult {
     public:
         DBResult();
-        ~DBResult();
+
+        ~DBResult(){
+            clear();
+        }
+
+        void clear(){
+            Data *curres=firstRow;
+            while(curres){
+                Data *next=curres->nextData;
+                curres->nextData=nullptr;
+                delete curres;
+                curres = next;
+            }
+            firstRow=nullptr;
+        };
 
         DBResult2 operator[](int value);
 
@@ -71,9 +85,6 @@ namespace blogi {
                           std::inserter<std::vector<char>>(Column,Column.begin()));
                 Column.push_back('\0');
                 nextData=nullptr;
-            }
-
-            virtual ~Data(){
             }
 
             int               row;
@@ -92,6 +103,9 @@ namespace blogi {
         DBResult2(DBResult *res,int value){
             result=res;
             row=value;
+        }
+
+        ~DBResult2(){
         }
 
         const char *operator[](int value2){
