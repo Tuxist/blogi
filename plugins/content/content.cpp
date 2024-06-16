@@ -690,13 +690,15 @@ namespace blogi {
                     if(strcmp(cururlform->getKey(),"start")==0)
                         startpos=atoi(cururlform->getValue());
                 }
-                std::cerr << startpos << std::endl;
                 if (strcmp(curl.data(),Args->config->buildurl("content/tag",url,512))>0){
                     size_t len = strlen(Args->config->buildurl("content/tag/",url,512));
                     libhttppp::HttpForm dec;
-                    std::vector<char> ucurl;
-                    dec.urlDecode(curl,ucurl);
-                    contentIdxPage(req,page,ucurl.data(),startpos,SITELIMIT);
+                    std::vector<char> tag;
+                    std::copy(curl.begin()+len,curl.end(),std::inserter<std::vector<char>>(tag,tag.begin()));
+                    tag.push_back('\0');
+                    std::vector<char> utag;
+                    dec.urlDecode(tag,utag);
+                    contentIdxPage(req,page,utag.data(),startpos,SITELIMIT);
                  }else{
                     contentIdxPage(req,page,nullptr,startpos,SITELIMIT);
                  }
