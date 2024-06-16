@@ -26,6 +26,7 @@
  *******************************************************************************/
 
 #include <iostream>
+#include <algorithm>
 
 #include <htmlpp/html.h>
 #include <htmlpp/exception.h>
@@ -659,25 +660,26 @@ namespace blogi {
 
         bool Controller(libhttppp::HttpRequest * req,libhtmlpp::HtmlElement *page){
             char url[512];
-            if(strncmp(req->getRequestURL(),Args->config->buildurl("content",url,512),strlen(Args->config->buildurl("content",url,512)))!=0){
+
+            const char *requ=req->getRequestURL();
+
+            if(strncmp(requ,Args->config->buildurl("content",url,512),strlen(Args->config->buildurl("content",url,512)))!=0){
                 return false;
             }
 
-            std::string curl=req->getRequestURL();
+            std::vector<char> curl;
 
-            std::cerr << curl << std::endl;
+            std::copy(requ,requ+strlen(requ),std::inserter<std::vector<char>>(curl,curl.begin()));
 
-            if(curl.find('?')>=0){
-                curl=curl.substr(0,curl.find('?'));
-            }
+            curl.push_back('\0');
 
-            if (strncmp(curl.c_str(),Args->config->buildurl("content/addpost",url,512),strlen(Args->config->buildurl("content/addpost",url,512)))==0){
+            if (strncmp(curl.data(),Args->config->buildurl("content/addpost",url,512),strlen(Args->config->buildurl("content/addpost",url,512)))==0){
                     addPostPage(req,*page);
-            }else if (strncmp(curl.c_str(), Args->config->buildurl("content/read",url,512), strlen(Args->config->buildurl("content/read",url,512))) == 0) {
+            }else if (strncmp(curl.data(), Args->config->buildurl("content/read",url,512), strlen(Args->config->buildurl("content/read",url,512))) == 0) {
                     contentPage(req,*page);
-            }else if (strncmp(curl.c_str(), Args->config->buildurl("content/edit",url,512), strlen(Args->config->buildurl("content/edit",url,512))) == 0) {
+            }else if (strncmp(curl.data(), Args->config->buildurl("content/edit",url,512), strlen(Args->config->buildurl("content/edit",url,512))) == 0) {
                     editPostPage(req,*page);
-            }else if (strncmp(curl.c_str(), Args->config->buildurl("content/del",url,512), strlen(Args->config->buildurl("content/del",url,512))) == 0) {
+            }else if (strncmp(curl.data(), Args->config->buildurl("content/del",url,512), strlen(Args->config->buildurl("content/del",url,512))) == 0) {
                     delPostPage(req,*page);
             }else{
                 int startpos = 0;
@@ -689,12 +691,11 @@ namespace blogi {
                         startpos=atoi(cururlform->getValue());
                 }
                 std::cerr << startpos << std::endl;
-                if (strcmp(curl.c_str(),Args->config->buildurl("content/tag",url,512))>0){
+                if (strcmp(curl.data(),Args->config->buildurl("content/tag",url,512))>0){
                     size_t len = strlen(Args->config->buildurl("content/tag/",url,512));
                     libhttppp::HttpForm dec;
                     std::vector<char> ucurl;
-                    dec.urlDecode(curl.c_str()+len,curl.length()-len,ucurl);
-                    ucurl.push_back('\0');
+                    dec.urlDecode(curl,ucurl);
                     contentIdxPage(req,page,ucurl.data(),startpos,SITELIMIT);
                  }else{
                     contentIdxPage(req,page,nullptr,startpos,SITELIMIT);
