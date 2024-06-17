@@ -79,6 +79,11 @@ blogi::Config::Config(const char *path) : confplus::Config(path){
     else
         _RedisPort=-1;
 
+    if(getKey("/BLOGI/REDIS/TIMEOUT"))
+        _RedisTimeout=getIntValue(getKey("/BLOGI/REDIS/TIMEOUT"),0);
+    else
+        _RedisTimeout=0;
+
     if(getKey("/BLOGI/HTTP/URL"))
         _HttpUrl=getValue(getKey("/BLOGI/HTTP/URL"),0);
 
@@ -184,6 +189,10 @@ const char * blogi::Config::getRedisPassword(){
 
 int blogi::Config::getRedisPort(){
     return _RedisPort;
+}
+
+int blogi::Config::getRedisTimeout(){
+    return _RedisTimeout;
 }
 
 const char * blogi::Config::getsiteurl(){

@@ -495,9 +495,9 @@ namespace blogi {
             Args->edit->addIcon(icondata,icondatalen,"selimage","webp","Insert Image from media albums");
 
             if(Args->config->getRedisPassword()){
-                _store = new RedisStore(Args->config->getRedisHost(),Args->config->getRedisPort(),Args->config->getRedisPassword());
+                _store = new RedisStore(Args->config->getRedisHost(),Args->config->getRedisPort(),Args->config->getRedisPassword(),Args->config->getRedisTimeout());
             }else{
-                _store = new RedisStore(Args->config->getRedisHost(),Args->config->getRedisPort());
+                _store = new RedisStore(Args->config->getRedisHost(),Args->config->getRedisPort(),nullptr,Args->config->getRedisTimeout());
             }
         }
 

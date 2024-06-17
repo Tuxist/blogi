@@ -67,6 +67,7 @@ namespace blogi {
         const char *getRedisHost();
         int         getRedisPort();
         const char *getRedisPassword();
+        int         getRedisTimeout();
 
         const char *getsslcertpath();
         const char *getsslkeypath();
@@ -84,6 +85,7 @@ namespace blogi {
         int                       _MaxCon;
         std::string               _RedisHost;
         int                       _RedisPort;
+        int                       _RedisTimeout;
         std::string               _RedisPassword;
         std::string               _HttpUrl;
         std::string               _HttpPrefix;

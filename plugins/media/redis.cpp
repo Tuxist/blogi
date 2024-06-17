@@ -34,11 +34,11 @@
 
 #include "backend.h"
 
-blogi::RedisStore::RedisStore(const char *host,int port,const char *password){
+blogi::RedisStore::RedisStore(const char *host,int port,const char *password,int millitout){
 
-    struct timeval timeout = { 1, 0 }; // 1.5 seconds
+    struct timeval timeout = { 0, millitout }; // 1.5 seconds
 
-    _RedisCTX=redisConnect(host,port);
+    _RedisCTX=redisConnectWithTimeout(host,port,timeout);
 
     if (_RedisCTX->err) {
         libhttppp::HTTPException exp;

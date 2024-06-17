@@ -46,7 +46,7 @@ namespace blogi {
 
     class RedisStore : public Store {
     public:
-        RedisStore(const char *host,int port,const char *password=nullptr);
+        RedisStore(const char *host,int port,const char *password=nullptr,int millitout=0);
         ~RedisStore();
 
         void save(const char *key,const char *data,size_t datalen) override;
