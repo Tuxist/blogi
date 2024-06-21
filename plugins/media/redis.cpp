@@ -65,6 +65,12 @@ size_t blogi::RedisStore::getSize(const char* key){
             throw e;
         }
 
+        if(rep->type == REDIS_REPLY_ERROR){
+            libhttppp::HTTPException e;
+            e[libhttppp::HTTPException::Error] << "media plugin err: " << rep->str;
+            throw e;
+        }
+
         return rep->integer;
 }
 
