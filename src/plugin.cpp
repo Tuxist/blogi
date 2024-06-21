@@ -53,6 +53,11 @@ bool blogi::PluginApi::Controller(libhttppp::HttpRequest *req,libhtmlpp::HtmlEle
     return false;
 }
 
+bool blogi::PluginApi::Response(libhttppp::HttpRequest* req){
+    return false;
+}
+
+
 void blogi::PluginApi::setArgs(blogi::PluginArgs* args){
     Args=args;
 }

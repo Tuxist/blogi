@@ -27,7 +27,6 @@
 
 #include <algorithm>
 #include <cstring>
-#include <string>
 #include <vector>
 
 #pragma once
@@ -48,10 +47,13 @@ namespace blogi {
         const char *c_str();
         void clear();
         bool empty();
-        size_t length();
+        size_t size();
+        void append(const char* data, size_t datalen);
+
     private:
-        std::string _SQL;
-        friend class Database;
+        std::vector<char> _SQL;
+        std::vector<char> _CStr;
+        friend class      Database;
     };
 
     class DBResult2;

@@ -25,7 +25,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *******************************************************************************/
 
-#include <cstring>
+#include <cstdio>
 
 #include "database.h"
 
@@ -44,19 +44,20 @@ blogi::SQL::~SQL()
 }
 
 blogi::SQL & blogi::SQL::operator<<(const char* sql){
-    _SQL.append(sql);
+    append(sql,strlen(sql));
     return *this;
 }
 
 blogi::SQL & blogi::SQL::operator<<(int sql){
     char buf[512*sizeof(int)];
     snprintf(buf,512,"%d",sql);
-    _SQL.append(buf);
+    append(buf,strlen(buf));
     return *this;
 }
 
 blogi::SQL & blogi::SQL::operator=(const char* sql){
-    _SQL=sql;
+    clear();
+    append(sql,strlen(sql));
     return *this;
 }
 
@@ -64,7 +65,7 @@ blogi::SQL & blogi::SQL::escaped(const char* text){
     size_t tlen=strlen(text);
     for(size_t i = 0; i < tlen; ++i){
         if(text[i]=='\''){
-            _SQL.append("''");
+            append("''",2);
         }else{
             _SQL.push_back(text[i]);
         }
@@ -74,7 +75,9 @@ blogi::SQL & blogi::SQL::escaped(const char* text){
 
 
 const char * blogi::SQL::c_str(){
-    return _SQL.c_str();
+    _CStr=_SQL;
+    _CStr.push_back('\0');
+    return _CStr.data();
 }
 
 void blogi::SQL::clear(){
@@ -85,10 +88,13 @@ bool blogi::SQL::empty(){
     return _SQL.empty();
 }
 
-size_t blogi::SQL::length(){
-    return _SQL.length();
+size_t blogi::SQL::size(){
+    return _SQL.size();
 }
 
+void blogi::SQL::append(const char* data, size_t datalen){
+   std::copy(data,data+datalen,std::inserter<std::vector<char>>(_SQL,_SQL.end()));
+}
 
 
 blogi::DBResult::DBResult(){

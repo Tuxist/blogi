@@ -40,8 +40,11 @@ namespace blogi {
         Store(){};
         virtual ~Store(){};
 
+        virtual size_t getSize(const char *key)=0;
+
         virtual void save(const char *key, const char *data,size_t datalen)=0;
-        virtual void load(libhttppp::HttpRequest *req,const char *key,const char *ctype) =0;
+        virtual void load(libhttppp::HttpRequest *req,const char *key,std::vector<char> &data,size_t pos,size_t blocksize) =0;
+
     };
 
     class RedisStore : public Store {
@@ -49,8 +52,10 @@ namespace blogi {
         RedisStore(const char *host,int port,const char *password=nullptr,int millitout=0);
         ~RedisStore();
 
+        size_t getSize(const char *key);
+
         void save(const char *key,const char *data,size_t datalen) override;
-        void load(libhttppp::HttpRequest *req,const char *key,const char *ctype) override;
+        void load(libhttppp::HttpRequest *req,const char *key,std::vector<char> &data,size_t pos,size_t blocksize) override;
     private:
         redisContext      *_RedisCTX;
         std::string        _RedisPassword;

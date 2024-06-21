@@ -61,6 +61,8 @@ namespace blogi {
 
         virtual bool Controller(libhttppp::HttpRequest *req,libhtmlpp::HtmlElement *page);
 
+        virtual bool Response(libhttppp::HttpRequest *req);
+
         virtual void Settings(libhttppp::HttpRequest *req,libhtmlpp::HtmlString &setdiv);
 
         virtual void Rendering(libhttppp::HttpRequest *req,libhtmlpp::HtmlElement *curpage);

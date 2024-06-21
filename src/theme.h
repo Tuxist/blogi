@@ -71,6 +71,8 @@ namespace blogi {
 
         bool Controller(libhttppp::HttpRequest *req);
 
+        bool Response(libhttppp::HttpRequest *req);
+
         void printSite(libhtmlpp::HtmlString &output,libhtmlpp::HtmlElement *index,const char *crrurl,bool login,const char *meta=nullptr);
     private:
         TemplateConfig             _Config;

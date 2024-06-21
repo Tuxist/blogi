@@ -56,14 +56,8 @@ blogi::RedisStore::~RedisStore(){
     redisFree(_RedisCTX);
 }
 
-void blogi::RedisStore::save(const char *key, const char *data,size_t datalen){
-    redisCommand(_RedisCTX,"SET %s %b",key,data,datalen);
-    redisCommand(_RedisCTX,"save");
-}
-
-void blogi::RedisStore::load(libhttppp::HttpRequest *req,const char *key,const char *ctype) {
-    try{
-        redisReply *rep=(redisReply*)redisCommand(_RedisCTX,"GET %s",key);
+size_t blogi::RedisStore::getSize(const char* key){
+        redisReply *rep=(redisReply*)redisCommand(_RedisCTX,"STRLEN %s",key);
 
         if(_RedisCTX->err!=REDIS_OK){
             libhttppp::HTTPException e;
@@ -71,10 +65,27 @@ void blogi::RedisStore::load(libhttppp::HttpRequest *req,const char *key,const c
             throw e;
         }
 
-        libhttppp::HttpResponse curres;
-        curres.setContentType(ctype);
-        curres.setState(HTTP200);
-        curres.send(req,rep->str,rep->len);
+        return rep->integer;
+}
+
+
+void blogi::RedisStore::save(const char *key, const char *data,size_t datalen){
+    redisCommand(_RedisCTX,"SET %s %b",key,data,datalen);
+    redisCommand(_RedisCTX,"save");
+}
+
+void blogi::RedisStore::load(libhttppp::HttpRequest *req,const char *key,std::vector<char> &data,size_t pos,size_t blocksize) {
+    try{
+        redisReply *rep=(redisReply*)redisCommand(_RedisCTX,"GETRANGE %s %d %d",key,pos,pos+blocksize);
+
+        if(_RedisCTX->err!=REDIS_OK){
+            libhttppp::HTTPException e;
+            e[libhttppp::HTTPException::Error] << "media plugin err: " << _RedisCTX->errstr;
+            throw e;
+        }
+
+        std::copy(rep->str,rep->str+rep->len,std::inserter<std::vector<char>>(data,data.begin()));
+
         freeReplyObject(rep);
     }catch(libhttppp::HTTPException &e){
         throw e;

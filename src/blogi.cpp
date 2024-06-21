@@ -380,6 +380,23 @@ RETRY_REQUEST:
     }
 }
 
+void blogi::Blogi::ResponseEvent(libhttppp::HttpRequest* curreq){
+    if(PlgArgs->theme->Response(curreq))
+        return;
+
+    for(blogi::Plugin::PluginData *curplg=BlogiPlg->getFirstPlugin(); curplg; curplg=curplg->getNextPlg()){
+        PluginApi *api=curplg->getInstace();
+        std::string url=PlgArgs->config->getprefix();
+        url+="/";
+        url+=api->getName();
+        if(strncmp(curreq->getRequestURL(),url.c_str(),url.length())==0){
+            if(api->Response(curreq)){
+                return;
+            }
+        }
+    }
+}
+
 
 class HttpConD : public libhttppp::HttpD {
 public:

@@ -41,6 +41,7 @@ namespace blogi {
         void logoutPage(libhttppp::HttpRequest *curreq);
         void settingsPage(libhttppp::HttpRequest *curreq);
         void RequestEvent(libhttppp::HttpRequest *curreq);
+        void ResponseEvent(libhttppp::HttpRequest *curreq);
     private:
         Plugin                 *BlogiPlg;
         PluginArgs             *PlgArgs;

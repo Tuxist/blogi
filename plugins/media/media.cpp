@@ -506,31 +506,15 @@ namespace blogi {
             const char *ccurl=req->getRequestURL();
 
             if (strncmp(ccurl,Args->config->buildurl("media/getimage/",url,512),strlen(Args->config->buildurl("media/getimage",url,512)))==0){
-                int plen=strlen(Args->config->buildurl("media/getimage/",url,512));
-                int mlen=strlen(ccurl);
+                size_t plen=strlen(Args->config->buildurl("media/getimage/",url,512));
+                size_t mlen=strlen(ccurl);
 
-                std::cout << "test" << std::endl;
-
-                if(mlen-plen<0)
+                if( int(mlen-plen) <0)
                     return false;
 
                 std::vector<char> suuid;
-                size_t tpos=std::string::npos;
 
-                suuid.resize(mlen-plen);
-
-                for(size_t i = mlen; i>plen; --i){
-                    if(ccurl[i]=='.'){
-                        tpos=i;
-                        break;
-                    }
-                }
-
-                std::copy(ccurl+plen,ccurl+tpos,suuid.begin());
-
-                suuid.push_back('\0');
-
-                std::cout << suuid.data() << std::endl;
+                _getSuuid(ccurl,plen,suuid);
 
                 blogi::SQL sql;
                 blogi::DBResult res;
@@ -540,12 +524,16 @@ namespace blogi {
 
                 int n = Args->database->exec(&sql,res);
 
-                std::cout << res[0][0] << std::endl;
+                libhttppp::HttpResponse curres;
 
                 if(n>0){
-                    _store->load(req,suuid.data(),res[0][0]);
+                    req->RecvData.pos=0;
+                    curres.setState(HTTP200);
+                    curres.setContentType(res[0][0]);
+                    curres.setContentLength(_store->getSize(suuid.data()));
+                    curres.send(req,nullptr,-1);
                 }else{
-                    libhttppp::HttpResponse curres;
+                    std::cout << "test 404" << std::endl;
                     curres.setVersion(HTTPVERSION(1.1));
                     curres.setState(HTTP404);
                     curres.send(req,nullptr,0);
@@ -555,7 +543,49 @@ namespace blogi {
             }
             return false;
         }
+
+        bool Response(libhttppp::HttpRequest * req){
+            char url[512];
+            const char *ccurl=req->getRequestURL();
+
+            if (strncmp(ccurl,Args->config->buildurl("media/getimage/",url,512),strlen(Args->config->buildurl("media/getimage",url,512)))==0){
+                size_t plen=strlen(Args->config->buildurl("media/getimage/",url,512));
+
+                std::vector<char> suuid,data;
+                _getSuuid(ccurl,plen,suuid);
+
+                if(req->RecvData.pos<_store->getSize(suuid.data())){
+                    _store->load(req,suuid.data(),data,req->RecvData.pos,BLOCKSIZE);
+                    req->SendData.append(data.data(),data.size());
+                    req->RecvData.pos+=data.size();
+                }
+            }
+            return true;
+        }
+
     private:
+        void _getSuuid(const char *rurl,size_t plen,std::vector<char> &suuid){
+            int mlen=strlen(rurl);
+            size_t tpos=std::string::npos;
+
+            for(size_t i = mlen; i>plen; --i){
+                if(rurl[i]=='.'){
+                    tpos=i;
+                    break;
+                }
+            }
+
+            if(tpos==std::string::npos){
+                libhttppp::HTTPException e;
+                e[libhttppp::HTTPException::Error] << "blogi media plugin: no valid media url!";
+                throw e;
+            }
+
+            std::copy(rurl+plen,rurl+tpos,std::inserter<std::vector<char>>(suuid,suuid.begin()));
+
+            suuid.push_back('\0');
+
+        }
         Store *_store;
     };
 };

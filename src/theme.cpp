@@ -166,16 +166,47 @@ bool blogi::Template::Controller(libhttppp::HttpRequest *req){
                 if( curfile->Compressed.length() >0 && req->getData("accept-encoding")
                     && strstr(req->getData(req->getData("accept-encoding")),"br") ){
                     *resp.setData("content-encoding") << "br";
-                    resp.send(req,curfile->Compressed.c_str(),curfile->Compressed.length());
+                    resp.setContentLength(curfile->Compressed.length());
+                    resp.send(req,nullptr,-1);
                 }else{
-                    resp.send(req,curfile->Content.c_str(),curfile->Content.length());
+                    resp.setContentLength(curfile->Content.length());
+                    resp.send(req,nullptr,-1);
                 }
+                req->SendData.pos=0;
                 return true;
             }
         }
         libhttppp::HTTPException excep;
         excep[libhttppp::HTTPException::Error] << "template file nod found!";
         throw excep;
+
+    }
+    return false;
+}
+
+
+bool blogi::Template::Response(libhttppp::HttpRequest *req){
+    std::string publicf = req->getRequestURL();
+    if(publicf.length() >strlen(_Config.config->getprefix()) && publicf.compare(strlen(_Config.config->getprefix()),13,"/theme/public/",13)==0){
+        for(auto curfile=_PublicFiles.begin(); curfile!=_PublicFiles.end(); curfile++){
+            if(publicf.compare(strlen(_Config.config->getprefix()),curfile->Path.length(),curfile->Path,0,curfile->Path.length())==0){
+                if(req->SendData.pos  < curfile->Content.length() ){
+                    if( curfile->Compressed.length() >0 && req->getData("accept-encoding")
+                        && strstr(req->getData(req->getData("accept-encoding")),"br") ){
+                        size_t len = BLOCKSIZE < curfile->Compressed.length()-req->SendData.pos ?
+                                    BLOCKSIZE : curfile->Compressed.length()-req->SendData.pos;
+                        req->SendData.append(curfile->Compressed.substr(req->SendData.pos,len).c_str(),len);
+                        req->SendData.pos+=len;
+                    }else{
+                        size_t len = BLOCKSIZE < curfile->Content.length()-req->SendData.pos ?
+                                    BLOCKSIZE : curfile->Content.length()-req->SendData.pos;
+                        req->SendData.append(curfile->Content.substr(req->SendData.pos,len).c_str(),len);
+                        req->SendData.pos+=len;
+                    }
+                    return true;
+                }
+            }
+        }
 
     }
     return false;

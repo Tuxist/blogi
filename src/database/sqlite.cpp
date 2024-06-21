@@ -60,8 +60,8 @@ namespace blogi {
         int exec(SQL *sql,DBResult &res) override{
             while( sqllock.exchange(true, std::memory_order_acquire) );
             char *ssql;
-            ssql=new char[sql->length()];
-            memcpy(ssql,sql->c_str(),sql->length());
+            ssql=new char[sql->size()];
+            memcpy(ssql,sql->c_str(),sql->size());
             sqlite3_stmt *prep;
             int rcount = 0;
 
@@ -73,7 +73,7 @@ namespace blogi {
 
             do{
                 const char *sqlptr=nullptr;
-                int pstate=sqlite3_prepare_v3(_dbconn,cssql,sql->length(),0,&prep,&sqlptr);
+                int pstate=sqlite3_prepare_v3(_dbconn,cssql,sql->size(),0,&prep,&sqlptr);
 
                 cssql=sqlptr;
 
@@ -113,7 +113,7 @@ namespace blogi {
           
                 } 
                 sqlite3_finalize(prep);
-            }while(cssql != ssql+sql->length());
+            }while(cssql != ssql+sql->size());
 
             sqllock.store(false);
             delete[] ssql;
