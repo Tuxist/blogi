@@ -558,9 +558,10 @@ namespace blogi {
                     _store->load(req,suuid.data(),data,req->RecvData.pos,BLOCKSIZE);
                     req->SendData.append(data.data(),data.size());
                     req->RecvData.pos+=data.size();
+                    return true;
                 }
             }
-            return true;
+            return false;
         }
 
     private:
