@@ -181,11 +181,15 @@ namespace blogi {
                 nreq.setRequestType(GETREQUEST);
                 nreq.setRequestURL(nurl.c_str());
                 nreq.setRequestVersion(HTTPVERSION(1.1));
-                *nreq.setData("connection") << "keep-alive";
+                *nreq.setData("connection") = "keep-alive";
                 *nreq.setData("host")  << _NHost.c_str() << ":" << _NPort;
-                *nreq.setData("accept") << "text/json";
-                *nreq.setData("user-agent") << "blogi/1.0 (Alpha Version 0.1)";
+                *nreq.setData("accept") = "text/json";
+                *nreq.setData("user-agent") = "blogi/1.0 (Alpha Version 0.1)";
                 nreq.send(cltsock.get(),srvsock.get());
+
+                std::string test;
+                nreq.printHeader(test);
+                std::cerr << test <<std::endl;
 
                 char data[16384];
                 int recv,tries=0,chunklen=0;
@@ -312,6 +316,8 @@ namespace blogi {
                         }
                     };
                 }
+
+                std::cout << json << std::endl;
 
                 struct json_object *ndir;
                 ndir = json_tokener_parse(json.c_str());
