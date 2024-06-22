@@ -27,7 +27,6 @@
 
 #include <iostream>
 #include <chrono>
-#include <thread>
 #include <cstring>
 #include <cmath>
 #include <string>
@@ -316,8 +315,6 @@ namespace blogi {
                         }
                     };
                 }
-
-                std::cout << json << std::endl;
 
                 struct json_object *ndir;
                 ndir = json_tokener_parse(json.c_str());

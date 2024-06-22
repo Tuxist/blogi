@@ -554,8 +554,17 @@ namespace blogi {
                 std::vector<char> suuid,data;
                 _getSuuid(ccurl,plen,suuid);
 
-                if(req->RecvData.pos<_store->getSize(suuid.data())){
-                    _store->load(req,suuid.data(),data,req->RecvData.pos,BLOCKSIZE);
+
+                size_t msize = _store->getSize(suuid.data());
+
+                size_t ssize = msize-req->SendData.pos < BLOCKSIZE ? msize-req->SendData.pos : BLOCKSIZE;
+
+                if(req->SendData.getlimit() < ssize){
+                    return true;
+                }
+
+                if(req->RecvData.pos<msize){
+                    _store->load(req,suuid.data(),data,req->RecvData.pos,ssize);
                     req->SendData.append(data.data(),data.size());
                     req->RecvData.pos+=data.size();
                     return true;
