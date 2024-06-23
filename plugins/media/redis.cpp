@@ -35,10 +35,7 @@
 #include "backend.h"
 
 blogi::RedisStore::RedisStore(const char *host,int port,const char *password,int millitout){
-
-    struct timeval timeout = { 0, millitout }; // 1.5 seconds
-REDISCONNECT:
-    _RedisCTX=redisConnectNonBlock(host,port);
+    _RedisCTX=redisConnect(host,port);
 
     if (_RedisCTX->err) {
         libhttppp::HTTPException exp;
@@ -66,11 +63,11 @@ size_t blogi::RedisStore::getSize(const char* key){
 
         redisReply *rep=(redisReply*)redisCommand(_RedisCTX,"STRLEN %s",key);
 
-        if(!rep || rep->type != REDIS_REPLY_INTEGER){
-            libhttppp::HTTPException e;
-            e[libhttppp::HTTPException::Error] << "media plugin err: wrong redis reply in getsize !";
-            throw e;
-        }
+       if(!rep || rep->type != REDIS_REPLY_INTEGER){
+           libhttppp::HTTPException e;
+           e[libhttppp::HTTPException::Error] << "media plugin err: wrong redis reply in getsize !";
+           throw e;
+       }
 
         size_t ret = rep->integer;
 
