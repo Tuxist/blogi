@@ -109,7 +109,7 @@ blogi::Template::~Template(){
 
 }
 
-void blogi::Template::renderPage(const char *name,libhtmlpp::HtmlPage* page, libhtmlpp::HtmlElement** index){
+void blogi::Template::renderPage(const int tid,const char *name,libhtmlpp::HtmlPage* page, libhtmlpp::HtmlElement** index){
     std::string htmlfile=_Config.Theme;
     htmlfile.append("/");
     htmlfile.append(name);
@@ -143,7 +143,7 @@ void blogi::Template::renderPage(const char *name,libhtmlpp::HtmlPage* page, lib
 
 }
 
-bool blogi::Template::Controller(libhttppp::HttpRequest *req){
+bool blogi::Template::Controller(const int tid,libhttppp::HttpRequest *req){
     std::string publicf = req->getRequestURL();
     if(publicf.length() >strlen(_Config.config->getprefix()) && publicf.compare(strlen(_Config.config->getprefix()),13,"/theme/public/",13)==0){
         for(auto curfile=_PublicFiles.begin(); curfile!=_PublicFiles.end(); curfile++){
@@ -185,7 +185,7 @@ bool blogi::Template::Controller(libhttppp::HttpRequest *req){
 }
 
 
-bool blogi::Template::Response(libhttppp::HttpRequest *req){
+bool blogi::Template::Response(const int tid,libhttppp::HttpRequest *req){
     std::string publicf = req->getRequestURL();
     if(publicf.length() >strlen(_Config.config->getprefix()) && publicf.compare(strlen(_Config.config->getprefix()),13,"/theme/public/",13)==0){
         for(auto curfile=_PublicFiles.begin(); curfile!=_PublicFiles.end(); curfile++){
@@ -212,7 +212,7 @@ bool blogi::Template::Response(libhttppp::HttpRequest *req){
     return false;
 }
 
-void blogi::Template::printSite(libhtmlpp::HtmlString &output,libhtmlpp::HtmlElement *index,const char *crrurl,bool login,const char *meta){
+void blogi::Template::printSite(const int tid,libhtmlpp::HtmlString &output,libhtmlpp::HtmlElement *index,const char *crrurl,bool login,const char *meta){
     try{
         char url[512];
 

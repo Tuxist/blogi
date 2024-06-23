@@ -59,7 +59,7 @@ namespace blogi {
         void initPlugin(){
         }
 
-        bool Controller(libhttppp::HttpRequest *req,libhtmlpp::HtmlElement *page){
+        bool Controller(const int tid,libhttppp::HttpRequest *req,libhtmlpp::HtmlElement *page){
             char url[512];
             if(strncmp(req->getRequestURL(),Args->config->buildurl("nodeinfo",url,512),strlen(Args->config->buildurl("nodeinfo",url,512)))!=0){
                 return false;
@@ -124,8 +124,8 @@ namespace blogi {
 
             page->getElementbyID("main")->insertChild(condat.parse());
 
-            Args->theme->printSite(out,page,req->getRequestURL(),
-                                    Args->auth->isLoggedIn(req,sid));
+            Args->theme->printSite(tid,out,page,req->getRequestURL(),
+                                    Args->auth->isLoggedIn(tid,req,sid));
 
             #endif
 

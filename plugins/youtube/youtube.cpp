@@ -106,22 +106,22 @@ namespace blogi {
 
 
             sql << "CREATE TABLE IF NOT EXISTS youtube_channels("
-                <<   "id integer PRIMARY KEY " << Args->database->autoincrement() << ","
+                <<   "id integer PRIMARY KEY " << Args->database[0]->autoincrement() << ","
                 <<   "channelname character varying(255) NOT NULL,"
                 <<   "apikey character varying(255) NOT NULL,"
                 <<   "channelkey character varying(255) NOT NULL"
                 << ");"
                 << " CREATE TABLE IF NOT EXISTS youtube_videos ("
-                <<   "id integer PRIMARY KEY " << Args->database->autoincrement() << ","
+                <<   "id integer PRIMARY KEY " << Args->database[0]->autoincrement() << ","
                 <<   "youtube_channels_pkey bigint REFERENCES youtube_channels(id),"
                 <<   "youtube_id varchar(255) NOT NULL"
                 << ")";
 
-            Args->database->exec(&sql,res);
+            Args->database[0]->exec(&sql,res);
 
         }
 
-        void SyncYoutube(int channel_id,libhtmlpp::HtmlString &out){
+        void SyncYoutube(const int tid,int channel_id,libhtmlpp::HtmlString &out){
             std::string json;
             libhttppp::HttpResponse res;
             size_t hsize=0,cpos;
@@ -133,7 +133,7 @@ namespace blogi {
 
             sql << "select channelname,apikey,channelkey from youtube_channels where id='" << channel_id <<"'";
 
-            int count = Args->database->exec(&sql,dbres);
+            int count = Args->database[tid]->exec(&sql,dbres);
 
             if(count < 1){
                 libhttppp::HTTPException he;
@@ -295,7 +295,7 @@ namespace blogi {
                 int fcount = json_object_array_length(ytems);
 
                 sql << "delete from youtube_videos where channel_id='" << channel_id <<"';";
-                Args->database->exec(&sql,dbres);
+                Args->database[tid]->exec(&sql,dbres);
 
                 for(int i =0; i<fcount; ++i) {
                     int ii=0;
@@ -306,7 +306,7 @@ namespace blogi {
                             if(yid){
                                 sql.clear();
                                 sql << "INSERT INTO youtube_videos (youtube_channels_pkey,youtube_id) VALUES ('" << channel_id << "','" << json_object_get_string(yid) << "')";
-                                Args->database->exec(&sql,dbres);
+                                Args->database[tid]->exec(&sql,dbres);
                             }
                         }
                     }
@@ -320,7 +320,7 @@ namespace blogi {
             }
         }
 
-        bool Controller(libhttppp::HttpRequest * req,libhtmlpp::HtmlElement *page){
+        bool Controller(const int tid,libhttppp::HttpRequest * req,libhtmlpp::HtmlElement *page){
             char url[512];
             libhtmlpp::HtmlString out;
             libhtmlpp::HtmlElement *hmain, youdiv("div");
@@ -333,9 +333,9 @@ namespace blogi {
             }
 
             if(strcmp(req->getRequestURL(),Args->config->buildurl("youtube/sync/",url,512))>0){
-                if(Args->auth->isLoggedIn(req,sid)){
+                if(Args->auth->isLoggedIn(tid,req,sid)){
                     try{
-                        SyncYoutube( atoi( req->getRequestURL()+strlen(Args->config->buildurl("youtube/sync/",url,512)) ),out);
+                        SyncYoutube(tid,atoi( req->getRequestURL()+strlen(Args->config->buildurl("youtube/sync/",url,512)) ),out);
                         youdiv.appendChild(out.parse());
                     }catch(libhttppp::HTTPException &e){
                         std::string error;
@@ -351,7 +351,7 @@ namespace blogi {
                 }
                 if( (hmain=page->getElementbyID("main")) )
                         hmain->appendChild(&youdiv);
-                Args->theme->printSite(out,page,req->getRequestURL(),Args->auth->isLoggedIn(req,sid));
+                Args->theme->printSite(tid,out,page,req->getRequestURL(),Args->auth->isLoggedIn(tid,req,sid));
                 libhttppp::HttpResponse curres;
                 curres.setVersion(HTTPVERSION(1.1));
                 curres.setContentType("text/html");
@@ -366,7 +366,7 @@ namespace blogi {
             sql << "SELECT youtube_channels.channelname,youtube_videos.youtube_id "
                 << "FROM youtube_channels LEFT JOIN youtube_videos ON youtube_channels.id = youtube_videos.youtube_channels_pkey;";
 
-            int count = Args->database->exec(&sql,dbres);
+            int count = Args->database[tid]->exec(&sql,dbres);
 
             if(count < 1){
                 libhttppp::HTTPException ee;
@@ -394,7 +394,7 @@ namespace blogi {
             if( (hmain=page->getElementbyID("main")) )
                 hmain->appendChild(&youdiv);
 
-            Args->theme->printSite(out,page,req->getRequestURL(),Args->auth->isLoggedIn(req,sid));
+            Args->theme->printSite(tid,out,page,req->getRequestURL(),Args->auth->isLoggedIn(tid,req,sid));
 
             libhttppp::HttpResponse curres;
             curres.setVersion(HTTPVERSION(1.1));

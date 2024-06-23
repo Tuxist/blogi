@@ -50,7 +50,7 @@ namespace blogi {
         ~Content(){
         };
 
-        void contentIdxPage(libhttppp::HttpRequest *curreq,libhtmlpp::HtmlElement *page,const char *tag,int start,int end){
+        void contentIdxPage(const int tid,libhttppp::HttpRequest *curreq,libhtmlpp::HtmlElement *page,const char *tag,int start,int end){
             libhttppp::HTTPException excep;
             libhtmlpp::HtmlString condat;
 
@@ -63,7 +63,7 @@ namespace blogi {
 
             if (tag) {
                 sql = "SELECT id FROM tags where name='"; sql.escaped(tag) << "' LIMIT 1";
-                if(Args->database->exec(&sql,res)<1){
+                if(Args->database[tid]->exec(&sql,res)<1){
                     excep[libhttppp::HTTPException::Critical] << "no tag data found for this name!";
                     throw excep;
                 }else {
@@ -71,17 +71,17 @@ namespace blogi {
                     sql <<"LEFT JOIN users ON content.author=users.id LEFT JOIN tags_content ON tags_content.content_id=content.id where tags_content.tag_id='"
                     << res[0][0]
                     <<"' ORDER BY content.id DESC LIMIT '" << end << "' OFFSET " << start;
-                    ncount=Args->database->exec(&sql,res);
+                    ncount=Args->database[tid]->exec(&sql,res);
                 }
             } else {
                 sql="SELECT content.id,content.title,content.descrition,users.displayname,content.created FROM content LEFT JOIN users ON content.author=users.id ORDER BY content.id DESC";
                 sql << " LIMIT '" << end << "' OFFSET " << start;
-                ncount=Args->database->exec(&sql,res);
+                ncount=Args->database[tid]->exec(&sql,res);
             }
 
             std::string meta;
             condat << "<div id=\"contentidx\">";
-            if(Args->auth->isLoggedIn(curreq,sid)){
+            if(Args->auth->isLoggedIn(tid,curreq,sid)){
                 condat << "<div class=\"blog_adminmenu\">"
                 << "<ul>"
                 << "<li><a href=\""<< Args->config->buildurl("content/addpost",url,512) <<"\">Addpost</a></li>"
@@ -93,7 +93,7 @@ namespace blogi {
                 condat << " </div>";
                 libhtmlpp::HtmlString out;
                 page->getElementbyID("main")->insertChild(condat.parse());
-                Args->theme->printSite(out,page,curreq->getRequestURL(),Args->auth->isLoggedIn(curreq,sid),meta.c_str());
+                Args->theme->printSite(tid,out,page,curreq->getRequestURL(),Args->auth->isLoggedIn(tid,curreq,sid),meta.c_str());
 
                 libhttppp::HttpResponse resp;
                 resp.setVersion(HTTPVERSION(1.1));
@@ -130,7 +130,7 @@ namespace blogi {
 
             sql="SELECT name,id FROM tags";
 
-            int tcount=Args->database->exec(&sql,res);
+            int tcount=Args->database[tid]->exec(&sql,res);
 
 
             if (tcount>0) {
@@ -141,7 +141,7 @@ namespace blogi {
                     sql << res[i][1] << "'";
                     blogi::DBResult rescnt;
                     condat << "<li><a href=\""
-                    << Args->config->buildurl("content/tag/",url,512) << res[i][0] << "\">" << res[i][0] << "(" << Args->database->exec(&sql,rescnt) << ")" << "</a></li>";
+                    << Args->config->buildurl("content/tag/",url,512) << res[i][0] << "\">" << res[i][0] << "(" << Args->database[tid]->exec(&sql,rescnt) << ")" << "</a></li>";
 
                 }
 
@@ -152,7 +152,7 @@ namespace blogi {
 
             page->getElementbyID("main")->insertChild(condat.parse());
 
-            Args->theme->printSite(out,page,curreq->getRequestURL(),Args->auth->isLoggedIn(curreq,sid),meta.c_str());
+            Args->theme->printSite(tid,out,page,curreq->getRequestURL(),Args->auth->isLoggedIn(tid,curreq,sid),meta.c_str());
 
             libhttppp::HttpResponse resp;
             resp.setVersion(HTTPVERSION(1.1));
@@ -161,7 +161,7 @@ namespace blogi {
             resp.send(curreq,out.c_str(),out.size());
         };
 
-        void contentPage(libhttppp::HttpRequest* curreq,libhtmlpp::HtmlElement &page) {
+        void contentPage(const int tid,libhttppp::HttpRequest* curreq,libhtmlpp::HtmlElement &page) {
             libhttppp::HTTPException excep;
             libhtmlpp::HtmlString *condat = new libhtmlpp::HtmlString;
 
@@ -178,14 +178,14 @@ namespace blogi {
             blogi::DBResult res;
 
 
-            if(Args->database->exec(&sql,res)<1){
+            if(Args->database[tid]->exec(&sql,res)<1){
                 delete condat;
                 excep[libhttppp::HTTPException::Critical] << "No entry found for content id: " << cid;
                 throw excep;
             }
 
             *condat << "<div id=\"content\">";
-            if (Args->auth->isLoggedIn(curreq,sid)) {
+            if (Args->auth->isLoggedIn(tid,curreq,sid)) {
                 *condat << "<div class=\"blog_adminmenu\">"
                 << "<ul>"
                 << "<li><a href=\"" << Args->config->buildurl("content/edit/",url,512) << cid << "\">Bearbeiten</a></li>"
@@ -211,7 +211,7 @@ namespace blogi {
 
             delete condat;
 
-            Args->theme->printSite(out,&page,curreq->getRequestURL(),Args->auth->isLoggedIn(curreq,sid));
+            Args->theme->printSite(tid,out,&page,curreq->getRequestURL(),Args->auth->isLoggedIn(tid,curreq,sid));
 
             libhttppp::HttpResponse resp;
             resp.setVersion(HTTPVERSION(1.1));
@@ -220,11 +220,11 @@ namespace blogi {
             resp.send(curreq,out.c_str(),out.size());
         };
 
-        void addPostPage(libhttppp::HttpRequest *curreq,libhtmlpp::HtmlElement &page){
+        void addPostPage(const int tid,libhttppp::HttpRequest *curreq,libhtmlpp::HtmlElement &page){
             std::string sid;
             char url[512];
 
-            if(!Args->auth->isLoggedIn(curreq,sid)){
+            if(!Args->auth->isLoggedIn(tid,curreq,sid)){
                 libhttppp::HTTPException exp;
                 exp[libhttppp::HTTPException::Error] << "Please login before!";
                 throw exp;
@@ -270,7 +270,7 @@ namespace blogi {
 
                     asql << "SELECT id from users WHERE sid='"<< uid.c_str() <<"' LIMIT 1;";
 
-                    if (Args->database->exec(&asql,ares) < 1) {
+                    if (Args->database[tid]->exec(&asql,ares) < 1) {
                         excep[libhttppp::HTTPException::Error] << "User with SID not found!";
                         throw excep;
                     }
@@ -290,7 +290,7 @@ namespace blogi {
                     sql.escaped(text.c_str()) <<"','"<< author <<"','" << ttmp << "') RETURNING id;";
 
                     try {
-                        Args->database->exec(&sql,res);
+                        Args->database[tid]->exec(&sql,res);
                         content_id=atoi(res[0][0]);
                     }catch(libhttppp::HTTPException &e){
                         throw e;
@@ -316,16 +316,16 @@ namespace blogi {
                                 sql = "select id,name from tags where name='";
                                 sql.escaped(tag.c_str()) << "' LIMIT 1;";
 
-                                if (Args->database->exec(&sql,res) != 1) {
+                                if (Args->database[tid]->exec(&sql,res) != 1) {
                                     sql = "insert into tags (name) VALUES ('";
                                     sql.escaped(tag.c_str()) <<"');";
-                                    Args->database->exec(&sql,res);
+                                    Args->database[tid]->exec(&sql,res);
                                     ++tries;
                                     goto TAGNAMECHECK;
                                 }
 
                                 sql =  "insert into tags_content (content_id,tag_id) VALUES ('"; sql << content_id <<"','" << res[0][0] <<"');";
-                                Args->database->exec(&sql,res);
+                                Args->database[tid]->exec(&sql,res);
                             }
                         }
                     }
@@ -358,7 +358,7 @@ namespace blogi {
 
             page.getElementbyID("main")->insertChild(condat.parse());
 
-            Args->theme->printSite(out,&page,curreq->getRequestURL(),Args->auth->isLoggedIn(curreq,sid));
+            Args->theme->printSite(tid,out,&page,curreq->getRequestURL(),Args->auth->isLoggedIn(tid,curreq,sid));
 
             libhttppp::HttpResponse resp;
             resp.setVersion(HTTPVERSION(1.1));
@@ -367,11 +367,11 @@ namespace blogi {
             resp.send(curreq,out.c_str(),out.size());
         }
 
-        void delPostPage(libhttppp::HttpRequest* curreq,libhtmlpp::HtmlElement &page) {
+        void delPostPage(const int tid,libhttppp::HttpRequest* curreq,libhtmlpp::HtmlElement &page) {
             std::string sid;
             char url[512];
 
-            if(!Args->auth->isLoggedIn(curreq,sid)){
+            if(!Args->auth->isLoggedIn(tid,curreq,sid)){
                 libhttppp::HTTPException exp;
                 exp[libhttppp::HTTPException::Error] << "Please login before!";
                 throw exp;
@@ -389,13 +389,13 @@ namespace blogi {
             sql ="DELETE FROM tags_content WHERE content_id='";
             sql << cid << "';" <<" DELETE FROM content WHERE id='"; sql << cid << "';";
 
-            if(Args->database->exec(&sql,res)<0){
+            if(Args->database[tid]->exec(&sql,res)<0){
                 libhttppp::HTTPException exp;
                 exp[libhttppp::HTTPException::Error] << "Can'T content sql data!";
                 throw exp;
             }
 
-            cleartags();
+            cleartags(tid);
 
             libhtmlpp::HtmlString condat;
 
@@ -410,7 +410,7 @@ namespace blogi {
                 throw excep;
             }
 
-            Args->theme->printSite(out,&page,curreq->getRequestURL(),Args->auth->isLoggedIn(curreq,sid));
+            Args->theme->printSite(tid,out,&page,curreq->getRequestURL(),Args->auth->isLoggedIn(tid,curreq,sid));
 
             libhttppp::HttpResponse resp;
             resp.setVersion(HTTPVERSION(1.1));
@@ -420,14 +420,14 @@ namespace blogi {
 
         }
 
-        void cleartags() {
+        void cleartags(const int tid) {
 
             blogi::SQL sql;
             blogi::DBResult res;
 
             sql="SELECT name,id FROM tags;";
 
-            int n=Args->database->exec(&sql,res);
+            int n=Args->database[tid]->exec(&sql,res);
 
             libhttppp::HTTPException excep;
 
@@ -438,7 +438,7 @@ namespace blogi {
 
                 blogi::DBResult res2;
 
-                if(Args->database->exec(&sql,res2)<0){
+                if(Args->database[tid]->exec(&sql,res2)<0){
                     libhttppp::HTTPException excep;
                     excep[libhttppp::HTTPException::Critical] << "clear tags count failed this shouldn't happend!";
                     throw excep;
@@ -449,7 +449,7 @@ namespace blogi {
 
                 sql = "DELETE FROM tags WHERE id='"; sql << res[i][1] << "';";
 
-                if(Args->database->exec(&sql,res2)<0){
+                if(Args->database[tid]->exec(&sql,res2)<0){
                     libhttppp::HTTPException excep;
                     excep[libhttppp::HTTPException::Critical] << "clear tags deletd failed this shouldn't happend!";
                     throw excep;
@@ -458,10 +458,10 @@ namespace blogi {
             }
         }
 
-        void editPostPage(libhttppp::HttpRequest* curreq,libhtmlpp::HtmlElement &page) {
+        void editPostPage(const int tid,libhttppp::HttpRequest* curreq,libhtmlpp::HtmlElement &page) {
             std::string sid;
             char url[512];
-            if (!Args->auth->isLoggedIn(curreq,sid)) {
+            if (!Args->auth->isLoggedIn(tid,curreq,sid)) {
                 libhttppp::HTTPException exp;
                 exp[libhttppp::HTTPException::Error] << "Please login before!";
                 throw exp;
@@ -513,7 +513,7 @@ namespace blogi {
 
                     blogi::DBResult textres;
 
-                    if (Args->database->exec(&sqltext, textres)<0) {
+                    if (Args->database[tid]->exec(&sqltext, textres)<0) {
                         excep[libhttppp::HTTPException::Critical] << "can't update updare content with id: " << cid << " !";
                         throw excep;
                     }
@@ -521,12 +521,12 @@ namespace blogi {
 
                 sql <<  "DELETE FROM tags_content WHERE content_id='" << cid <<"';";
 
-                if (Args->database->exec(&sql,res) < 0) {
+                if (Args->database[tid]->exec(&sql,res) < 0) {
                     excep[libhttppp::HTTPException::Critical] << "can't delete old tags id from tags_id!";
                     throw excep;
                 }
 
-                cleartags();
+                cleartags(tid);
 
                 size_t tgsstart = 0, tgsend = 0;
                 if (!tags.empty() && cid != -1) {
@@ -547,7 +547,7 @@ namespace blogi {
 
                                 int tamount;
 
-                                if ((tamount=Args->database->exec(&sql,res)) < 0) {
+                                if ((tamount=Args->database[tid]->exec(&sql,res)) < 0) {
                                     excep[libhttppp::HTTPException::Critical] << "can't find existing tags !";
                                     throw excep;
                                 }
@@ -555,14 +555,14 @@ namespace blogi {
                                 if (tamount != 1) {
                                     sql="insert into tags (name) VALUES ('";
                                     sql.escaped(tag.c_str()) << "');";
-                                    Args->database->exec(&sql,res);
+                                    Args->database[tid]->exec(&sql,res);
                                     ++tries;
                                     goto TAGNAMECHECK;
                                 }
 
                                 sql= "insert into tags_content (content_id,tag_id) VALUES ('"; sql << cid << "','" << res[0][0] << "');";
 
-                                if (Args->database->exec(&sql,res) < 0) {
+                                if (Args->database[tid]->exec(&sql,res) < 0) {
                                     excep[libhttppp::HTTPException::Critical] << "can't create link between tag and content !";
                                     throw excep;
                                 }
@@ -581,7 +581,7 @@ namespace blogi {
 
             int ccamount;
 
-            if ((ccamount=Args->database->exec(&sql,res)) < 0) {
+            if ((ccamount=Args->database[tid]->exec(&sql,res)) < 0) {
                 excep[libhttppp::HTTPException::Error] << "can't find tages for this content id !";
                 throw excep;
             }
@@ -611,7 +611,7 @@ namespace blogi {
                 excep[libhttppp::HTTPException::Error] << e.what();
                 throw excep;
             }
-            Args->theme->printSite(out,&page,curreq->getRequestURL(),Args->auth->isLoggedIn(curreq,sid));
+            Args->theme->printSite(tid,out,&page,curreq->getRequestURL(),Args->auth->isLoggedIn(tid,curreq,sid));
 
             libhttppp::HttpResponse resp;
             resp.setVersion(HTTPVERSION(1.1));
@@ -636,7 +636,7 @@ namespace blogi {
             blogi::SQL sql;
             blogi::DBResult res;
             sql << "CREATE TABLE IF NOT EXISTS content ("
-                <<   "id integer PRIMARY KEY " << Args->database->autoincrement() << ","
+                <<   "id integer PRIMARY KEY " << Args->database[0]->autoincrement() << ","
                 <<     "title character varying(255) NOT NULL,"
                 <<     "text text NOT NULL,"
                 <<     "descrition character varying(255) NOT NULL,"
@@ -645,7 +645,7 @@ namespace blogi {
                 <<     "FOREIGN KEY (author) REFERENCES users(id)"
                 <<   "); "
                 << "CREATE TABLE IF NOT EXISTS tags ("
-                <<   "id integer PRIMARY KEY " << Args->database->autoincrement() << ","
+                <<   "id integer PRIMARY KEY " << Args->database[0]->autoincrement() << ","
                 <<      "name character varying(255) NOT NULL UNIQUE"
                 << "); "
                 << "CREATE TABLE IF NOT EXISTS tags_content ("
@@ -654,11 +654,11 @@ namespace blogi {
                 <<   "FOREIGN KEY (content_id) REFERENCES content (id),"
                 <<   "FOREIGN KEY (tag_id) REFERENCES tags (id)"
                 << ");";
-            Args->database->exec(&sql,res);
+            Args->database[0]->exec(&sql,res);
             return;
         }
 
-        bool Controller(libhttppp::HttpRequest * req,libhtmlpp::HtmlElement *page){
+        bool Controller(const int tid,libhttppp::HttpRequest * req,libhtmlpp::HtmlElement *page){
             char url[512];
 
             const char *requ=req->getRequestURL();
@@ -674,13 +674,13 @@ namespace blogi {
             curl.push_back('\0');
 
             if (strncmp(curl.data(),Args->config->buildurl("content/addpost",url,512),strlen(Args->config->buildurl("content/addpost",url,512)))==0){
-                    addPostPage(req,*page);
+                    addPostPage(tid,req,*page);
             }else if (strncmp(curl.data(), Args->config->buildurl("content/read",url,512), strlen(Args->config->buildurl("content/read",url,512))) == 0) {
-                    contentPage(req,*page);
+                    contentPage(tid,req,*page);
             }else if (strncmp(curl.data(), Args->config->buildurl("content/edit",url,512), strlen(Args->config->buildurl("content/edit",url,512))) == 0) {
-                    editPostPage(req,*page);
+                    editPostPage(tid,req,*page);
             }else if (strncmp(curl.data(), Args->config->buildurl("content/del",url,512), strlen(Args->config->buildurl("content/del",url,512))) == 0) {
-                    delPostPage(req,*page);
+                    delPostPage(tid,req,*page);
             }else{
                 int startpos = 0;
                 libhttppp::HttpForm start;
@@ -698,9 +698,9 @@ namespace blogi {
                     tag.push_back('\0');
                     std::vector<char> utag;
                     dec.urlDecode(tag,utag);
-                    contentIdxPage(req,page,utag.data(),startpos,SITELIMIT);
+                    contentIdxPage(tid,req,page,utag.data(),startpos,SITELIMIT);
                  }else{
-                    contentIdxPage(req,page,nullptr,startpos,SITELIMIT);
+                    contentIdxPage(tid,req,page,nullptr,startpos,SITELIMIT);
                  }
             }
             return true;

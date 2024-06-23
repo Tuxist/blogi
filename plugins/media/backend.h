@@ -40,24 +40,25 @@ namespace blogi {
         Store(){};
         virtual ~Store(){};
 
-        virtual size_t getSize(const char *key)=0;
+        virtual size_t getSize(int tid,const char *key)=0;
 
-        virtual void save(const char *key, const char *data,size_t datalen)=0;
-        virtual void load(libhttppp::HttpRequest *req,const char *key,std::vector<char> &data,size_t pos,size_t blocksize) =0;
+        virtual void save(int tid,const char *key, const char *data,size_t datalen)=0;
+        virtual void load(int tid,libhttppp::HttpRequest *req,const char *key,std::vector<char> &data,size_t pos,size_t blocksize) =0;
 
     };
 
     class RedisStore : public Store {
     public:
-        RedisStore(const char *host,int port,const char *password=nullptr,int millitout=0);
+        RedisStore(const char *host,int port,const char *password=nullptr,int threads=0);
         ~RedisStore();
 
-        size_t getSize(const char *key);
+        size_t getSize(int tid,const char *key) override;
 
-        void save(const char *key,const char *data,size_t datalen) override;
-        void load(libhttppp::HttpRequest *req,const char *key,std::vector<char> &data,size_t pos,size_t blocksize) override;
+        void save(int tid,const char *key,const char *data,size_t datalen) override;
+        void load(int tid,libhttppp::HttpRequest *req,const char *key,std::vector<char> &data,size_t pos,size_t blocksize) override;
     private:
-        redisContext      *_RedisCTX;
+        redisContext     **_RedisCTX;
         std::string        _RedisPassword;
+        int                _Threads;
     };
 };

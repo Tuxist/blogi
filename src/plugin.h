@@ -39,12 +39,13 @@
 
 namespace blogi {
     struct PluginArgs{
-        Database *database;
+        Database **database;
         Session  *session;
         Auth     *auth;
         Template *theme;
         Editor   *edit;
         Config   *config;
+        int       maxthreads;
     };
 
     class PluginApi {
@@ -57,15 +58,15 @@ namespace blogi {
 
         void setArgs(PluginArgs *args);
 
-        virtual void initPlugin()=0;
+        virtual void initPlugin();
 
-        virtual bool Controller(libhttppp::HttpRequest *req,libhtmlpp::HtmlElement *page);
+        virtual bool Controller(const int tid,libhttppp::HttpRequest *req,libhtmlpp::HtmlElement *page);
 
-        virtual bool Response(libhttppp::HttpRequest *req);
+        virtual bool Response(const int tid,libhttppp::HttpRequest *req);
 
-        virtual void Settings(libhttppp::HttpRequest *req,libhtmlpp::HtmlString &setdiv);
+        virtual void Settings(const int tid,libhttppp::HttpRequest *req,libhtmlpp::HtmlString &setdiv);
 
-        virtual void Rendering(libhttppp::HttpRequest *req,libhtmlpp::HtmlElement *curpage);
+        virtual void Rendering(const int tid,libhttppp::HttpRequest *req,libhtmlpp::HtmlElement *curpage);
     protected:
         PluginArgs *Args;
     };

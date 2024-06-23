@@ -66,22 +66,22 @@ namespace blogi {
 
 
             sql << "CREATE TABLE IF NOT EXISTS gameserver_protocols("
-                <<   "id integer PRIMARY KEY " << Args->database->autoincrement() << ","
+                <<   "id integer PRIMARY KEY " << Args->database[0]->autoincrement() << ","
                 <<   "pname character varying(255) NOT NULL"
                 << "); "
                 << "CREATE TABLE IF NOT EXISTS gameserver("
-                <<   "id integer PRIMARY KEY " << Args->database->autoincrement() << ","
+                <<   "id integer PRIMARY KEY " << Args->database[0]->autoincrement() << ","
                 <<   "protocol integer,"
                 <<   "addr character varying(255) NOT NULL,"
                 <<   "port integer,"
                 <<   "FOREIGN KEY (protocol) REFERENCES gameserver_protocols (id)"
                 << ");";
 
-            Args->database->exec(&sql,res);
+            Args->database[0]->exec(&sql,res);
 
             sql="select protocol,addr,port from gameserver";
 
-            int count = Args->database->exec(&sql,res);
+            int count = Args->database[0]->exec(&sql,res);
 
             for (int i = 0; i < count; i++) {
                 if(atoi(res[i][0])!=0)
@@ -91,7 +91,7 @@ namespace blogi {
             }
         }
 
-        bool Controller(libhttppp::HttpRequest *req,libhtmlpp::HtmlElement *page){
+        bool Controller(const int tid,libhttppp::HttpRequest *req,libhtmlpp::HtmlElement *page){
             char url[512];
             if(strncmp(req->getRequestURL(),Args->config->buildurl("gamestatus",url,512),strlen(Args->config->buildurl("gamestatus",url,512)))!=0){
                 return false;
@@ -135,8 +135,8 @@ namespace blogi {
             std::string sid;
             page->getElementbyID("main")->insertChild(condat.parse());
 
-            Args->theme->printSite(out,page,req->getRequestURL(),
-                                    Args->auth->isLoggedIn(req,sid));
+            Args->theme->printSite(tid,out,page,req->getRequestURL(),
+                                    Args->auth->isLoggedIn(tid,req,sid));
 
             libhttppp::HttpResponse resp;
             resp.setVersion(HTTPVERSION(1.1));

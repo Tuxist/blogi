@@ -59,10 +59,14 @@ blogi::Blogi::Blogi(Config *blgcfg,netplus::socket *serversocket) : HttpEvent(se
 
     PlgArgs = new PluginArgs;
     PlgArgs->config=blgcfg;
-    if(strcmp(PlgArgs->config->getdbdriver(),"pgsql")==0)
-        PlgArgs->database= new Postgresql(PlgArgs->config->getdbopts());
-    else if(strcmp(PlgArgs->config->getdbdriver(),"sqlite")==0)
-        PlgArgs->database= new SQLite(PlgArgs->config->getdbopts());
+
+    PlgArgs->database=new Database*[threads];
+    for(int i=0; i<=threads; ++i){
+        if(strcmp(PlgArgs->config->getdbdriver(),"pgsql")==0)
+            PlgArgs->database[i]= new Postgresql(PlgArgs->config->getdbopts());
+        else if(strcmp(PlgArgs->config->getdbdriver(),"sqlite")==0)
+            PlgArgs->database[i]= new SQLite(PlgArgs->config->getdbopts());
+    }
     PlgArgs->session= new Session();
     PlgArgs->auth=new Auth(PlgArgs->database,PlgArgs->session,PlgArgs->config);
     PlgArgs->edit=new Editor(PlgArgs->config);
@@ -75,9 +79,11 @@ blogi::Blogi::Blogi(Config *blgcfg,netplus::socket *serversocket) : HttpEvent(se
     PlgArgs->theme=new Template(tplcfg);
 
     Page = new libhtmlpp::HtmlPage;
-    PlgArgs->theme->renderPage("index.html",Page,&Index);
+    PlgArgs->theme->renderPage(0,"index.html",Page,&Index);
     MPage = new libhtmlpp::HtmlPage;
-    PlgArgs->theme->renderPage("mobile.html",MPage,&MIndex);
+    PlgArgs->theme->renderPage(0,"mobile.html",MPage,&MIndex);
+
+    PlgArgs->maxthreads=threads;
 
     BlogiPlg = new Plugin();
 
@@ -97,11 +103,11 @@ blogi::Blogi::~Blogi(){
     delete MPage;
 }
 #include <iostream>
-void blogi::Blogi::loginPage(libhttppp::HttpRequest *curreq){
+void blogi::Blogi::loginPage(libhttppp::HttpRequest *curreq,const int tid){
     char url[512];
     libhttppp::HTTPException excep;
     std::string sessid;
-    if(PlgArgs->auth->isLoggedIn(curreq,sessid)){
+    if(PlgArgs->auth->isLoggedIn(tid,curreq,sessid)){
         libhttppp::HTTPException err;
         err[libhttppp::HTTPException::Error] << "you already authenticated please logoff before you login again!";
         throw err;
@@ -148,10 +154,10 @@ void blogi::Blogi::loginPage(libhttppp::HttpRequest *curreq){
             index.getElementbyID("main")->insertChild(condat.parse());
 
         for(blogi::Plugin::PluginData *curplg=BlogiPlg->getFirstPlugin(); curplg; curplg=curplg->getNextPlg()){
-            curplg->getInstace()->Rendering(curreq,&index);
+            curplg->getInstace()->Rendering(tid,curreq,&index);
         }
 
-        PlgArgs->theme->printSite(out,&index,curreq->getRequestURL(),false);
+        PlgArgs->theme->printSite(tid,out,&index,curreq->getRequestURL(),false);
         libhttppp::HttpResponse curres;
         curres.setState(HTTP200);
         curres.setVersion(HTTPVERSION(1.1));
@@ -162,7 +168,7 @@ void blogi::Blogi::loginPage(libhttppp::HttpRequest *curreq){
 
     std::string sid;
 
-    if(PlgArgs->auth->login(username.c_str(),password.c_str(),sid)){
+    if(PlgArgs->auth->login(tid,username.c_str(),password.c_str(),sid)){
         const char *sessid = PlgArgs->session->createSession(sid.c_str());
         PlgArgs->session->addSessionData(sessid,"sid",sid.c_str(),sid.length());
         PlgArgs->session->addSessionData(sessid,"username",username.c_str(), username.length());
@@ -196,7 +202,7 @@ void blogi::Blogi::loginPage(libhttppp::HttpRequest *curreq){
     }
 }
 
-void blogi::Blogi::logoutPage(libhttppp::HttpRequest *curreq){
+void blogi::Blogi::logoutPage(libhttppp::HttpRequest *curreq,const int tid){
     const char *host;
     for(libhttppp::HttpHeader::HeaderData *preq = curreq->getfirstHeaderData(); preq; preq=curreq->nextHeaderData(preq)){
         if(strncmp(curreq->getKey(preq),"Host",4)==0)
@@ -213,12 +219,12 @@ void blogi::Blogi::logoutPage(libhttppp::HttpRequest *curreq){
     curres.send(curreq,nullptr,0);
 }
 
-void blogi::Blogi::settingsPage(libhttppp::HttpRequest* curreq){
+void blogi::Blogi::settingsPage(libhttppp::HttpRequest* curreq,const int tid){
     libhttppp::HttpCookie cookie;
     cookie.parse(curreq);
     std::string sessid;
 
-    if(!PlgArgs->auth->isLoggedIn(curreq,sessid)){
+    if(!PlgArgs->auth->isLoggedIn(tid,curreq,sessid)){
         libhttppp::HTTPException err;
         err[libhttppp::HTTPException::Error] << "you are not logged in permission denied";
         throw err;
@@ -240,7 +246,7 @@ void blogi::Blogi::settingsPage(libhttppp::HttpRequest* curreq){
         for(blogi::Plugin::PluginData *curplg=BlogiPlg->getFirstPlugin(); curplg; curplg=curplg->getNextPlg()){
             if(strncmp(curreq->getRequestURL()+strlen(PlgArgs->config->buildurl("settings/",url,512)), curplg->getInstace()->getName(),
                 strlen(curplg->getInstace()->getName()))==0)
-                curplg->getInstace()->Settings(curreq,setgui);
+                curplg->getInstace()->Settings(tid,curreq,setgui);
         }
     }
 
@@ -255,10 +261,10 @@ void blogi::Blogi::settingsPage(libhttppp::HttpRequest* curreq){
     index->getElementbyID("main")->appendChild(setgui.parse());
 
     for(blogi::Plugin::PluginData *curplg=BlogiPlg->getFirstPlugin(); curplg; curplg=curplg->getNextPlg()){
-        curplg->getInstace()->Rendering(curreq,index);
+        curplg->getInstace()->Rendering(tid,curreq,index);
     }
 
-    PlgArgs->theme->printSite(out,index,curreq->getRequestURL(),false);
+    PlgArgs->theme->printSite(tid,out,index,curreq->getRequestURL(),false);
     libhttppp::HttpResponse curres;
     curres.setState(HTTP200);
     curres.setVersion(HTTPVERSION(1.1));
@@ -268,7 +274,7 @@ void blogi::Blogi::settingsPage(libhttppp::HttpRequest* curreq){
 }
 
 
-void blogi::Blogi::RequestEvent(libhttppp::HttpRequest *curreq){
+void blogi::Blogi::RequestEvent(libhttppp::HttpRequest *curreq,const int tid,void *args){
     char url[512];
     try{;
         libhttppp::HttpHeader::HeaderData *hip=curreq->getData("x-real-ip");
@@ -293,13 +299,13 @@ RETRY_REQUEST:
                 curres.send(curreq, nullptr, 0);
                 return;
             }else if(strncmp(curreq->getRequestURL(),PlgArgs->config->buildurl("logout",url,512),strlen(PlgArgs->config->buildurl("logout",url,512)))==0){
-                logoutPage(curreq);
+                logoutPage(curreq,tid);
                 return;
             }else if(strncmp(curreq->getRequestURL(),PlgArgs->config->buildurl("login",url,512),strlen(PlgArgs->config->buildurl("login",url,512)))==0){
-                loginPage(curreq);
+                loginPage(curreq,tid);
                 return;
             }else if(strncmp(curreq->getRequestURL(),PlgArgs->config->buildurl("settings",url,512),strlen(PlgArgs->config->buildurl("settings",url,512)))==0){
-                settingsPage(curreq);
+                settingsPage(curreq,tid);
                 return;
             }else if(strncmp(curreq->getRequestURL(),PlgArgs->config->buildurl("editor",url,512),strlen(PlgArgs->config->buildurl("editor",url,512)))==0){
                 PlgArgs->edit->Controller(curreq);
@@ -314,7 +320,7 @@ RETRY_REQUEST:
                 return;
             }
 
-            if(!PlgArgs->theme->Controller(curreq)){
+            if(!PlgArgs->theme->Controller(tid,curreq)){
                 libhtmlpp::HtmlElement *index;
                 if(curreq->isMobile())
                     index= new libhtmlpp::HtmlElement(MIndex);
@@ -322,7 +328,7 @@ RETRY_REQUEST:
                     index= new libhtmlpp::HtmlElement(Index);;
 
                 for(blogi::Plugin::PluginData *curplg=BlogiPlg->getFirstPlugin(); curplg; curplg=curplg->getNextPlg()){
-                    curplg->getInstace()->Rendering(curreq,index);
+                    curplg->getInstace()->Rendering(tid,curreq,index);
                 }
 
                 for(blogi::Plugin::PluginData *curplg=BlogiPlg->getFirstPlugin(); curplg; curplg=curplg->getNextPlg()){
@@ -331,7 +337,7 @@ RETRY_REQUEST:
                     url+="/";
                     url+=api->getName();
                     if(strncmp(curreq->getRequestURL(),url.c_str(),url.length())==0){
-                        if(api->Controller(curreq,index)){
+                        if(api->Controller(tid,curreq,index)){
                             delete index;
                             return;
                         }
@@ -354,8 +360,8 @@ RETRY_REQUEST:
                 resp.send(curreq,output.c_str(),output.size());
             }
         }catch(libhttppp::HTTPException &e){
-            if(!PlgArgs->database->isConnected()){
-                PlgArgs->database->reset();
+            if(!PlgArgs->database[tid]->isConnected()){
+                PlgArgs->database[tid]->reset();
                 goto RETRY_REQUEST;
             }
             throw e;
@@ -380,8 +386,8 @@ RETRY_REQUEST:
     }
 }
 
-void blogi::Blogi::ResponseEvent(libhttppp::HttpRequest* curreq){
-    if(PlgArgs->theme->Response(curreq))
+void blogi::Blogi::ResponseEvent(libhttppp::HttpRequest* curreq,const int tid,void *args){
+    if(PlgArgs->theme->Response(tid,curreq))
         return;
 
     for(blogi::Plugin::PluginData *curplg=BlogiPlg->getFirstPlugin(); curplg; curplg=curplg->getNextPlg()){
@@ -390,7 +396,7 @@ void blogi::Blogi::ResponseEvent(libhttppp::HttpRequest* curreq){
         url+="/";
         url+=api->getName();
         if(strncmp(curreq->getRequestURL(),url.c_str(),url.length())==0){
-            if(api->Response(curreq)){
+            if(api->Response(tid,curreq)){
                 return;
             }
         }

@@ -46,19 +46,19 @@ void blogi::StaticPage::initPlugin(){
     blogi::SQL sql;
     blogi::DBResult res;
     sql << "CREATE TABLE IF NOT EXISTS static_content ("
-        << "id integer PRIMARY KEY " << Args->database->autoincrement() << ","
+        << "id integer PRIMARY KEY " << Args->database[0]->autoincrement() << ","
         << "text text,"
         << "meta text,"
         << "url character varying(255) NOT NULL UNIQUE"
         << ");";
-    Args->database->exec(&sql,res);
+    Args->database[0]->exec(&sql,res);
 }
 
 bool blogi::StaticPage::haveSettings(){
     return true;
 }
 
-void blogi::StaticPage::Settings(libhttppp::HttpRequest* req, libhtmlpp::HtmlString& setdiv){
+void blogi::StaticPage::Settings(const int tid,libhttppp::HttpRequest* req, libhtmlpp::HtmlString& setdiv){
     char url[512];
     std::string surl,curl=req->getRequestURL();
     size_t urlen = curl.length();
@@ -85,13 +85,13 @@ SENDFIND:
         std::cout << surl << std::endl;
 
         if(surl=="newpage"){
-            newPage(req,setdiv);
+            newPage(tid,req,setdiv);
             return;
         }else if(surl=="delpage"){
-            delPage(req,setdiv);
+            delPage(tid,req,setdiv);
             return;
         }else if(surl=="editpage"){
-            editPage(req,setdiv);
+            editPage(tid,req,setdiv);
             return;
         }
 
@@ -102,7 +102,7 @@ SETTINGSINDEX:
 
     sql << "select id,url from static_content";
 
-    int scount=Args->database->exec(&sql,res);
+    int scount=Args->database[tid]->exec(&sql,res);
 
     setdiv << "<div id=\"staticsettings\"><span>Statische Seiten</span><table>";
     setdiv << "<tr><th>ID</th><th>URL</th><th>Options</th></tr>";
@@ -114,7 +114,7 @@ SETTINGSINDEX:
     setdiv << "</table><a href=\"" << Args->config->buildurl("settings/staticpage/newpage",url,512) << "\" >Neue Seite Erstellen</a></div>";
 }
 
-void blogi::StaticPage::newPage(libhttppp::HttpRequest* req, libhtmlpp::HtmlString& setdiv){
+void blogi::StaticPage::newPage(const int tid,libhttppp::HttpRequest* req, libhtmlpp::HtmlString& setdiv){
     char url[512];
     blogi::SQL sql;
     blogi::DBResult res;
@@ -155,7 +155,7 @@ void blogi::StaticPage::newPage(libhttppp::HttpRequest* req, libhtmlpp::HtmlStri
         sql.escaped(surl.c_str()) << "','";
         sql.escaped(meta.c_str()) << "','";
         sql.escaped(text.c_str()) <<"');";
-        Args->database->exec(&sql,res);
+        Args->database[tid]->exec(&sql,res);
         sql.clear();
         setdiv << "<div id=\"staticsettings\"><span>Added succesfully! </span></div>";
     }else{
@@ -181,7 +181,7 @@ void blogi::StaticPage::newPage(libhttppp::HttpRequest* req, libhtmlpp::HtmlStri
     }
 }
 
-void blogi::StaticPage::delPage(libhttppp::HttpRequest* req, libhtmlpp::HtmlString& setdiv){
+void blogi::StaticPage::delPage(const int tid,libhttppp::HttpRequest* req, libhtmlpp::HtmlString& setdiv){
     char url[512];
     int id=-1;
     blogi::SQL sql;
@@ -210,7 +210,7 @@ void blogi::StaticPage::delPage(libhttppp::HttpRequest* req, libhtmlpp::HtmlStri
 
     if(confirmed){
         sql << "DELETE FROM static_content WHERE id='" << id << "'";
-        Args->database->exec(&sql,res);
+        Args->database[tid]->exec(&sql,res);
         setdiv << "<div id=\"staticsettings\"><span>page with id " << id << " is removed !</span></div>";
     }else{
         setdiv << "<div id=\"staticsettings\"><span>You wan't remove the page with id " << id << "?</span><br>"
@@ -219,7 +219,7 @@ void blogi::StaticPage::delPage(libhttppp::HttpRequest* req, libhtmlpp::HtmlStri
     }
 }
 
-void blogi::StaticPage::editPage(libhttppp::HttpRequest* req, libhtmlpp::HtmlString& setdiv){
+void blogi::StaticPage::editPage(const int tid,libhttppp::HttpRequest* req, libhtmlpp::HtmlString& setdiv){
     char url[512];
     int id=-1;
     blogi::SQL sql;
@@ -275,7 +275,7 @@ void blogi::StaticPage::editPage(libhttppp::HttpRequest* req, libhtmlpp::HtmlStr
                 }
             }
             if(!sql.empty()){
-                Args->database->exec(&sql,res);
+                Args->database[tid]->exec(&sql,res);
                 sql.clear();
             }
         }
@@ -306,7 +306,7 @@ void blogi::StaticPage::editPage(libhttppp::HttpRequest* req, libhtmlpp::HtmlStr
 
     sql << "select id,url,meta,text from static_content where id='"; sql << id << "' LIMIT 1";
 
-    if(Args->database->exec(&sql,res)<1){
+    if(Args->database[tid]->exec(&sql,res)<1){
         return;
     }
 
@@ -326,12 +326,12 @@ void blogi::StaticPage::editPage(libhttppp::HttpRequest* req, libhtmlpp::HtmlStr
     << "</form></div>";
 }
 
-void blogi::StaticPage::uploadPage(libhttppp::HttpRequest* req, libhtmlpp::HtmlString& setdiv){
+void blogi::StaticPage::uploadPage(const int tid,libhttppp::HttpRequest* req, libhtmlpp::HtmlString& setdiv){
 }
 
 
 
-bool blogi::StaticPage::Controller(libhttppp::HttpRequest *req,libhtmlpp::HtmlElement *page){
+bool blogi::StaticPage::Controller(const int tid,libhttppp::HttpRequest *req,libhtmlpp::HtmlElement *page){
     char url[512];
     if (strncmp(req->getRequestURL(),Args->config->buildurl("staticpage",url,512),strlen(Args->config->buildurl("staticpage",url,512)))==0){
         std::string surl=req->getRequestURL()+strlen(Args->config->buildurl("staticpage/",url,512));
@@ -353,7 +353,7 @@ bool blogi::StaticPage::Controller(libhttppp::HttpRequest *req,libhtmlpp::HtmlEl
 
         sql << "select url,text,meta from static_content where url='"; sql.escaped(surl.c_str()) << "' LIMIT 1";
 
-        if (Args->database->exec(&sql,res)<1) {
+        if (Args->database[tid]->exec(&sql,res)<1) {
             excep[libhttppp::HTTPException::Error] << "Staticpage with this url not found!";
             throw excep;
         }
@@ -365,7 +365,7 @@ bool blogi::StaticPage::Controller(libhttppp::HttpRequest *req,libhtmlpp::HtmlEl
         std::string sid;
         page->getElementbyID("main")->insertChild(condat.parse());;
 
-        Args->theme->printSite(out,page,req->getRequestURL(),Args->auth->isLoggedIn(req,sid),res[0][2]);
+        Args->theme->printSite(tid,out,page,req->getRequestURL(),Args->auth->isLoggedIn(tid,req,sid),res[0][2]);
         libhttppp::HttpResponse resp;
         resp.setVersion(HTTPVERSION(1.1));
         resp.setState(HTTP200);

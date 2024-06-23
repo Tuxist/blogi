@@ -57,23 +57,24 @@ namespace blogi {
         void initPlugin(){
             blogi::SQL sql;
             blogi::DBResult res;
+
             sql << "CREATE TABLE IF NOT EXISTS navbar("
-                <<   "id integer PRIMARY KEY " << Args->database->autoincrement() << ","
+                <<   "id integer PRIMARY KEY " << Args->database[0]->autoincrement() << ","
                 <<   "name character varying(255) NOT NULL,"
                 <<   "container_id character varying(255) NOT NULL"
                 << "); "
                 << "CREATE TABLE IF NOT EXISTS navbar_items("
-                <<   "id integer PRIMARY KEY " << Args->database->autoincrement() << ","
+                <<   "id integer PRIMARY KEY " << Args->database[0]->autoincrement() << ","
                 <<   "name character varying(255) NOT NULL,"
                 <<   "url character varying(255) NOT NULL,"
                 <<   "navbar_id integer,"
                 <<   "FOREIGN KEY (navbar_id) REFERENCES navbar (id)"
                 << ");";
-            Args->database->exec(&sql,res);
+            Args->database[0]->exec(&sql,res);
             return;
         }
 
-        void Rendering(libhttppp::HttpRequest *req,libhtmlpp::HtmlElement* curpage){
+        void Rendering(const int tid,libhttppp::HttpRequest *req,libhtmlpp::HtmlElement* curpage){
             blogi::SQL sql,sql2;
             blogi::DBResult res,res2;
             sql << "select id,name,container_id from navbar";
@@ -83,7 +84,7 @@ namespace blogi {
                 turl=turl.substr(0,turl.rfind('?'));
             }
 
-            int n = Args->database->exec(&sql,res);
+            int n = Args->database[tid]->exec(&sql,res);
             if(n<1){
                 return;
             }
@@ -94,7 +95,7 @@ namespace blogi {
 
                 sql2 << "select url,name from navbar_items WHERE navbar_id='" << res[i][0] << "' ORDER BY id";
 
-                int n2 = Args->database->exec(&sql2,res2);
+                int n2 = Args->database[tid]->exec(&sql2,res2);
                 for (int ii = 0; ii < n2; ii++) {
                     buf << "<li ";
                     if(turl.compare(0,strlen(res2[ii][0]),res2[ii][0]) == 0 )
@@ -116,7 +117,7 @@ namespace blogi {
             return true;
         }
 
-        void delNavigation(libhttppp::HttpRequest *req,libhtmlpp::HtmlString &setdiv){
+        void delNavigation(const int tid,libhttppp::HttpRequest *req,libhtmlpp::HtmlString &setdiv){
             char url[512];
             int navid=-1;
             bool confirmed=false;
@@ -151,13 +152,13 @@ namespace blogi {
             sql << "delete from navbar_items WHERE navbar_id='" << navid <<"'; ";
             sql << "delete from navbar WHERE id='" << navid <<"';";
 
-            Args->database->exec(&sql,res);
+            Args->database[tid]->exec(&sql,res);
 
             setdiv << "<div id=\"navsettings\"><span>Successfully removed Navigation</span></div>";
 
         }
 
-        void editNavigation(libhttppp::HttpRequest *req,libhtmlpp::HtmlString &setdiv){
+        void editNavigation(const int tid,libhttppp::HttpRequest *req,libhtmlpp::HtmlString &setdiv){
             int navid=-1,rem_itemid=-1;
             blogi::SQL sql;
             blogi::DBResult res;
@@ -192,23 +193,23 @@ namespace blogi {
                 throw excep;
             }
 
-            auto changeItemName = [this,navid](const char *key,const char *value){
+            auto changeItemName = [this,tid,navid](const char *key,const char *value){
                 int iid;
                 sscanf(key,"navitem_name_%d",&iid);
                 blogi::SQL sql2;
                 blogi::DBResult res2;
                 sql2 << "UPDATE navbar_items SET name='"; sql2.escaped(value) << "' WHERE navbar_id='" << navid << "' AND id='" << iid << "'";
-                Args->database->exec(&sql2,res2);
+                Args->database[tid]->exec(&sql2,res2);
                 sql2.clear();
             };
 
-            auto changeItemUrl = [this,navid](const char *key,const char *value){
+            auto changeItemUrl = [this,tid,navid](const char *key,const char *value){
                 int iid;
                 sscanf(key,"navitem_url_%d",&iid);
                 blogi::SQL sql2;
                 blogi::DBResult res2;
                 sql2 << "UPDATE navbar_items SET url='"; sql2.escaped(value) << "' WHERE navbar_id='" << navid << "' AND id='" << iid << "'";
-                Args->database->exec(&sql2,res2);
+                Args->database[tid]->exec(&sql2,res2);
                 sql2.clear();
 
             };
@@ -222,32 +223,32 @@ namespace blogi {
 
             if(rem_itemid>=0){
                 sql << "DELETE FROM navbar_items WHERE navbar_id='" << navid << "'AND id='" << rem_itemid << "'";
-                Args->database->exec(&sql,res);
+                Args->database[tid]->exec(&sql,res);
                 sql.clear();
             }
 
             if(!navname.empty()){
                 sql << "UPDATE navbar SET name='"; sql.escaped(navname.c_str()) << "' WHERE id='" << navid << "'";
-                Args->database->exec(&sql,res);
+                Args->database[tid]->exec(&sql,res);
                 sql.clear();
             }
 
             if(!container_id.empty()){
                 sql << "UPDATE navbar SET container_id='"; sql.escaped(container_id.c_str()) << "' WHERE id='" << navid << "'";
-                Args->database->exec(&sql,res);
+                Args->database[tid]->exec(&sql,res);
                 sql.clear();
             }
 
 
             if(!newitem_name.empty() && !newitem_url.empty()){
                 sql << "INSERT INTO navbar_items (name,url,navbar_id) VALUES('"; sql.escaped(newitem_name.c_str()) << "','"; sql.escaped(newitem_url.c_str()) << "','" << navid << "')";
-                Args->database->exec(&sql,res);
+                Args->database[tid]->exec(&sql,res);
                 sql.clear();
             }
 
             sql << "SELECT name,container_id from navbar WHERE id='" << navid << "' LIMIT 1";
 
-            Args->database->exec(&sql,res);
+            Args->database[tid]->exec(&sql,res);
 
             sql.clear();
 
@@ -258,7 +259,7 @@ namespace blogi {
 
             sql << "select id,name,url from navbar_items WHERE navbar_id='" << navid << "' ORDER BY id";
 
-            int n = Args->database->exec(&sql,res);
+            int n = Args->database[tid]->exec(&sql,res);
 
             setdiv << "<tr><td>item name:</td><td>item url:</td><td>actions:</td></tr>";
 
@@ -280,7 +281,7 @@ namespace blogi {
 
         }
 
-        void newNaviagtion(libhttppp::HttpRequest *req,libhtmlpp::HtmlString &setdiv){
+        void newNaviagtion(const int tid,libhttppp::HttpRequest *req,libhtmlpp::HtmlString &setdiv){
             std::string navname,navcontainer;
             libhttppp::HttpForm form;
             form.parse(req);
@@ -298,7 +299,7 @@ namespace blogi {
 
                 sql << "INSERT INTO navbar (name,container_id) VALUES ('"; sql.escaped(navname.c_str()) <<"','";  sql.escaped(navcontainer.c_str()) << "')";
 
-                Args->database->exec(&sql,res);
+                Args->database[tid]->exec(&sql,res);
 
                 setdiv << "<div id=\"navsettings\"><span> Navigation " << navname <<" created </span></div>";
 
@@ -316,7 +317,7 @@ namespace blogi {
                    << "</div>";
         }
 
-        void Settings(libhttppp::HttpRequest *req,libhtmlpp::HtmlString &setdiv){
+        void Settings(const int tid,libhttppp::HttpRequest *req,libhtmlpp::HtmlString &setdiv){
             char url[512];
             std::string surl,curl=req->getRequestURL();
             size_t urlen = curl.length();
@@ -341,13 +342,13 @@ SENDFIND:
                 surl=curl.substr(prelen,send);
 
                 if(surl=="newnav"){
-                    newNaviagtion(req,setdiv);
+                    newNaviagtion(tid,req,setdiv);
                     return;
                 }else if(surl=="delnav"){
-                    delNavigation(req,setdiv);
+                    delNavigation(tid,req,setdiv);
                     return;
                 }else if(surl=="editnav"){
-                    editNavigation(req,setdiv);
+                    editNavigation(tid,req,setdiv);
                     return;
                 }
 
@@ -365,7 +366,7 @@ SETTINGSINDEX:
                 turl=turl.substr(0,turl.rfind('?'));
             }
 
-            int n = Args->database->exec(&sql,res);
+            int n = Args->database[tid]->exec(&sql,res);
             if(n>0){
                 setdiv << "<table>";
                 setdiv << "<tr><th>Name</th><th>Actions</th></tr>";
@@ -380,7 +381,7 @@ SETTINGSINDEX:
 
         }
 
-        bool Controller(libhttppp::HttpRequest *req,libhtmlpp::HtmlElement *page){
+        bool Controller(const int tid,libhttppp::HttpRequest *req,libhtmlpp::HtmlElement *page){
             return false;
         }
     };

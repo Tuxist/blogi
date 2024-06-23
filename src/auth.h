@@ -44,22 +44,22 @@ namespace blogi {
 
     class Auth{
     public:
-        Auth(blogi::Database *pcon,blogi::Session *session,blogi::Config *cfg);
+        Auth(blogi::Database **pcon,blogi::Session *session,blogi::Config *cfg);
         ~Auth();
-        bool login(const char *username,const char *password,std::string &ssid);
-        bool isLoggedIn(libhttppp::HttpRequest *curreq,std::string &sessionid);
+        bool login(const int tid,const char *username,const char *password,std::string &ssid);
+        bool isLoggedIn(const int tid,libhttppp::HttpRequest *curreq,std::string &sessionid);
     private:
 #ifdef LDAPSUPPORT
-        bool ldapLogin(const char *username,const char *password,std::string &ssid);
+        bool ldapLogin(const int tid,const char *username,const char *password,std::string &ssid);
 #endif
-        bool locallogin(const char *username,const char *password,std::string &ssid);
+        bool locallogin(const int tid,const char *username,const char *password,std::string &ssid);
 
-        blogi::Database *_dbconn;
-        blogi::Session  *_session;
-        blogi::Config   *_config;
+        blogi::Database **_dbconn;
+        blogi::Session   *_session;
+        blogi::Config    *_config;
 #ifdef LDAPSUPPORT
-        LDAPControl    *_serverctrls;
-        LDAPControl    *_clientctrls;
+        LDAPControl      *_serverctrls;
+        LDAPControl      *_clientctrls;
 #endif
     };
 };

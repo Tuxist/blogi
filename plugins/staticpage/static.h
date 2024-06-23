@@ -42,14 +42,14 @@ namespace blogi {
         void initPlugin();
         bool haveSettings();
 
-        bool Controller(libhttppp::HttpRequest *req,libhtmlpp::HtmlElement *page);
-        void Settings(libhttppp::HttpRequest * req, libhtmlpp::HtmlString & setdiv);
+        bool Controller(const int tid,libhttppp::HttpRequest *req,libhtmlpp::HtmlElement *page);
+        void Settings(const int tid,libhttppp::HttpRequest * req, libhtmlpp::HtmlString & setdiv);
     private:
-        void newPage(libhttppp::HttpRequest * req, libhtmlpp::HtmlString & setdiv);
-        void delPage(libhttppp::HttpRequest * req, libhtmlpp::HtmlString & setdiv);
-        void editPage(libhttppp::HttpRequest * req, libhtmlpp::HtmlString & setdiv);
+        void newPage(const int tid,libhttppp::HttpRequest * req, libhtmlpp::HtmlString & setdiv);
+        void delPage(const int tid,libhttppp::HttpRequest * req, libhtmlpp::HtmlString & setdiv);
+        void editPage(const int tid,libhttppp::HttpRequest * req, libhtmlpp::HtmlString & setdiv);
 
-        void uploadPage(libhttppp::HttpRequest * req, libhtmlpp::HtmlString & setdiv);
+        void uploadPage(const int tid,libhttppp::HttpRequest * req, libhtmlpp::HtmlString & setdiv);
     };
 };
 

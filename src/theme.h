@@ -57,9 +57,9 @@ namespace blogi {
     };
 
     struct TemplateConfig{
-        std::string Theme;
-        Database   *TDatabase;
-        Config     *config;
+        std::string  Theme;
+        Database   **TDatabase;
+        Config      *config;
     };
 
     class Template {
@@ -67,13 +67,13 @@ namespace blogi {
         Template(TemplateConfig &config);
         ~Template();
 
-        void renderPage(const char *name,libhtmlpp::HtmlPage *page,libhtmlpp::HtmlElement **index);
+        void renderPage(const int tid,const char *name,libhtmlpp::HtmlPage *page,libhtmlpp::HtmlElement **index);
 
-        bool Controller(libhttppp::HttpRequest *req);
+        bool Controller(const int tid,libhttppp::HttpRequest *req);
 
-        bool Response(libhttppp::HttpRequest *req);
+        bool Response(const int tid,libhttppp::HttpRequest *req);
 
-        void printSite(libhtmlpp::HtmlString &output,libhtmlpp::HtmlElement *index,const char *crrurl,bool login,const char *meta=nullptr);
+        void printSite(const int tid,libhtmlpp::HtmlString &output,libhtmlpp::HtmlElement *index,const char *crrurl,bool login,const char *meta=nullptr);
     private:
         TemplateConfig             _Config;
         std::vector<TemplateFiles> _PublicFiles;

@@ -37,16 +37,16 @@ namespace blogi {
     public:
         Blogi(Config *blgcfg,netplus::socket *serversocket);
         ~Blogi();
-        void loginPage(libhttppp::HttpRequest *curreq);
-        void logoutPage(libhttppp::HttpRequest *curreq);
-        void settingsPage(libhttppp::HttpRequest *curreq);
-        void RequestEvent(libhttppp::HttpRequest *curreq);
-        void ResponseEvent(libhttppp::HttpRequest *curreq);
+        void loginPage(libhttppp::HttpRequest *curreq,const int tid);
+        void logoutPage(libhttppp::HttpRequest *curreq,const int tid);
+        void settingsPage(libhttppp::HttpRequest *curreq,const int tid);
+        void RequestEvent(libhttppp::HttpRequest *curreq,const int tid,void *args);
+        void ResponseEvent(libhttppp::HttpRequest *curreq,const int tid,void *args);
     private:
-        Plugin                 *BlogiPlg;
         PluginArgs             *PlgArgs;
         libhtmlpp::HtmlPage    *Page,*MPage;
         libhtmlpp::HtmlElement *Index,*MIndex;
         blogi::Config          *BlogConfig;
+        blogi::Plugin          *BlogiPlg;
     };
 };

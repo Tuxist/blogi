@@ -65,7 +65,7 @@ namespace blogi {
             return true;
         }
 
-        void newAlbum(libhttppp::HttpRequest * req, libhtmlpp::HtmlString & setdiv){
+        void newAlbum(const int tid,libhttppp::HttpRequest * req, libhtmlpp::HtmlString & setdiv){
             int id = -1;
             std::string albumname;
             blogi::SQL sql,sql2;
@@ -91,12 +91,12 @@ namespace blogi {
                 localtime_r(&t,&time);
                 asctime_r(&time,ttmp);
                 sql2 << "INSERT INTO media_albums (name,owner,created) VALUES ('"; sql2.escaped(albumname.c_str()) << "','" << id << "','" << ttmp<< "')";
-                Args->database->exec(&sql2,res2);
+                Args->database[tid]->exec(&sql2,res2);
             }
 
             setdiv << "<form method=\"POST\" ><span>Albumname</span>:<input name=\"albumname\" type=\"text\" />"
                    << "<select name=\"userid\" >";
-            int n = Args->database->exec(&sql,res);
+            int n = Args->database[tid]->exec(&sql,res);
             for(int i=0; i <n; ++i){
                 setdiv << "<option value=\"" << res[i][0] <<"\">" << res[i][1] << "</option>";
             }
@@ -104,7 +104,7 @@ namespace blogi {
                    << "<input value=\"create\" type=\"submit\" /></form>";
         }
 
-        void editAlbum(libhttppp::HttpRequest * req, libhtmlpp::HtmlString & setdiv){
+        void editAlbum(const int tid,libhttppp::HttpRequest * req, libhtmlpp::HtmlString & setdiv){
             int id = -1;
             char url[512];
             libhttppp::HttpForm form;
@@ -129,13 +129,13 @@ namespace blogi {
 
             if(!name.empty()){
                 sql << "UPDATE media_albums set name='"; sql.escaped(name.c_str()) <<"' WHERE id='" << id << "'";
-                Args->database->exec(&sql,res);
+                Args->database[tid]->exec(&sql,res);
                 sql.clear();
             }
 
             sql << "SELECT name FROM media_albums WHERE id='" << id <<"' LIMIT 1";
 
-            if(Args->database->exec(&sql,res)<0){
+            if(Args->database[tid]->exec(&sql,res)<0){
                 libhttppp::HTTPException exp;
                 exp[libhttppp::HTTPException::Warning] << "this album id is not found Database";
                 throw exp;
@@ -153,7 +153,7 @@ namespace blogi {
                    << "</div>";
         }
 
-        void uploadMedia(int id,libhttppp::HttpRequest * req, libhtmlpp::HtmlString & setdiv){
+        void uploadMedia(const int tid,int id,libhttppp::HttpRequest * req, libhtmlpp::HtmlString & setdiv){
             char url[512];
             std::map<std::vector<char>,std::vector<char>> media;
             libhttppp::HttpForm form;
@@ -202,7 +202,7 @@ namespace blogi {
 
                 sql << "SELECT id FROM media_type where ext='"; sql.escaped(ext.c_str()) <<"' LIMIT 1";
 
-                int n = Args->database->exec(&sql,res);
+                int n = Args->database[tid]->exec(&sql,res);
 
                 if(n<1){
                     libhttppp::HTTPException excep;
@@ -221,7 +221,7 @@ namespace blogi {
 
                 sql << "INSERT INTO media_items (album_id,name) VALUES('" << id << "','"; sql.escaped(pname.c_str()) << "') RETURNING id";
 
-                Args->database->exec(&sql,res);
+                Args->database[tid]->exec(&sql,res);
                 sql.clear();
 
                 int mid=atoi(res[0][0]);
@@ -236,9 +236,9 @@ namespace blogi {
                 sql << "INSERT INTO media_items_files (media_items_id,redis_uuid,media_type_id,public) VALUES('"
                 << mid << "','" << cfuuid << "','" << tid << "',True)";
 
-                Args->database->exec(&sql,res);
+                Args->database[tid]->exec(&sql,res);
                 sql.clear();
-                _store->save(cfuuid,mediafile.data(),mediafile.size());
+                _store->save(tid,cfuuid,mediafile.data(),mediafile.size());
 
             }
 
@@ -248,14 +248,14 @@ namespace blogi {
 
             sql << "SELECT id FROM media_items WHERE album_id='" << id << "'";
 
-            int n = Args->database->exec(&sql,res);
+            int n = Args->database[tid]->exec(&sql,res);
 
             setdiv << "<div id=\"viewmedia\"><ul>";
 
             for(int i=0; i<n; ++i){
                 sql2 << "SELECT redis_uuid,media_type.ext,media_type.type,media_type.ctype FROM media_items_files LEFT JOIN media_type ON"
                 << " media_items_files.media_type_id=media_type.id WHERE media_items_id='" << res[i][0] << "'";
-                int nn = Args->database->exec(&sql2,res2);
+                int nn = Args->database[tid]->exec(&sql2,res2);
                 for(int ii=0; ii<nn; ++ii){
                     if(atoi(res2[ii][2])==blogi::MediaTypes::Picture)
                         setdiv << "<li class=\"upreview\" ><a><img src=\"" << Args->config->buildurl("media/getimage/",url,512) << res2[ii][0] << "." << res2[ii][1] << "\"></a></li>";
@@ -276,7 +276,7 @@ namespace blogi {
             << "</div>";
         }
 
-        void viewAlbum(libhttppp::HttpRequest * req, libhtmlpp::HtmlString & setdiv){
+        void viewAlbum(const int tid,libhttppp::HttpRequest * req, libhtmlpp::HtmlString & setdiv){
             int id;
             libhttppp::HttpForm form;
             form.parse(req);
@@ -313,11 +313,11 @@ namespace blogi {
             }
 
             setdiv << "<div><span>View media library</span><br>";
-            uploadMedia(id,req,setdiv);
+            uploadMedia(tid,id,req,setdiv);
             setdiv << "</div>";
         }
 
-        void editMediaTypes(libhttppp::HttpRequest * req, libhtmlpp::HtmlString & setdiv){
+        void editMediaTypes(const int tid,libhttppp::HttpRequest * req, libhtmlpp::HtmlString & setdiv){
             char url[512];
 
             libhttppp::HttpForm form;
@@ -348,7 +348,7 @@ namespace blogi {
 
                         sql << "DELETE FROM media_type WHERE id='" << mid << "'";
 
-                        Args->database->exec(&sql,res);
+                        Args->database[tid]->exec(&sql,res);
                     }else{
                         setdiv << "<div><span>Remove media types </span><br>"
                                << "<span>You want Remove this media type ? (All Files oh this type will also Removed !)</span>"
@@ -365,7 +365,7 @@ namespace blogi {
 
                 sql << "INSERT INTO media_type (type,ext,ctype) VALUES ('" << mtype <<"','"; sql.escaped(mfext.c_str()) << "','";  sql.escaped(mctype.c_str()) << "')";
 
-                Args->database->exec(&sql,res);
+                Args->database[tid]->exec(&sql,res);
             }
 
 
@@ -377,7 +377,7 @@ namespace blogi {
 
             setdiv << "<table><tr><th>Type</th><th>File extension</th><th>Contentype</th><th>Actions</th></tr>";
 
-            int n = Args->database->exec(&sql,res);
+            int n = Args->database[tid]->exec(&sql,res);
             for(int i=0; i <n; ++i){
                 setdiv << "<tr><td>"<< res[i][1] <<"</td><td>" << res[i][2] << "</td><td>" << res[i][3] <<"</td><td>"
                        << "<a href=\""<< Args->config->buildurl("settings/media/editmediatypes/delmtype?",url,512) << "mtypeid=" << res[i][0] <<"\">Remove</a>"
@@ -395,7 +395,7 @@ namespace blogi {
                    <<"</form></tr></table></div>";
         }
 
-        void Settings(libhttppp::HttpRequest * req, libhtmlpp::HtmlString & setdiv){
+        void Settings(const int tid,libhttppp::HttpRequest * req, libhtmlpp::HtmlString & setdiv){
             char url[512];
 
             std::string suburl;
@@ -409,13 +409,13 @@ namespace blogi {
             }
 
             if(suburl=="editalbum"){
-                editAlbum(req,setdiv);
+                editAlbum(tid,req,setdiv);
                 return;
             }else if(suburl=="editmediatypes"){
-                editMediaTypes(req,setdiv);
+                editMediaTypes(tid,req,setdiv);
                 return;
             }else if(suburl=="viewalbum"){
-                viewAlbum(req,setdiv);
+                viewAlbum(tid,req,setdiv);
                 return;
             }
 
@@ -429,7 +429,7 @@ namespace blogi {
                 << " FROM media_albums LEFT JOIN users ON owner=users.id";
 
             setdiv << "<tr><th>Albumname</th><th>Owner</th><th>Created</th><th>Actions</th></tr>";
-            int n = Args->database->exec(&sql,res);
+            int n = Args->database[tid]->exec(&sql,res);
             for(int i=0; i <n; ++i){
                 setdiv << "<tr><td>"<< res[i][1] <<"</td><td>" << res[i][4] << "</td><td>" << res[i][3] <<"</td><td>"
                        << "<a href=\""<< Args->config->buildurl("settings/media/delalbum?",url,512) << "albumid=" << res[i][0] <<"\">Remove</a>"
@@ -438,7 +438,7 @@ namespace blogi {
                        << "</td></tr>";
             }
             setdiv << "</table><br>";
-            newAlbum(req,setdiv);
+            newAlbum(tid,req,setdiv);
             setdiv << "</div>";
         }
 
@@ -447,26 +447,26 @@ namespace blogi {
             blogi::SQL sql;
             blogi::DBResult res;
             sql << "CREATE TABLE IF NOT EXISTS media_albums ("
-                <<   "id integer PRIMARY KEY " << Args->database->autoincrement() << ","
+                <<   "id integer PRIMARY KEY " << Args->database[0]->autoincrement() << ","
                 <<   "name character varying(255) NOT NULL,"
                 <<   "owner integer NOT NULL,"
                 <<   "created date NOT NULL,"
                 <<   "FOREIGN KEY (owner) REFERENCES users (id)"
                 << "); "
                 << "CREATE TABLE IF NOT EXISTS media_type ("
-                <<   "id integer PRIMARY KEY " << Args->database->autoincrement() << ","
+                <<   "id integer PRIMARY KEY " << Args->database[0]->autoincrement() << ","
                 <<   "type integer NOT NULL,"
                 <<   "ext character varying(255) NOT NULL,"
                 <<   "ctype character varying(255) NOT NULL"
                 << "); "
                 << "CREATE TABLE IF NOT EXISTS media_items ("
-                <<   "id integer PRIMARY KEY " << Args->database->autoincrement() << ","
+                <<   "id integer PRIMARY KEY " << Args->database[0]->autoincrement() << ","
                 <<   "album_id integer NOT NULL,"
                 <<   "name character varying(255) NOT NULL,"
                 <<   "FOREIGN KEY (album_id) REFERENCES media_albums (id)"
                 << "); "
                 << "CREATE TABLE IF NOT EXISTS media_items_files ("
-                <<   "id integer PRIMARY KEY " << Args->database->autoincrement() << ","
+                <<   "id integer PRIMARY KEY " << Args->database[0]->autoincrement() << ","
                 <<   "media_items_id integer NOT NULL,"
                 <<   "redis_uuid uuid NOT NULL,"
                 <<   "media_type_id integer NOT NULL,"
@@ -475,14 +475,14 @@ namespace blogi {
                 <<   "FOREIGN KEY (media_type_id) REFERENCES media_type (id)"
                 << "); "
                 << "CREATE TABLE IF NOT EXISTS media_preview ("
-                <<   "id integer PRIMARY KEY " << Args->database->autoincrement() << ","
+                <<   "id integer PRIMARY KEY " << Args->database[0]->autoincrement() << ","
                 <<   "name character varying(255) NOT NULL,"
                 <<   "options character varying(255),"
                 <<   "media_type_id integer,"
                 <<   "FOREIGN KEY (media_type_id) REFERENCES media_type (id)"
                 << "); "
                 << "CREATE TABLE IF NOT EXISTS media_items_preview ("
-                <<   "id integer PRIMARY KEY " << Args->database->autoincrement() << ","
+                <<   "id integer PRIMARY KEY " << Args->database[0]->autoincrement() << ","
                 <<   "media_items_id integer NOT NULL,"
                 <<   "redis_uuid uuid NOT NULL,"
                 <<   "media_type_id integer NOT NULL,"
@@ -490,18 +490,18 @@ namespace blogi {
                 <<   "FOREIGN KEY (media_items_id) REFERENCES media_items (id),"
                 <<   "FOREIGN KEY (media_type_id) REFERENCES media_type (id)"
                 << ");";
-            Args->database->exec(&sql,res);
+            Args->database[0]->exec(&sql,res);
 
             Args->edit->addIcon(icondata,icondatalen,"selimage","webp","Insert Image from media albums");
 
             if(Args->config->getRedisPassword()){
-                _store = new RedisStore(Args->config->getRedisHost(),Args->config->getRedisPort(),Args->config->getRedisPassword(),Args->config->getRedisTimeout());
+                _store = new RedisStore(Args->config->getRedisHost(),Args->config->getRedisPort(),Args->config->getRedisPassword(),Args->maxthreads);
             }else{
-                _store = new RedisStore(Args->config->getRedisHost(),Args->config->getRedisPort(),nullptr,Args->config->getRedisTimeout());
+                _store = new RedisStore(Args->config->getRedisHost(),Args->config->getRedisPort(),nullptr,Args->maxthreads);
             }
         }
 
-        bool Controller(libhttppp::HttpRequest *req,libhtmlpp::HtmlElement *page){
+        bool Controller(const int tid,libhttppp::HttpRequest *req,libhtmlpp::HtmlElement *page){
             char url[512];
             const char *ccurl=req->getRequestURL();
 
@@ -522,7 +522,7 @@ namespace blogi {
                 sql << "SELECT media_type.ctype FROM media_items_files LEFT JOIN media_type ON media_items_files.media_Type_id=media_type.id WHERE media_items_files.redis_uuid='";
                 sql.escaped(suuid.data()) <<"'";
 
-                int n = Args->database->exec(&sql,res);
+                int n = Args->database[tid]->exec(&sql,res);
 
                 libhttppp::HttpResponse curres;
 
@@ -530,7 +530,7 @@ namespace blogi {
                     req->RecvData.pos=0;
                     curres.setState(HTTP200);
                     curres.setContentType(res[0][0]);
-                    curres.setContentLength(_store->getSize(suuid.data()));
+                    curres.setContentLength(_store->getSize(tid,suuid.data()));
                     curres.send(req,nullptr,-1);
                 }else{
                     std::cout << "test 404" << std::endl;
@@ -544,7 +544,7 @@ namespace blogi {
             return false;
         }
 
-        bool Response(libhttppp::HttpRequest * req){
+        bool Response(const int tid,libhttppp::HttpRequest * req){
             char url[512];
             const char *ccurl=req->getRequestURL();
 
@@ -555,7 +555,7 @@ namespace blogi {
                 _getSuuid(ccurl,plen,suuid);
 
 
-                size_t msize = _store->getSize(suuid.data());
+                size_t msize = _store->getSize(tid,suuid.data());
 
                 size_t ssize = msize-req->SendData.pos < BLOCKSIZE ? msize-req->SendData.pos : BLOCKSIZE;
 
@@ -564,7 +564,7 @@ namespace blogi {
                 }
 
                 if(req->RecvData.pos<msize){
-                    _store->load(req,suuid.data(),data,req->RecvData.pos,ssize);
+                    _store->load(tid,req,suuid.data(),data,req->RecvData.pos,ssize);
                     req->SendData.append(data.data(),data.size());
                     req->RecvData.pos+=data.size();
                     return true;

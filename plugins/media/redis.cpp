@@ -34,34 +34,40 @@
 
 #include "backend.h"
 
-blogi::RedisStore::RedisStore(const char *host,int port,const char *password,int millitout){
-    _RedisCTX=redisConnect(host,port);
+blogi::RedisStore::RedisStore(const char *host,int port,const char *password,int threads){
+    _Threads=threads;
+    _RedisCTX=new struct redisContext*[_Threads];
+    for(int i = 0; i<=_Threads; ++i){
+        _RedisCTX[i]=redisConnect(host,port);
 
-    if (_RedisCTX->err) {
-        libhttppp::HTTPException exp;
-        exp[libhttppp::HTTPException::Error] << "media plugin err: " << _RedisCTX->errstr;
-        throw exp;
-    }
+        if (_RedisCTX[i]->err) {
+            libhttppp::HTTPException exp;
+            exp[libhttppp::HTTPException::Error] << "media plugin err: " << _RedisCTX[i]->errstr;
+            throw exp;
+        }
 
-    if(password){
-        _RedisPassword=password;
-        redisCommand(_RedisCTX,"AUTH %s", password);
+        if(password){
+            _RedisPassword=password;
+            redisCommand(_RedisCTX[i],"AUTH %s", password);
+        }
     }
 
 }
 blogi::RedisStore::~RedisStore(){
-    redisFree(_RedisCTX);
+    for(int i = 0; i<_Threads; ++i){
+        redisFree(_RedisCTX[i]);
+    }
 }
 
-size_t blogi::RedisStore::getSize(const char* key){
+size_t blogi::RedisStore::getSize(int tid,const char* key){
 
-        if(_RedisCTX->err!=REDIS_OK){
+        if(_RedisCTX[tid]->err!=REDIS_OK){
             libhttppp::HTTPException e;
-            e[libhttppp::HTTPException::Error] << "media plugin err: " << _RedisCTX->errstr;
+            e[libhttppp::HTTPException::Error] << "media plugin err: " << _RedisCTX[tid]->errstr;
             throw e;
         }
 
-        redisReply *rep=(redisReply*)redisCommand(_RedisCTX,"STRLEN %s",key);
+        redisReply *rep=(redisReply*)redisCommand(_RedisCTX[tid],"STRLEN %s",key);
 
        if(!rep || rep->type != REDIS_REPLY_INTEGER){
            libhttppp::HTTPException e;
@@ -77,18 +83,18 @@ size_t blogi::RedisStore::getSize(const char* key){
 }
 
 
-void blogi::RedisStore::save(const char *key, const char *data,size_t datalen){
-    redisCommand(_RedisCTX,"SET %s %b",key,data,datalen);
-    redisCommand(_RedisCTX,"save");
+void blogi::RedisStore::save(int tid,const char *key, const char *data,size_t datalen){
+    redisCommand(_RedisCTX[tid],"SET %s %b",key,data,datalen);
+    redisCommand(_RedisCTX[tid],"save");
 }
 
-void blogi::RedisStore::load(libhttppp::HttpRequest *req,const char *key,std::vector<char> &data,size_t pos,size_t blocksize) {
+void blogi::RedisStore::load(int tid,libhttppp::HttpRequest *req,const char *key,std::vector<char> &data,size_t pos,size_t blocksize) {
     try{
-        redisReply *rep=(redisReply*)redisCommand(_RedisCTX,"GETRANGE %s %d %d",key,pos,pos+blocksize);
+        redisReply *rep=(redisReply*)redisCommand(_RedisCTX[tid],"GETRANGE %s %d %d",key,pos,pos+blocksize);
 
-        if(_RedisCTX->err!=REDIS_OK){
+        if(_RedisCTX[tid]->err!=REDIS_OK){
             libhttppp::HTTPException e;
-            e[libhttppp::HTTPException::Error] << "media plugin err: " << _RedisCTX->errstr;
+            e[libhttppp::HTTPException::Error] << "media plugin err: " << _RedisCTX[tid]->errstr;
             throw e;
         }
 

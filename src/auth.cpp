@@ -38,14 +38,14 @@
 #include "conf.h"
 #include "theme.h"
 
-blogi::Auth::Auth(blogi::Database *pcon,blogi::Session *session,blogi::Config *cfg){
+blogi::Auth::Auth(blogi::Database **pcon,blogi::Session *session,blogi::Config *cfg){
     _dbconn=pcon;
     _session=session;
     _config=cfg;
     blogi::SQL sql;
     blogi::DBResult res;
     sql << "CREATE TABLE IF NOT EXISTS users ("
-        <<      "id integer PRIMARY KEY " << pcon->autoincrement() << ","
+        <<      "id integer PRIMARY KEY " << pcon[0]->autoincrement() << ","
         <<      "sid character varying(255),"
         <<      "username character varying(255),"
         <<      "email character varying(255),"
@@ -53,17 +53,17 @@ blogi::Auth::Auth(blogi::Database *pcon,blogi::Session *session,blogi::Config *c
         <<      "authprovider integer DEFAULT 0 NOT NULL,"
         <<      "password character varying(255)"
         << ");";
-    _dbconn->exec(&sql,res);
+    _dbconn[0]->exec(&sql,res);
 }
 
 blogi::Auth::~Auth(){
 
 }
 
-bool blogi::Auth::login(const char* username, const char* password, std::string& ssid){
+bool blogi::Auth::login(const int tid,const char* username, const char* password, std::string& ssid){
 #ifdef LDAPSUPPORT
-    if(!ldapLogin(username,password,ssid))
-        return locallogin(username,password,ssid);
+    if(!ldapLogin(tid,username,password,ssid))
+        return locallogin(tid,username,password,ssid);
     else
         return true;
 #else
@@ -71,7 +71,7 @@ bool blogi::Auth::login(const char* username, const char* password, std::string&
 #endif
 }
 
-bool blogi::Auth::locallogin(const char* username, const char* password, std::string& ssid){
+bool blogi::Auth::locallogin(const int tid,const char* username, const char* password, std::string& ssid){
     blogi::SQL sql;
     blogi::DBResult res;
     sql = "SELECT sid,id,username FROM users WHERE username='"; sql.escaped(username) << "' LIMIT 1;";
@@ -79,7 +79,7 @@ bool blogi::Auth::locallogin(const char* username, const char* password, std::st
 }
 
 #ifdef LDAPSUPPORT
-bool blogi::Auth::ldapLogin(const char *username,const char *password,std::string &ssid){
+bool blogi::Auth::ldapLogin(const int tid,const char *username,const char *password,std::string &ssid){
     libhttppp::HTTPException excep;
     timeval ltimeout;
     ltimeout.tv_sec = 5;
@@ -203,9 +203,9 @@ LDAPLOGINUSERFOUND:
         blogi::DBResult res;
         sql = "SELECT sid,id FROM users WHERE sid='"; sql << sid << "' LIMIT 1;";
 
-        if (_dbconn->exec(&sql,res) < 1) {
+        if (_dbconn[tid]->exec(&sql,res) < 1) {
            sql <<  "INSERT INTO users (sid,username,email,authprovider,displayname) VALUES ('" << sid <<"','" << username << "','" << email <<"','1','" << displayname << "');";
-           _dbconn->exec(&sql,res);
+           _dbconn[tid]->exec(&sql,res);
         };
 
         _session->createSession(sid);
@@ -217,7 +217,7 @@ LDAPLOGINUSERFOUND:
 }
 #endif
 
-bool blogi::Auth::isLoggedIn(libhttppp::HttpRequest *curreq,std::string &sessionid){
+bool blogi::Auth::isLoggedIn(const int tid,libhttppp::HttpRequest *curreq,std::string &sessionid){
         libhttppp::HttpCookie cookie;
         cookie.parse(curreq);
         const char *tmp=nullptr;

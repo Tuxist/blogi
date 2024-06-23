@@ -37,23 +37,27 @@
 blogi::PluginApi::~PluginApi(){
 }
 
+void blogi::PluginApi::initPlugin(){
+    return;
+}
+
 bool blogi::PluginApi::haveSettings(){
     return false;
 }
 
-void blogi::PluginApi::Rendering(libhttppp::HttpRequest *req,libhtmlpp::HtmlElement *curpage){
+void blogi::PluginApi::Rendering(const int tid,libhttppp::HttpRequest *req,libhtmlpp::HtmlElement *curpage){
     return;
 }
 
-void blogi::PluginApi::Settings(libhttppp::HttpRequest *req,libhtmlpp::HtmlString &setdiv){
+void blogi::PluginApi::Settings(const int tid,libhttppp::HttpRequest *req,libhtmlpp::HtmlString &setdiv){
     return;
 };
 
-bool blogi::PluginApi::Controller(libhttppp::HttpRequest *req,libhtmlpp::HtmlElement *page){
+bool blogi::PluginApi::Controller(const int tid,libhttppp::HttpRequest *req,libhtmlpp::HtmlElement *page){
     return false;
 }
 
-bool blogi::PluginApi::Response(libhttppp::HttpRequest* req){
+bool blogi::PluginApi::Response(const int tid,libhttppp::HttpRequest* req){
     return false;
 }
 
