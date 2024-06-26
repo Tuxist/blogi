@@ -49,7 +49,7 @@ namespace blogi {
 
     class RedisStore : public Store {
     public:
-        RedisStore(const char *host,int port,const char *password=nullptr,int threads=0);
+        RedisStore(const char *host,int port,const char *password,int timeout,int threads=0);
         ~RedisStore();
 
         size_t getSize(int tid,const char *key) override;
