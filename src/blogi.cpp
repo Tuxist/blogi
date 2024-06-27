@@ -60,7 +60,7 @@ blogi::Blogi::Blogi(Config *blgcfg,netplus::socket *serversocket) : HttpEvent(se
     PlgArgs = new PluginArgs;
     PlgArgs->config=blgcfg;
 
-    PlgArgs->database=new Database*[threads];
+    PlgArgs->database=new Database*[threads+1];
     for(int i=0; i<=threads; ++i){
         if(strcmp(PlgArgs->config->getdbdriver(),"pgsql")==0)
             PlgArgs->database[i]= new Postgresql(PlgArgs->config->getdbopts());
