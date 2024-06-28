@@ -36,8 +36,8 @@
 
 blogi::RedisStore::RedisStore(const char *host,int port,const char *password,int timeout,int threads){
     _Threads=threads;
-    _RedisCTX=new struct redisContext*[_Threads+1];
-    for(int i = 0; i<=_Threads; ++i){
+    _RedisCTX=new struct redisContext*[_Threads];
+    for(int i = 0; i<_Threads; ++i){
 
         struct timeval tv={0,timeout};
 

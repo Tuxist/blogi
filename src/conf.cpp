@@ -104,6 +104,9 @@ blogi::Config::Config(const char *path) : confplus::Config(path){
             _SSLKeypath=getValue(getKey("/BLOGI/HTTP/SSLKEYPATH"),0);
     }catch(...){
     }
+
+    if(getKey("/BLOGI/DOMAIN/NAME"))
+        _Domain=getValue(getKey("/BLOGI/DOMAIN/NAME"),0);
 }
 
 blogi::Config::~Config(){
@@ -232,3 +235,8 @@ const char * blogi::Config::getsslkeypath(){
     return _SSLKeypath.c_str();
 }
 
+const char * blogi::Config::getDomain(){
+    if(_Domain.empty())
+        return nullptr;
+    return _Domain.c_str();
+}

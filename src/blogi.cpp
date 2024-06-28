@@ -60,8 +60,8 @@ blogi::Blogi::Blogi(Config *blgcfg,netplus::socket *serversocket) : HttpEvent(se
     PlgArgs = new PluginArgs;
     PlgArgs->config=blgcfg;
 
-    PlgArgs->database=new Database*[threads+1];
-    for(int i=0; i<=threads; ++i){
+    PlgArgs->database=new Database*[threads];
+    for(int i=0; i<threads; ++i){
         if(strcmp(PlgArgs->config->getdbdriver(),"pgsql")==0)
             PlgArgs->database[i]= new Postgresql(PlgArgs->config->getdbopts());
         else if(strcmp(PlgArgs->config->getdbdriver(),"sqlite")==0)
@@ -96,7 +96,10 @@ blogi::Blogi::~Blogi(){
     delete PlgArgs->edit;
     delete PlgArgs->auth;
     delete PlgArgs->session;
-    delete PlgArgs->database;
+     for(int i=0; i<threads; ++i){
+        delete PlgArgs->database[i];
+    }
+    delete[] PlgArgs->database;
     delete BlogiPlg;
     delete PlgArgs;
     delete Page;
@@ -174,7 +177,8 @@ void blogi::Blogi::loginPage(libhttppp::HttpRequest *curreq,const int tid){
         PlgArgs->session->addSessionData(sessid,"username",username.c_str(), username.length());
         libhttppp::HttpResponse curres;
         libhttppp::HttpCookie cookie;
-        cookie.setcookie(&curres, "sessionid", sessid);
+        cookie.setcookie(&curres, "sessionid", sessid,nullptr,PlgArgs->config->getDomain(),-1,
+                         PlgArgs->config->buildurl("",url,512),false,"1","Lax");
         curres.setState(HTTP307);
         curres.setVersion(HTTPVERSION(1.1));
         *curres.setData("Location") << PlgArgs->config->getstartpage();

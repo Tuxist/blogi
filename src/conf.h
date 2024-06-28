@@ -71,6 +71,9 @@ namespace blogi {
 
         const char *getsslcertpath();
         const char *getsslkeypath();
+
+        const char *getDomain();
+
     private:
         std::vector<std::string>  _PlgDir;
         std::string               _DBDriver;
@@ -93,5 +96,6 @@ namespace blogi {
         std::string               _StartPage;
         std::string               _SSLCertpath;
         std::string               _SSLKeypath;
+        std::string               _Domain;
     };
 };
