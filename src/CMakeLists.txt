@@ -21,7 +21,7 @@ add_library(blogidev STATIC
 
 target_link_libraries(blogidev
     htmlpp::htmlpp
-    Upstream::httppp
+    httppp::httppp
     netplus::netplus
     Upstream::secureid
     cmdplus::cmdplus
