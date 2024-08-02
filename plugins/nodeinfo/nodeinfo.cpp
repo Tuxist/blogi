@@ -98,13 +98,14 @@ namespace blogi {
                 }
             }
 
-
+#iddef Linux
             long psize;
             if((psize=sysconf(_SC_PAGESIZE))>0){
-                //char ab[512];
-                //snprintf(ab,512,"%ld/%ld MB",(sysconf(_SC_AVPHYS_PAGES)*psize)/(1048576),((sysconf(_SC_PHYS_PAGES)*psize)/1048576));
-                //htmltable << libhtmlpp::HtmlTable::Row() << "Arbeitspeicher: " <<  ab;
+                char ab[512];
+                snprintf(ab,512,"%ld/%ld MB",(sysconf(_SC_AVPHYS_PAGES)*psize)/(1048576),((sysconf(_SC_PHYS_PAGES)*psize)/1048576));
+                htmltable << libhtmlpp::HtmlTable::Row() << "Arbeitspeicher: " <<  ab;
             }
+#endif
             libhtmlpp::HtmlElement table;
             htmltable.insert(&table);
             table.setAttribute("class","kinfo");
