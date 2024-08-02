@@ -98,7 +98,7 @@ namespace blogi {
                 }
             }
 
-#iddef Linux
+#ifdef Linux
             long psize;
             if((psize=sysconf(_SC_PAGESIZE))>0){
                 char ab[512];
