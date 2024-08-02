@@ -87,18 +87,18 @@ void blogi::Plugin::loadPlugins(const char *path,PluginArgs *args){
                 ppath.append(direntStruct->d_name);
 
                 PluginData *ldplg=new PluginData();
-
+                const char * dlsym_error=nullptr;                
                 ldplg->pldata = dlopen(ppath.c_str(),RTLD_LAZY);
-                if (!ldplg->pldata) {
-                    delete ldplg;
-                    libhttppp::HTTPException err;
-                    err[libhttppp::HTTPException::Error] << "Cannot load library";
-                    throw err;
+
+                if (!ldplg->pldata && (dlsym_error=dlerror()) ){
+                        delete ldplg; libhttppp::HTTPException err; 
+                        err[libhttppp::HTTPException::Error] << "Cannot load library: " << dlsym_error; 
+                        throw err;
                 }
+
                 // load the symbols
                 create_t* create_plugin= (create_t*) dlsym(ldplg->pldata, "create");
-                const char* dlsym_error = dlerror();
-                if (dlsym_error) {
+                if ( !ldplg->pldata && (dlsym_error=dlerror()) ) {
                     delete ldplg;
                     libhttppp::HTTPException err;
                     err[libhttppp::HTTPException::Error]  << "Cannot load symbol create: " << dlsym_error << '\n';
