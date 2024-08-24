@@ -64,11 +64,10 @@ bool blogi::Auth::login(const int tid,const char* username, const char* password
 #ifdef LDAPSUPPORT
     if(!ldapLogin(tid,username,password,ssid))
         return locallogin(tid,username,password,ssid);
-    else
-        return true;
 #else
     return locallogin(username,password,ssid);
 #endif
+    return false;
 }
 
 bool blogi::Auth::locallogin(const int tid,const char* username, const char* password, std::string& ssid){
@@ -159,7 +158,8 @@ bool blogi::Auth::ldapLogin(const int tid,const char *username,const char *passw
                 if (strcmp(attribute, "userPrincipalName") == 0) {
                     for (int i = 0; values[i]; i++) {
                         if (strncmp(username, values[i]->bv_val, values[i]->bv_len) == 0) {
-                                goto LDAPLOGINUSERFOUND;
+                            ldap_value_free_len(values);
+                            goto LDAPLOGINUSERFOUND;
                         }
                     }
                 }

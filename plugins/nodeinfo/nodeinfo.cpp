@@ -37,6 +37,12 @@
 #include "theme.h"
 #include "conf.h"
 
+#ifdef Linux
+#include "icons/tux.h"
+#else
+#include "icons/freebsd.h"
+#endif
+
 #define RELEASEFILE "/etc/os-release"
 
 namespace blogi {
@@ -64,6 +70,20 @@ namespace blogi {
             if(strncmp(req->getRequestURL(),Args->config->buildurl("nodeinfo",url,512),strlen(Args->config->buildurl("nodeinfo",url,512)))!=0){
                 return false;
             }
+
+            if(strncmp(req->getRequestURL(),Args->config->buildurl("nodeinfo/sysico.png",url,512),strlen(Args->config->buildurl("nodeinfo/sysico.png",url,512)))==0){
+                libhttppp::HttpResponse resp;
+                resp.setVersion(HTTPVERSION(1.1));
+                resp.setState(HTTP200);
+                resp.setContentType("image/jpeg");
+                resp.send(req,(const char*)sysicon,sysicon_size);
+                return true;
+            }
+
+            libhtmlpp::HtmlString condat,sysicohtml;
+
+            sysicohtml << "<img alt=\"sysico\" src=\"" << Args->config->buildurl("nodeinfo/sysico.png",url,512) << "\" />";
+
             #ifndef Windows
             struct utsname usysinfo;
             uname(&usysinfo);
@@ -78,7 +98,7 @@ namespace blogi {
             }
 
             /*create table rows*/
-            htmltable << libhtmlpp::HtmlTable::Row() << "Operating system:" << usysinfo.sysname;
+            htmltable << libhtmlpp::HtmlTable::Row() << "Operating system:" << (sysicohtml << usysinfo.sysname);
             htmltable << libhtmlpp::HtmlTable::Row() << "Release Version :" << usysinfo.release;
             htmltable << libhtmlpp::HtmlTable::Row() << "Hardware        :" << usysinfo.machine;
 
@@ -106,7 +126,9 @@ namespace blogi {
                 htmltable << libhtmlpp::HtmlTable::Row() << "Arbeitspeicher: " <<  ab;
             }
 #endif
+
             libhtmlpp::HtmlElement table;
+
             htmltable.insert(&table);
             table.setAttribute("class","kinfo");
 
@@ -119,9 +141,7 @@ namespace blogi {
             std::string sid;
             libhtmlpp::print(&html,systable);
 
-            libhtmlpp::HtmlString condat;
             condat << systable;
-
 
             page->getElementbyID("main")->insertChild(condat.parse());
 

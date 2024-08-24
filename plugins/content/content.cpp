@@ -299,7 +299,7 @@ namespace blogi {
 
                 size_t tgsstart=0,tgsend=0;
                 if (!tags.empty() && content_id != -1) {
-                    for (int i = 0; i <= tags.length(); ++i) {
+                    for (size_t i = 0; i <= tags.length(); ++i) {
                         if (tags[i] == ' ' || i == tags.length()) {
                             if((i - tgsstart) >0 ){
                                 std::string tag= tags.substr(tgsstart,(i-tgsstart));
