@@ -491,8 +491,8 @@ int main(int argc, char** argv){
                 throw e;
             }
 
-            logFiles("/var/log/blogi/access.log",1);
-            logFiles("/var/log/blogi/error.log",2);
+            logFiles("/var/log/blogi/access.log",STDOUT_FILENO);
+            logFiles("/var/log/blogi/error.log",STDERR_FILENO);
 
             int pid = daemon(1,1);
             if(pid==0){
