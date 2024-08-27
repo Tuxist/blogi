@@ -166,8 +166,9 @@ namespace blogi {
                 try{
                     srvsock=std::make_shared<netplus::tcp>();
                     cltsock=std::make_shared<netplus::tcp>(_NHost.c_str(),_NPort,1,0);
+                    cltsock->setTimeout(2);
                     srvsock->connect(cltsock.get());
-                    cltsock->setTimeout(1000);
+
 
                 }catch(netplus::NetException &e){
                     ++tries;
