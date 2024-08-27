@@ -440,7 +440,7 @@ public:
 };
 
 void logFiles(const char *path,int fd){
-    int pfd=open(path,O_APPEND,O_WRONLY,O_CREAT);
+    int pfd=open(path,O_APPEND|O_CREAT|O_WRONLY,S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP|S_IROTH);
 
     struct passwd *pwd=getpwnam("blogi");
 
