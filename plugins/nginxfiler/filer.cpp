@@ -161,21 +161,12 @@ namespace blogi {
             std::shared_ptr<netplus::tcp> srvsock;
             std::shared_ptr<netplus::tcp> cltsock;
             try{
-                int tries = 0;
-                CAGAIN:
                 try{
                     srvsock=std::make_shared<netplus::tcp>();
                     cltsock=std::make_shared<netplus::tcp>(_NHost.c_str(),_NPort,1,0);
-                    cltsock->setTimeout(2);
+                    cltsock->setTimeout(1);
                     srvsock->connect(cltsock.get());
-
-
                 }catch(netplus::NetException &e){
-                    ++tries;
-                    if(tries<5){
-                        std::this_thread::sleep_for(std::chrono::milliseconds(10));
-                        goto CAGAIN;
-                    }
                     libhttppp::HTTPException he;
                     he[libhttppp::HTTPException::Error] << e.what();
                     throw he;
@@ -191,10 +182,10 @@ namespace blogi {
                 *nreq.setData("host")  << _NHost.c_str() << ":" << _NPort;
                 *nreq.setData("accept") = "text/json";
                 *nreq.setData("user-agent") = "blogi/1.0 (Alpha Version 0.1)";
-                nreq.send(cltsock.get(),srvsock.get());
+                nreq.send(srvsock.get(),cltsock.get());
 
                 char data[1500];
-                int recv,chunklen=0;
+                int recv,tries=0,chunklen=0;
 
                 try{
                     for(;;){
@@ -203,7 +194,7 @@ namespace blogi {
                             break;
                         }catch(netplus::NetException &e){
                             if(e.getErrorType()==netplus::NetException::Note){
-                                std::this_thread::sleep_for(std::chrono::milliseconds(10));
+                                std::this_thread::sleep_for(std::chrono::milliseconds(1000));
                                 continue;
                             }
                             e[netplus::NetException::Error] << "nginxfiler: can't reach nginx server !";
@@ -303,7 +294,7 @@ namespace blogi {
                                         break;
                                     }catch(netplus::NetException &e){
                                         if(e.getErrorType()==netplus::NetException::Note){
-                                            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+                                            std::this_thread::sleep_for(std::chrono::milliseconds(100));
                                             continue;
                                         }
                                         e[netplus::NetException::Error] << "nginxfiler: can't reach nginx server !";
