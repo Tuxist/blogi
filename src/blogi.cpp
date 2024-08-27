@@ -45,6 +45,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <cmdplus/cmdplus.h>
 
 #ifndef Windows
+#include <unistd.h>
 #include <pwd.h>
 #include <grp.h>
 #endif
