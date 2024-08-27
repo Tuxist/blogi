@@ -20,7 +20,7 @@ add_library(blogidev STATIC
 )
 
 target_link_libraries(blogidev
-    htmlpp::htmlpp
+    htmlpp
     httppp::httppp
     netplus::netplus
     Upstream::secureid

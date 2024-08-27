@@ -44,6 +44,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <cmdplus/cmdplus.h>
 
+#ifndef Windows
+#include <pwd.h>
+#include <grp.h>
+#endif
+
 #include "session.h"
 #include "auth.h"
 #include "database.h"
@@ -428,8 +433,6 @@ public:
 };
 
 int main(int argc, char** argv){
-    signal(SIGPIPE, SIG_IGN);
-
     cmdplus::CmdController *BlogiCmdCtl;
     BlogiCmdCtl = &cmdplus::CmdController::getInstance();
 
@@ -441,10 +444,12 @@ int main(int argc, char** argv){
     }
 
     BlogiCmdCtl->registerCmd("config",'c', true,(const char*) nullptr,"Blogi Config File");
+    BlogiCmdCtl->registerCmd("debug",'d', false,(int)0,"Blogi runs Debugmod");
 
     BlogiCmdCtl->parseCmd(argc,argv);
 
     const char *config = BlogiCmdCtl->getCmdbyKey("config")->getValue();
+    int debug = BlogiCmdCtl->getCmdbyKey("debug")->getValueInt();
 
     blogi::Config *cins;
 
@@ -458,7 +463,31 @@ int main(int argc, char** argv){
         return -1;
 
     try{
+#ifndef Windows
+        signal(SIGPIPE, SIG_IGN);
+
+        if(debug==0){
+            if(getuid()!=0){
+                libhttppp::HTTPException e;
+                e[libhttppp::HTTPException::Critical] << "must be run as root!";
+                throw e;
+            }
+
+            struct passwd *pwd=getpwnam("blogi");
+            seteuid(pwd->pw_uid);
+            setegid(pwd->pw_gid);
+            int pid = daemon(1,1);
+            if(pid==0){
+                HttpConD blogiD(cins);
+            }else if(pid>0){
+
+            }
+        }else{
+            HttpConD blogiD(cins);
+        }
+#else
         HttpConD blogiD(cins);
+#endif
     }catch(libhttppp::HTTPException &e){
         std::cerr << e.what() << std::endl;
         return -1;
