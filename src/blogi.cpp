@@ -46,6 +46,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #ifndef Windows
 #include <unistd.h>
+#include <fcntl.h>
 #include <pwd.h>
 #include <grp.h>
 #endif
@@ -438,6 +439,17 @@ public:
     };
 };
 
+void logFiles(const char *path,int fd){
+    int pfd=open(path,O_APPEND,O_WRONLY,O_CREAT);
+
+    struct passwd *pwd=getpwnam("blogi");
+
+    fchown(pfd,pwd->pw_uid,pwd->pw_gid);
+
+    dup2(pfd, fd);
+    close(pfd);
+}
+
 int main(int argc, char** argv){
     cmdplus::CmdController *BlogiCmdCtl;
     BlogiCmdCtl = &cmdplus::CmdController::getInstance();
@@ -478,6 +490,10 @@ int main(int argc, char** argv){
                 e[libhttppp::HTTPException::Critical] << "must be run as root!";
                 throw e;
             }
+
+            logFiles("/var/log/blogi/access.log",1);
+            logFiles("/var/log/blogi/error.log",2);
+
             int pid = daemon(1,1);
             if(pid==0){
                 HttpConD blogiD(cins);
