@@ -161,14 +161,20 @@ namespace blogi {
             std::shared_ptr<netplus::tcp> srvsock;
             std::shared_ptr<netplus::tcp> cltsock;
             try{
+                int tries = 0;
+                CAGAIN:
                 try{
                     srvsock=std::make_shared<netplus::tcp>();
-                    // srvsock->setnonblocking();
                     cltsock=std::make_shared<netplus::tcp>(_NHost.c_str(),_NPort,1,0);
-                    // cltsock->setnonblocking();
                     srvsock->connect(cltsock.get());
+                    cltsock->setTimeout(1000);
 
                 }catch(netplus::NetException &e){
+                    ++tries;
+                    if(tries<5){
+                        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+                        goto CAGAIN;
+                    }
                     libhttppp::HTTPException he;
                     he[libhttppp::HTTPException::Error] << e.what();
                     throw he;
@@ -186,17 +192,13 @@ namespace blogi {
                 *nreq.setData("user-agent") = "blogi/1.0 (Alpha Version 0.1)";
                 nreq.send(cltsock.get(),srvsock.get());
 
-                std::string test;
-                nreq.printHeader(test);
-                std::cerr << test <<std::endl;
-
-                char data[16384];
-                int recv,tries=0,chunklen=0;
+                char data[1500];
+                int recv,chunklen=0;
 
                 try{
                     for(;;){
                         try{
-                            recv=srvsock->recvData(cltsock.get(),data,16384);
+                            recv=srvsock->recvData(cltsock.get(),data,1500);
                             break;
                         }catch(netplus::NetException &e){
                             if(e.getErrorType()==netplus::NetException::Note){
@@ -254,7 +256,7 @@ namespace blogi {
                                 for(;;){
                                     cpos=0;
                                     try{
-                                        recv=srvsock->recvData(cltsock.get(),data,16384);
+                                        recv=srvsock->recvData(cltsock.get(),data,1500);
                                         break;
                                     }catch(netplus::NetException &e){
                                         if(e.getErrorType()==netplus::NetException::Note){
@@ -296,7 +298,7 @@ namespace blogi {
                                 for(;;){
                                     cpos=0;
                                     try{
-                                        recv=srvsock->recvData(cltsock.get(),data,16384);
+                                        recv=srvsock->recvData(cltsock.get(),data,1500);
                                         break;
                                     }catch(netplus::NetException &e){
                                         if(e.getErrorType()==netplus::NetException::Note){
