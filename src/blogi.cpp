@@ -423,6 +423,11 @@ public:
             blogi::Session session;
             try{
                 blogi::Blogi blg(blgcfg,getServerSocket());
+#ifndef Windows
+                struct passwd *pwd=getpwnam("blogi");
+                seteuid(pwd->pw_uid);
+                setegid(pwd->pw_gid);
+#endif
                 blg.runEventloop();
             }catch(libhttppp::HTTPException &e){
                 std::cerr << e.what() << std::endl;
@@ -473,10 +478,6 @@ int main(int argc, char** argv){
                 e[libhttppp::HTTPException::Critical] << "must be run as root!";
                 throw e;
             }
-
-            struct passwd *pwd=getpwnam("blogi");
-            seteuid(pwd->pw_uid);
-            setegid(pwd->pw_gid);
             int pid = daemon(1,1);
             if(pid==0){
                 HttpConD blogiD(cins);
