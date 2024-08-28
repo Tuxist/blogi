@@ -184,13 +184,14 @@ namespace blogi {
                 *nreq.setData("user-agent") = "blogi/1.0 (Alpha Version 0.1)";
                 nreq.send(srvsock.get(),cltsock.get());
 
-                char data[1500];
+                std::shared_ptr<char> data(new char[16384]);
+
                 int recv,tries=0,chunklen=0;
 
                 try{
                     for(;;){
                         try{
-                            recv=srvsock->recvData(cltsock.get(),data,1500);
+                            recv=srvsock->recvData(cltsock.get(),data.get(),16384);
                             break;
                         }catch(netplus::NetException &e){
                             if(e.getErrorType()==netplus::NetException::Note){
@@ -217,17 +218,17 @@ namespace blogi {
                 int rlen=0;
 
 
-                hsize=res.parse(data,recv);
+                hsize=res.parse(data.get(),recv);
 
                 recv-=hsize;
 
-                memmove(data,data+hsize,recv);
+                memmove(data.get(),data.get()+hsize,recv);
 
                 cpos=0;
 
                 try{
                     if(strcmp(res.getTransferEncoding(),"chunked")==0){
-                        chunklen=readchunk(data,recv,cpos);
+                        chunklen=readchunk(data.get(),recv,cpos);
                         chunked=true;
                     }else{
                         throw;
@@ -242,13 +243,13 @@ namespace blogi {
                 if(!chunked){
                     do{
                         try{
-                            json.append(data+cpos,recv);
+                            json.append(data.get()+cpos,recv);
                             rlen-=recv;
                             if(rlen>0){
                                 for(;;){
                                     cpos=0;
                                     try{
-                                        recv=srvsock->recvData(cltsock.get(),data,1500);
+                                        recv=srvsock->recvData(cltsock.get(),data.get(),16384);
                                         break;
                                     }catch(netplus::NetException &e){
                                         if(e.getErrorType()==netplus::NetException::Note){
@@ -274,7 +275,7 @@ namespace blogi {
                         if(recv - cpos > 0){
 
                             if(readed==chunklen){
-                                if( (chunklen=readchunk(data,recv,cpos)) == 0 ){
+                                if( (chunklen=readchunk(data.get(),recv,cpos)) == 0 ){
                                     break;
                                 }
                                 readed=0;
@@ -282,7 +283,7 @@ namespace blogi {
 
                             size_t len = (chunklen - readed) < (recv - cpos) ? (chunklen - readed)  : (recv - cpos);
 
-                            json.append(data+cpos,len);
+                            json.append(data.get()+cpos,len);
                             cpos+=len;
                             readed+=len;
                         }else{
@@ -290,7 +291,7 @@ namespace blogi {
                                 for(;;){
                                     cpos=0;
                                     try{
-                                        recv=srvsock->recvData(cltsock.get(),data,1500);
+                                        recv=srvsock->recvData(cltsock.get(),data.get(),16384);
                                         break;
                                     }catch(netplus::NetException &e){
                                         if(e.getErrorType()==netplus::NetException::Note){
@@ -312,6 +313,8 @@ namespace blogi {
 
                 struct json_object *ndir;
                 ndir = json_tokener_parse(json.c_str());
+
+                std::cout << json << std::endl;
 
                 if(!ndir){
                     libhttppp::HTTPException e;
