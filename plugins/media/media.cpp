@@ -42,11 +42,9 @@ namespace blogi {
     class Media : public PluginApi {
     public:
         Media(){
-            _store=nullptr;
         }
 
         ~Media(){
-            delete _store;
         }
 
         const char* getName(){
@@ -495,11 +493,11 @@ namespace blogi {
             Args->edit->addIcon(icondata,icondatalen,"selimage","webp","Insert Image from media albums");
 
             if(Args->config->getRedisPassword()){
-                _store = new RedisStore(Args->config->getRedisHost(),Args->config->getRedisPort(),
-                                        Args->config->getRedisPassword(),Args->config->getRedisTimeout(),Args->maxthreads);
+                _store = std::shared_ptr<RedisStore>(new RedisStore(Args->config->getRedisHost(),Args->config->getRedisPort(),
+                                        Args->config->getRedisPassword(),Args->config->getRedisTimeout(),Args->maxthreads));
             }else{
-                _store = new RedisStore(Args->config->getRedisHost(),Args->config->getRedisPort(),
-                                        nullptr,Args->config->getRedisTimeout(),Args->maxthreads);
+                _store = std::shared_ptr<RedisStore>(new RedisStore(Args->config->getRedisHost(),Args->config->getRedisPort(),
+                                        nullptr,Args->config->getRedisTimeout(),Args->maxthreads));
             }
         }
 
@@ -594,7 +592,7 @@ namespace blogi {
             suuid.push_back('\0');
 
         }
-        Store *_store;
+        std::shared_ptr<Store> _store;
     };
 };
 
