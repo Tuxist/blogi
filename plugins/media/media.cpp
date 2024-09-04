@@ -561,10 +561,6 @@ namespace blogi {
 
                 size_t ssize = msize-req->SendData.pos < BLOCKSIZE ? msize-req->SendData.pos : BLOCKSIZE;
 
-                if(req->SendData.getlimit() < ssize){
-                    return true;
-                }
-
                 if(req->RecvData.pos<msize){
                     _store->load(tid,req,suuid.data(),data,req->RecvData.pos,ssize);
                     req->SendData.append(data.data(),data.size());

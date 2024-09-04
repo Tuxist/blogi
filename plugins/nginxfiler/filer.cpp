@@ -147,6 +147,8 @@ namespace blogi {
 
         bool Controller(const int tid,libhttppp::HttpRequest *req,libhtmlpp::HtmlElement *page){
             char url[512];
+            struct json_object *ndir=nullptr;
+
             if(strncmp(req->getRequestURL(),Args->config->buildurl("nginxfiler",url,512),strlen(Args->config->buildurl("nginxfiler",url,512)))!=0){
                 return false;
             }
@@ -182,33 +184,19 @@ namespace blogi {
                 *nreq.setData("host")  << _NHost.c_str() << ":" << _NPort;
                 *nreq.setData("accept") = "text/json";
                 *nreq.setData("user-agent") = "blogi/1.0 (Alpha Version 0.1)";
-                nreq.send(srvsock.get(),cltsock.get());
+                nreq.send(cltsock.get(),srvsock.get());
 
                 std::shared_ptr<char> data(new char[16384]);
 
                 int recv,tries=0,chunklen=0;
 
                 try{
-                    for(;;){
-                        try{
-                            recv=srvsock->recvData(cltsock.get(),data.get(),16384);
-                            break;
-                        }catch(netplus::NetException &e){
-                            if(e.getErrorType()==netplus::NetException::Note){
-                                std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-                                continue;
-                            }
-                            e[netplus::NetException::Error] << "nginxfiler: can't reach nginx server !";
-                            throw e;
-                        }
-                    }
+                    recv=srvsock->recvData(cltsock.get(),data.get(),16384);
                 }catch(netplus::NetException &e){
                     libhttppp::HTTPException he;
                     he[libhttppp::HTTPException::Error] << e.what();
                     throw he;
                 }
-
-
 
                 std::string json;
                 libhttppp::HttpResponse res;
@@ -228,7 +216,7 @@ namespace blogi {
 
                 try{
                     if(strcmp(res.getTransferEncoding(),"chunked")==0){
-                        chunklen=readchunk(data.get(),recv,cpos);
+                        chunklen=readchunk(data.get(),recv,++cpos);
                         chunked=true;
                     }else{
                         throw;
@@ -272,7 +260,8 @@ namespace blogi {
                     size_t readed=0;
 
                     for(;;){
-                        if(recv - cpos > 0){
+                        std::cout << "test" << std::endl;
+                        if(recv - cpos <= 0){
 
                             if(readed==chunklen){
                                 if( (chunklen=readchunk(data.get(),recv,cpos)) == 0 ){
@@ -288,56 +277,41 @@ namespace blogi {
                             readed+=len;
                         }else{
                             try{
-                                for(;;){
-                                    cpos=0;
-                                    try{
-                                        recv=srvsock->recvData(cltsock.get(),data.get(),16384);
-                                        break;
-                                    }catch(netplus::NetException &e){
-                                        if(e.getErrorType()==netplus::NetException::Note){
-                                            std::this_thread::sleep_for(std::chrono::milliseconds(100));
-                                            continue;
-                                        }
-                                        e[netplus::NetException::Error] << "nginxfiler: can't reach nginx server !";
-                                        throw e;
-                                    }
-                                }
+                                recv=srvsock->recvData(cltsock.get(),data.get(),16384);
+                                cpos=0;
                             }catch(netplus::NetException &e){
-                                libhttppp::HTTPException ee;
-                                ee[libhttppp::HTTPException::Error] << e.what();
-                                throw ee;
+                                libhttppp::HTTPException eh;
+                                eh[netplus::NetException::Error] << "nginxfiler: can't reach nginx server: " << eh.what();
+                                throw eh;
                             }
                         }
                     };
                 }
 
-                struct json_object *ndir;
-                ndir = json_tokener_parse(json.c_str());
+                std::cout << "\n"<< json << std::endl;
 
-                std::cout << json << std::endl;
+                enum json_tokener_error jerr = json_tokener_success;
 
-                if(!ndir){
-                    libhttppp::HTTPException e;
-                    e[libhttppp::HTTPException::Error] << "nginxfiler: counld't read json !";
-                    throw e;
+                ndir = json_tokener_parse_verbose(json.c_str(),&jerr);
+
+                if(jerr != json_tokener_success){
+                    libhttppp::HTTPException ej;
+                    ej[libhttppp::HTTPException::Error] << "nginxfiler: counld't read json :" << json_tokener_error_desc(jerr);
+                    throw ej;
                 }
+
+                std::cout << "hello" << std::endl;
+
 
                 libhtmlpp::HtmlString fileHtml,out;
                 std::string sid;
 
-                try{
-                    RenderUI(path,ndir,fileHtml);
+                RenderUI(path,ndir,fileHtml);
+                libhtmlpp::HtmlElement *fel=fileHtml.parse();
 
-                    libhtmlpp::HtmlElement *fel=fileHtml.parse();
+                if(page->getElementbyID("main") && fel)
+                    page->getElementbyID("main")->appendChild(fel);
 
-                    if(page->getElementbyID("main") && fel)
-                        page->getElementbyID("main")->appendChild(fel);
-
-                }catch(libhtmlpp::HTMLException &e){
-                    libhttppp::HTTPException ee;
-                    ee[libhttppp::HTTPException::Error] << e.what();
-                    throw ee;
-                }
 
                 Args->theme->printSite(tid,out,page,req->getRequestURL(),Args->auth->isLoggedIn(tid,req,sid));
 
@@ -353,6 +327,7 @@ namespace blogi {
                 curres.setState(HTTP500);
                 curres.send(req, e.what(),strlen(e.what()));
             }
+            while (json_object_put(ndir) != 1){};
             return true;
         }
     private:
@@ -361,7 +336,14 @@ namespace blogi {
 
             char value[512];
 
-            while( (pos < datasize) && data[++pos]!='\r'){};
+            while( (pos < datasize) && data[pos]!='\r'){
+                if (!isxdigit(data[pos])){
+                    libhttppp::HTTPException ex;
+                    ex[libhttppp::HTTPException::Error] << "nginxfiler:  wrong chuncklen at sign: " << pos;
+                    throw ex;
+                }
+                ++pos;
+            };
 
             int len=pos-start;
 
@@ -374,10 +356,6 @@ namespace blogi {
             memcpy(value,data+start,len);
 
             value[len]='\0';
-
-            if (len < 1) {
-                return 0;
-            }
 
             int result=strtol(value, NULL, 16);
 
