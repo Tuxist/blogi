@@ -186,7 +186,7 @@ namespace blogi {
                 *nreq.setData("user-agent") = "blogi/1.0 (Alpha Version 0.1)";
                 nreq.send(cltsock.get(),srvsock.get());
 
-                std::shared_ptr<char> data(new char[16384]);
+                std::shared_ptr<char[16384]> data(new char[16384]);
 
                 int recv,tries=0,chunklen=0;
 
@@ -260,8 +260,7 @@ namespace blogi {
                     size_t readed=0;
 
                     for(;;){
-                        std::cout << "test" << std::endl;
-                        if(recv - cpos <= 0){
+                        if(recv - cpos < 0){
 
                             if(readed==chunklen){
                                 if( (chunklen=readchunk(data.get(),recv,cpos)) == 0 ){
@@ -299,9 +298,6 @@ namespace blogi {
                     ej[libhttppp::HTTPException::Error] << "nginxfiler: counld't read json :" << json_tokener_error_desc(jerr);
                     throw ej;
                 }
-
-                std::cout << "hello" << std::endl;
-
 
                 libhtmlpp::HtmlString fileHtml,out;
                 std::string sid;

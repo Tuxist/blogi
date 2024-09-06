@@ -32,6 +32,7 @@
 #include <vector>
 
 #include <gameinfoplus/hldsview.h>
+#include <gameinfoplus/exception.h>
 
 #include <plugin.h>
 #include <database.h>
@@ -86,7 +87,7 @@ namespace blogi {
             for (int i = 0; i < count; i++) {
                 if(atoi(res[i][0])!=0)
                     continue;
-                HldsView view(res[i][1],atoi(res[i][2]));
+                gameinfo::HldsView view(res[i][1],atoi(res[i][2]));
                 HLDS.push_back(view);
             }
         }
@@ -103,7 +104,7 @@ namespace blogi {
 
             for (auto i = HLDS.begin(); i!=HLDS.end(); ++i) {
                 try{
-                    HldsView::HldsData hldsdata;
+                    gameinfo::HldsView::HldsData hldsdata;
                     rlock.lock();
                     i->refresh(hldsdata);
                     rlock.unlock();
@@ -123,9 +124,10 @@ namespace blogi {
                     << hldsdata.BotsAmount << ")" << "/"
                     << hldsdata.MaxPlayers
                     << "</td></tr></table></div>";
-                }catch(const char *e){
-                    std::cerr << e <<std::endl;
+                }catch(gameinfo::GameInfoException &e){
+                    std::cerr << e.what();
                     rlock.unlock();
+                    continue;
                 }
             }
 
@@ -147,7 +149,7 @@ namespace blogi {
 
         }
     private:
-        std::vector<HldsView> HLDS;
+        std::vector<gameinfo::HldsView> HLDS;
     };
 };
 
