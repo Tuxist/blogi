@@ -57,8 +57,8 @@ namespace blogi {
         void save(int tid,const char *key,const char *data,size_t datalen) override;
         void load(int tid,libhttppp::HttpRequest *req,const char *key,std::vector<char> &data,size_t pos,size_t blocksize) override;
     private:
-        redisContext     **_RedisCTX;
-        std::string        _RedisPassword;
-        int                _Threads;
+        std::vector<redisContext*> _RedisCTX;
+        std::string                _RedisPassword;
+        int                        _Threads;
     };
 };

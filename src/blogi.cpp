@@ -112,7 +112,7 @@ blogi::Blogi::~Blogi(){
     delete Page;
     delete MPage;
 }
-#include <iostream>
+
 void blogi::Blogi::loginPage(libhttppp::HttpRequest *curreq,const int tid){
     char url[512];
     libhttppp::HTTPException excep;
@@ -143,11 +143,12 @@ void blogi::Blogi::loginPage(libhttppp::HttpRequest *curreq,const int tid){
 
     libhtmlpp::HtmlString out;
 
-    libhtmlpp::HtmlElement index;
+    std::shared_ptr<libhtmlpp::HtmlElement> index;
+
     if(curreq->isMobile())
-        index=MIndex;
+        *index=MIndex;
     else
-        index=Index;
+        *index=Index;
 
     if (username.empty() || password.empty()) {
         libhtmlpp::HtmlString condat;
@@ -160,14 +161,14 @@ void blogi::Blogi::loginPage(libhttppp::HttpRequest *curreq,const int tid){
                << "</form>"
                << "</div>";
 
-        if(index.getElementbyID("main"))
-            index.getElementbyID("main")->insertChild(condat.parse());
+        if(index->getElementbyID("main"))
+            index->getElementbyID("main")->insertChild(condat.parse());
 
         for(blogi::Plugin::PluginData *curplg=BlogiPlg->getFirstPlugin(); curplg; curplg=curplg->getNextPlg()){
-            curplg->getInstace()->Rendering(tid,curreq,&index);
+            curplg->getInstace()->Rendering(tid,curreq,&*index);
         }
 
-        PlgArgs->theme->printSite(tid,out,&index,curreq->getRequestURL(),false);
+        PlgArgs->theme->printSite(tid,out,&*index,curreq->getRequestURL(),false);
         libhttppp::HttpResponse curres;
         curres.setState(HTTP200);
         curres.setVersion(HTTPVERSION(1.1));
