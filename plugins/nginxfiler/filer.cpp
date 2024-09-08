@@ -303,7 +303,7 @@ namespace blogi {
                 std::string sid;
 
                 RenderUI(path,ndir,fileHtml);
-                libhtmlpp::HtmlElement *fel=fileHtml.parse();
+                libhtmlpp::Element *fel=fileHtml.parse();
 
                 if(page->getElementbyID("main") && fel)
                     page->getElementbyID("main")->appendChild(fel);

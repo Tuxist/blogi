@@ -139,7 +139,7 @@ void blogi::Template::renderPage(const int tid,const char *name,libhtmlpp::HtmlP
 
     data.push_back('\0');
 
-    *index=page->loadString(data.data());
+    page->loadString(**index,data.data());
 
 }
 
