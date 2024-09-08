@@ -44,8 +44,8 @@ namespace blogi {
         void ResponseEvent(libhttppp::HttpRequest *curreq,const int tid,void *args);
     private:
         PluginArgs             *PlgArgs;
-        libhtmlpp::HtmlPage    *Page,*MPage;
-        libhtmlpp::HtmlElement *Index,*MIndex;
+        libhtmlpp::HtmlPage     Page,MPage;
+        libhtmlpp::HtmlElement  Index,MIndex;
         blogi::Config          *BlogConfig;
         blogi::Plugin          *BlogiPlg;
     };

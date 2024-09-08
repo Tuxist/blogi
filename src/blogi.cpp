@@ -85,10 +85,9 @@ blogi::Blogi::Blogi(Config *blgcfg,netplus::socket *serversocket) : HttpEvent(se
 
     PlgArgs->theme=new Template(tplcfg);
 
-    Page = new libhtmlpp::HtmlPage;
-    PlgArgs->theme->renderPage(0,"index.html",Page,&Index);
-    MPage = new libhtmlpp::HtmlPage;
-    PlgArgs->theme->renderPage(0,"mobile.html",MPage,&MIndex);
+
+    PlgArgs->theme->renderPage(0,"index.html",Page,Index);
+    PlgArgs->theme->renderPage(0,"mobile.html",MPage,MIndex);
 
     PlgArgs->maxthreads=threads;
 
@@ -109,8 +108,6 @@ blogi::Blogi::~Blogi(){
     delete[] PlgArgs->database;
     delete BlogiPlg;
     delete PlgArgs;
-    delete Page;
-    delete MPage;
 }
 
 void blogi::Blogi::loginPage(libhttppp::HttpRequest *curreq,const int tid){
@@ -333,14 +330,14 @@ RETRY_REQUEST:
             }
 
             if(!PlgArgs->theme->Controller(tid,curreq)){
-                libhtmlpp::HtmlElement *index;
+                libhtmlpp::HtmlElement index;
                 if(curreq->isMobile())
-                    index= new libhtmlpp::HtmlElement(MIndex);
+                    index=MIndex;
                 else
-                    index= new libhtmlpp::HtmlElement(Index);;
+                    index=Index;
 
                 for(blogi::Plugin::PluginData *curplg=BlogiPlg->getFirstPlugin(); curplg; curplg=curplg->getNextPlg()){
-                    curplg->getInstace()->Rendering(tid,curreq,index);
+                    curplg->getInstace()->Rendering(tid,curreq,&index);
                 }
 
                 for(blogi::Plugin::PluginData *curplg=BlogiPlg->getFirstPlugin(); curplg; curplg=curplg->getNextPlg()){
@@ -349,13 +346,11 @@ RETRY_REQUEST:
                     url+="/";
                     url+=api->getName();
                     if(strncmp(curreq->getRequestURL(),url.c_str(),url.length())==0){
-                        if(api->Controller(tid,curreq,index)){
-                            delete index;
+                        if(api->Controller(tid,curreq,&index)){
                             return;
                         }
                     }
                 }
-                delete index;
 
                 libhtmlpp::HtmlString output;
                 libhtmlpp::HtmlString err;

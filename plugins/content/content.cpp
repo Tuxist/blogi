@@ -149,8 +149,8 @@ namespace blogi {
             }
             libhtmlpp::HtmlString out;
 
-
-            page->getElementbyID("main")->insertChild(condat.parse());
+            if(page->getElementbyID("main"))
+                page->getElementbyID("main")->insertChild(condat.parse());
 
             Args->theme->printSite(tid,out,page,curreq->getRequestURL(),Args->auth->isLoggedIn(tid,curreq,sid),meta.c_str());
 

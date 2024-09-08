@@ -109,7 +109,7 @@ blogi::Template::~Template(){
 
 }
 
-void blogi::Template::renderPage(const int tid,const char *name,libhtmlpp::HtmlPage* page, libhtmlpp::HtmlElement** index){
+void blogi::Template::renderPage(const int tid,const char *name,libhtmlpp::HtmlPage& page, libhtmlpp::HtmlElement &index){
     std::string htmlfile=_Config.Theme;
     htmlfile.append("/");
     htmlfile.append(name);
@@ -139,7 +139,7 @@ void blogi::Template::renderPage(const int tid,const char *name,libhtmlpp::HtmlP
 
     data.push_back('\0');
 
-    page->loadString(**index,data.data());
+    page.loadString(index,data.data());
 
 }
 
