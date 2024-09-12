@@ -62,9 +62,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "sqlite.cpp"
 
 
-blogi::Blogi::Blogi(Config *blgcfg,netplus::socket *serversocket) : HttpEvent(serversocket){
+blogi::Blogi::Blogi(Config *blgcfg,netplus::socket *serversocket,bool debug) : HttpEvent(serversocket){
 
     PlgArgs = new PluginArgs;
+    PlgArgs->debug=debug;
     PlgArgs->config=blgcfg;
 
     PlgArgs->database=new Database*[threads];
@@ -83,7 +84,7 @@ blogi::Blogi::Blogi(Config *blgcfg,netplus::socket *serversocket) : HttpEvent(se
     tplcfg.Theme=tplcfg.config->gettemplate();
     tplcfg.TDatabase=PlgArgs->database;
 
-    PlgArgs->theme=new Template(tplcfg);
+    PlgArgs->theme=new Template(tplcfg,debug);
 
 
     PlgArgs->theme->renderPage(0,"index.html",Page,Index);
@@ -140,12 +141,12 @@ void blogi::Blogi::loginPage(libhttppp::HttpRequest *curreq,const int tid){
 
     libhtmlpp::HtmlString out;
 
-    std::shared_ptr<libhtmlpp::HtmlElement> index;
+    libhtmlpp::HtmlElement index;
 
     if(curreq->isMobile())
-        *index=MIndex;
+        index=MIndex;
     else
-        *index=Index;
+        index=Index;
 
     if (username.empty() || password.empty()) {
         libhtmlpp::HtmlString condat;
@@ -158,14 +159,14 @@ void blogi::Blogi::loginPage(libhttppp::HttpRequest *curreq,const int tid){
                << "</form>"
                << "</div>";
 
-        if(index->getElementbyID("main"))
-            index->getElementbyID("main")->insertChild(condat.parse());
+        if(index.getElementbyID("main"))
+            index.getElementbyID("main")->insertChild(condat.parse());
 
         for(blogi::Plugin::PluginData *curplg=BlogiPlg->getFirstPlugin(); curplg; curplg=curplg->getNextPlg()){
-            curplg->getInstace()->Rendering(tid,curreq,&*index);
+            curplg->getInstace()->Rendering(tid,curreq,&index);
         }
 
-        PlgArgs->theme->printSite(tid,out,&*index,curreq->getRequestURL(),false);
+        PlgArgs->theme->printSite(tid,out,&index,curreq->getRequestURL(),false);
         libhttppp::HttpResponse curres;
         curres.setState(HTTP200);
         curres.setVersion(HTTPVERSION(1.1));
@@ -413,13 +414,13 @@ void blogi::Blogi::ResponseEvent(libhttppp::HttpRequest* curreq,const int tid,vo
 
 class HttpConD : public libhttppp::HttpD {
 public:
-    HttpConD(blogi::Config *blgcfg)
+    HttpConD(blogi::Config *blgcfg,bool debug)
             : HttpD(blgcfg->gethttpaddr(),blgcfg->gethttpport(),blgcfg->gethttpmaxcon(),blgcfg->getsslcertpath(),blgcfg->getsslkeypath()){
         libhttppp::HTTPException httpexception;
         try {
             blogi::Session session;
             try{
-                blogi::Blogi blg(blgcfg,getServerSocket());
+                blogi::Blogi blg(blgcfg,getServerSocket(),debug);
 #ifndef Windows
                 struct passwd *pwd=getpwnam("blogi");
                 seteuid(pwd->pw_uid);
@@ -492,12 +493,10 @@ int main(int argc, char** argv){
 
             int pid = daemon(1,1);
             if(pid==0){
-                HttpConD blogiD(cins);
-            }else if(pid>0){
-
+                HttpConD blogiD(cins,false);
             }
         }else{
-            HttpConD blogiD(cins);
+            HttpConD blogiD(cins,true);
         }
 #else
         HttpConD blogiD(cins);

@@ -64,7 +64,7 @@ namespace blogi {
 
     class Template {
     public:
-        Template(TemplateConfig &config);
+        Template(TemplateConfig &config,bool formated);
         ~Template();
 
         void renderPage(const int tid,const char *name,libhtmlpp::HtmlPage &page,libhtmlpp::HtmlElement &index);
@@ -77,5 +77,6 @@ namespace blogi {
     private:
         TemplateConfig             _Config;
         std::vector<TemplateFiles> _PublicFiles;
+        bool                       _Formated;
     };
 };

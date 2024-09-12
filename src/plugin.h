@@ -46,6 +46,7 @@ namespace blogi {
         Editor   *edit;
         Config   *config;
         int       maxthreads;
+        bool      debug;
     };
 
     class PluginApi {

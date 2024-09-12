@@ -54,6 +54,8 @@ namespace blogi {
             libhttppp::HTTPException excep;
             libhtmlpp::HtmlString condat;
 
+            condat << "<div><div id=\"contentidx\">";
+
             char url[512];
             std::string sid;
             blogi::SQL sql;
@@ -80,7 +82,7 @@ namespace blogi {
             }
 
             std::string meta;
-            condat << "<div id=\"contentidx\">";
+
             if(Args->auth->isLoggedIn(tid,curreq,sid)){
                 condat << "<div class=\"blog_adminmenu\">"
                 << "<ul>"
@@ -108,7 +110,7 @@ namespace blogi {
                 condat << "<div class=\"blog_entry\">"
                 << "<span class=\"title\">" << res[i][1] << "</span>"
                 << "<div  class=\"entry_text\">" << res[i][2] << "</div>"
-                << "<span><a href=\""<< Args->config->buildurl("content/read/",url,512) << res[i][0] << "\">Weiterlesen</a> </span>"
+                << "<span><a href=\""<< Args->config->buildurl("content/read/",url,512) << res[i][0] << "\">Weiterlesen</a></span>"
                 << "<span class=\"author\">verfasst von " << res[i][3] << " am "<< res[i][4]  <<" </span></div>";
                 meta.append(res[i][1]);
                 meta.append(" author: ");
@@ -126,7 +128,7 @@ namespace blogi {
             if((ncount -10) >= 0 )
                 condat << "<a href=\"" << curreq->getRequestURL() << "?start=" << start+10 <<"\" > Weiter </a>";
 
-            condat << " </div> </div>";
+            condat << "</div></div>";
 
             sql="SELECT name,id FROM tags";
 
@@ -147,6 +149,7 @@ namespace blogi {
 
                 condat << "</ul></div>";
             }
+
             libhtmlpp::HtmlString out;
 
             if(page->getElementbyID("main"))
@@ -163,7 +166,7 @@ namespace blogi {
 
         void contentPage(const int tid,libhttppp::HttpRequest* curreq,libhtmlpp::HtmlElement &page) {
             libhttppp::HTTPException excep;
-            libhtmlpp::HtmlString *condat = new libhtmlpp::HtmlString;
+            libhtmlpp::HtmlString condat;
 
             char url[512];
             std::string sid;
@@ -179,21 +182,20 @@ namespace blogi {
 
 
             if(Args->database[tid]->exec(&sql,res)<1){
-                delete condat;
                 excep[libhttppp::HTTPException::Critical] << "No entry found for content id: " << cid;
                 throw excep;
             }
 
-            *condat << "<div id=\"content\">";
+            condat << "<div id=\"content\">";
             if (Args->auth->isLoggedIn(tid,curreq,sid)) {
-                *condat << "<div class=\"blog_adminmenu\">"
+                condat << "<div class=\"blog_adminmenu\">"
                 << "<ul>"
                 << "<li><a href=\"" << Args->config->buildurl("content/edit/",url,512) << cid << "\">Bearbeiten</a></li>"
                 << "<li><a href=\"" << Args->config->buildurl("content/del/",url,512) << cid << "\">Loeschen</a></li>"
                 << "</ul>"
                 << "</div>";
             }
-            *condat << "<div class=\"blog_entry\">"
+            condat << "<div class=\"blog_entry\">"
             << "<span class=\"title\">" << res[0][1] << "</span>"
             << "<div  class=\"text\">" << res[0][2] << "</div>"
             << "<span class=\"author\">verfasst von " << res[0][3] << " am "<< res[0][4]  <<" </span>"
@@ -202,14 +204,11 @@ namespace blogi {
             libhtmlpp::HtmlString out;
 
             try{
-                page.getElementbyID("main")->insertChild(condat->parse());
+                page.getElementbyID("main")->insertChild(condat.parse());
             }catch(libhtmlpp::HTMLException &e){
-                delete condat;
                 excep[libhttppp::HTTPException::Error] << e.what();
                 throw excep;
             }
-
-            delete condat;
 
             Args->theme->printSite(tid,out,&page,curreq->getRequestURL(),Args->auth->isLoggedIn(tid,curreq,sid));
 

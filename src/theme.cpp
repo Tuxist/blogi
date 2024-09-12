@@ -45,8 +45,9 @@
 #include "compress.h"
 
 
-blogi::Template::Template(blogi::TemplateConfig& config){
+blogi::Template::Template(blogi::TemplateConfig& config,bool formated){
     _Config=config;
+    _Formated=formated;
 
     DIR *directory = opendir(std::string(_Config.Theme).append("/public").c_str());
 
@@ -242,19 +243,20 @@ void blogi::Template::printSite(const int tid,libhtmlpp::HtmlString &output,libh
 
         }
         footernav = index->getElementbyID("footernav");
-        libhtmlpp::HtmlElement contentd("div");
         libhtmlpp::HtmlString footerancor;
-        footerancor << "<a class=\"footer\" href=\"" << _Config.config->buildurl("staticpage/impressum",url,512) << "\" >Impressum</a>";
+        footerancor << "<div><a class=\"footer\" href=\"" << _Config.config->buildurl("staticpage/impressum",url,512) << "\" >Impressum</a>";
         if(!login){
-            footerancor << "<a class=\"footer\" href=\"" << _Config.config->buildurl("login",url,512) << "\">Login</a> ";
+            footerancor << "<a class=\"footer\" href=\"" << _Config.config->buildurl("login",url,512) << "\">Login</a>";
         }else{
             footerancor << "<a class=\"footer\" href=\"" << _Config.config->buildurl("logout",url,512) << "\">Logout</a>"
             << "<a class=\"footer\" href=\"" << _Config.config->buildurl("settings",url,512) << "\">Settings</a>";
         }
+        footerancor << "</div>";
+
         if(footernav)
             footernav->appendChild(footerancor.parse());
 
-        libhtmlpp::print(index,output);
+        libhtmlpp::print(index,output,_Formated);
     }catch(libhtmlpp::HTMLException &e){
         libhttppp::HTTPException excep;
         excep[libhttppp::HTTPException::Error] << e.what();

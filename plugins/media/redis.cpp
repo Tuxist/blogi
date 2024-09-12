@@ -73,6 +73,7 @@ size_t blogi::RedisStore::getSize(int tid,const char* key){
         redisReply *rep=(redisReply*)redisCommand(_RedisCTX[tid],"STRLEN %s",key);
 
        if(!rep || rep->type != REDIS_REPLY_INTEGER){
+           freeReplyObject(rep);
            libhttppp::HTTPException e;
            e[libhttppp::HTTPException::Error] << "media plugin err: wrong redis reply in getsize !";
            throw e;
@@ -96,6 +97,7 @@ void blogi::RedisStore::load(int tid,libhttppp::HttpRequest *req,const char *key
         redisReply *rep=(redisReply*)redisCommand(_RedisCTX[tid],"GETRANGE %s %d %d",key,pos,pos+blocksize);
 
         if(_RedisCTX[tid]->err!=REDIS_OK){
+            freeReplyObject(rep);
             libhttppp::HTTPException e;
             e[libhttppp::HTTPException::Error] << "media plugin err: " << _RedisCTX[tid]->errstr;
             throw e;
