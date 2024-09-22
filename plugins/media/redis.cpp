@@ -51,8 +51,10 @@ blogi::RedisStore::RedisStore(const char *host,int port,const char *password,int
 
         if(password){
             _RedisPassword=password;
-            redisCommand(_RedisCTX[i],"AUTH %s", password);
+            redisReply *rep=(redisReply*)redisCommand(_RedisCTX[i],"AUTH %s", password);
+            freeReplyObject(rep);
         }
+
     }
 
 }
@@ -88,8 +90,10 @@ size_t blogi::RedisStore::getSize(int tid,const char* key){
 
 
 void blogi::RedisStore::save(int tid,const char *key, const char *data,size_t datalen){
-    redisCommand(_RedisCTX[tid],"SET %s %b",key,data,datalen);
-    redisCommand(_RedisCTX[tid],"save");
+    redisReply *rep=(redisReply*)redisCommand(_RedisCTX[tid],"SET %s %b",key,data,datalen);
+    freeReplyObject(rep);
+    rep=(redisReply*)redisCommand(_RedisCTX[tid],"save");
+    freeReplyObject(rep);
 }
 
 void blogi::RedisStore::load(int tid,libhttppp::HttpRequest *req,const char *key,std::vector<char> &data,size_t pos,size_t blocksize) {

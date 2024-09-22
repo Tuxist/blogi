@@ -110,6 +110,7 @@ blogi::Config::Config(const char *path) : confplus::Config(path){
 }
 
 blogi::Config::~Config(){
+
 }
 
 
