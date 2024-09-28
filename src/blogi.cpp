@@ -130,7 +130,6 @@ void blogi::Blogi::loginPage(libhttppp::HttpRequest *curreq,const int tid){
 
     for (libhttppp::HttpForm::UrlcodedForm::Data* cururlform = curform.UrlFormData.getFormData(); cururlform;
         cururlform = cururlform->nextData()) {
-        std::cout << cururlform->getKey() <<std::endl;
         if (strcmp(cururlform->getKey(), "username") == 0) {
             username = cururlform->getValue();
         }else if (strcmp(cururlform->getKey(), "password") == 0) {
@@ -183,8 +182,7 @@ void blogi::Blogi::loginPage(libhttppp::HttpRequest *curreq,const int tid){
         PlgArgs->session->addSessionData(sessid,"username",username.c_str(), username.length());
         libhttppp::HttpResponse curres;
         libhttppp::HttpCookie cookie;
-        cookie.setcookie(&curres, "sessionid", sessid,nullptr,PlgArgs->config->getDomain(),-1,
-                         PlgArgs->config->buildurl("",url,512),false,"1","Lax");
+        cookie.setcookie(&curres, "sessionid", sessid,nullptr,PlgArgs->config->getDomain(),-1, nullptr,false,"1","None");
         curres.setState(HTTP307);
         curres.setVersion(HTTPVERSION(1.1));
         *curres.setData("Location") << PlgArgs->config->getstartpage();

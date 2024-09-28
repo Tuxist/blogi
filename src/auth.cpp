@@ -61,13 +61,14 @@ blogi::Auth::~Auth(){
 }
 
 bool blogi::Auth::login(const int tid,const char* username, const char* password, std::string& ssid){
-#ifdef LDAPSUPPORT
-    if(!ldapLogin(tid,username,password,ssid))
-        return locallogin(tid,username,password,ssid);
-#else
+#ifndef LDAPSUPPORT
     return locallogin(username,password,ssid);
+#else
+    bool ret=ldapLogin(tid,username,password,ssid);
+    if(!ret)
+        return locallogin(tid,username,password,ssid);
+    return ret;
 #endif
-    return false;
 }
 
 bool blogi::Auth::locallogin(const int tid,const char* username, const char* password, std::string& ssid){
@@ -118,11 +119,12 @@ bool blogi::Auth::ldapLogin(const int tid,const char *username,const char *passw
         throw excep;
     }
 
-    char* attrs[] = { (char*)"objectSid",(char*)"userPrincipalName",(char*)"mail",(char*)"gecos",NULL };
+    char* attrs[] = { (char*)"objectSid",(char*)"userPrincipalName",(char*)"mail",(char*)"gecos",nullptr };
     LDAPMessage* answer, * entry;
     struct timeval timeout;
 
     timeout.tv_sec = 1;
+    timeout.tv_usec =0;
 
     ulerr = ldap_search_ext_s(userldap, _config->getlpbasedn(), LDAP_SCOPE_SUBTREE, _config->getlpfilter(), attrs, 0, &userserverctls, &userclientctls, &timeout, 0, &answer);
 
@@ -197,7 +199,6 @@ LDAPLOGINUSERFOUND:
 
         printSID(mysid,sid,512);
         destroySID(mysid);
-        std::cout << "User : " << sid << " are logged in" << std::endl;
         ssid=sid;
         blogi::SQL sql;
         blogi::DBResult res;
@@ -209,6 +210,8 @@ LDAPLOGINUSERFOUND:
         };
 
         _session->createSession(sid);
+
+        std::cout << "User : " << sid << " are logged in" << std::endl;
 
         ldap_memfree(dn);
         ldap_msgfree(answer);

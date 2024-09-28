@@ -54,9 +54,15 @@ const char *blogi::Session::createSession(const char *uid){
 };
 
 void blogi::Session::addSessionData(const char *sessionid,const char *key,const char *value,size_t size){
+    uuid_t sin;
+
+    if(uuid_parse(sessionid,sin)!=0){
+        libhttppp::HTTPException excep;
+        excep[libhttppp::HTTPException::Error] << "addSessionData Session: sessionid empty !";
+        throw excep;
+    }
+
     for(SessionData *curses=_firstSessionData; curses; curses=curses->_nextSessionData){
-        uuid_t sin;
-        uuid_parse(sessionid,sin);
         if(uuid_compare(curses->_sessionid,sin)==0){
             if(curses->_firstData){
                 curses->_lastData->_nextData=new SessionData::Data;
@@ -70,7 +76,6 @@ void blogi::Session::addSessionData(const char *sessionid,const char *key,const 
             snprintf(curses->_lastData->_key,255,"%s",key);
             return;
         }
-
     }
 
     libhttppp::HTTPException excep;
@@ -79,9 +84,15 @@ void blogi::Session::addSessionData(const char *sessionid,const char *key,const 
 };
 
 void blogi::Session::getSessionData(const char *sessionid,const char *key,std::string &value){
+    uuid_t sin;
+
+    if(uuid_parse(sessionid,sin)!=0){
+        libhttppp::HTTPException excep;
+        excep[libhttppp::HTTPException::Error] << "getSessionData Session: sessionid empty !";
+        throw excep;
+    }
+
     for(SessionData *curses=_firstSessionData; curses; curses=curses->_nextSessionData){
-        uuid_t sin;
-        uuid_parse(sessionid,sin);
         if(uuid_compare(curses->_sessionid,sin)==0){
             for(SessionData::Data *curdat=curses->_firstData; curdat; curdat=curdat->_nextData){
                 if(strcmp(key,curdat->_key)==0){
