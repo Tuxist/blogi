@@ -162,10 +162,9 @@ namespace blogi {
             std::shared_ptr<netplus::tcp> cltsock;
             try{
                 try{
-                    srvsock=std::make_shared<netplus::tcp>(),std::default_delete<netplus::tcp>();
-                    // srvsock->setnonblocking();
-                    cltsock=std::make_shared<netplus::tcp>(_NHost.c_str(),_NPort,1,0),std::default_delete<netplus::tcp>();
-                    // cltsock->setnonblocking();
+                    srvsock=std::make_shared<netplus::tcp>();
+                    cltsock=std::make_shared<netplus::tcp>(_NHost.c_str(),_NPort,1,0);
+                    cltsock->setTimeout(1);
                     srvsock->connect(cltsock.get());
 
                 }catch(netplus::NetException &e){
@@ -184,7 +183,7 @@ namespace blogi {
                 *nreq.setData("host")  << _NHost.c_str() << ":" << _NPort;
                 *nreq.setData("accept") = "text/json";
                 *nreq.setData("user-agent") = "blogi/1.0 (Alpha Version 0.1)";
-                nreq.send(cltsock.get(),srvsock.get());
+                nreq.send(srvsock.get(),cltsock.get());
 
                 std::string test;
                 nreq.printHeader(test);
