@@ -162,9 +162,9 @@ namespace blogi {
             std::shared_ptr<netplus::tcp> cltsock;
             try{
                 try{
-                    srvsock=std::make_shared<netplus::tcp>();
+                    srvsock=std::make_shared<netplus::tcp>(),std::default_delete<netplus::tcp>();
                     // srvsock->setnonblocking();
-                    cltsock=std::make_shared<netplus::tcp>(_NHost.c_str(),_NPort,1,0);
+                    cltsock=std::make_shared<netplus::tcp>(_NHost.c_str(),_NPort,1,0),std::default_delete<netplus::tcp>();
                     // cltsock->setnonblocking();
                     srvsock->connect(cltsock.get());
 
