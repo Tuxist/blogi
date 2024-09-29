@@ -185,10 +185,6 @@ namespace blogi {
                 *nreq.setData("user-agent") = "blogi/1.0 (Alpha Version 0.1)";
                 nreq.send(srvsock.get(),cltsock.get());
 
-                std::string test;
-                nreq.printHeader(test);
-                std::cerr << test <<std::endl;
-
                 std::shared_ptr<char> data(new char[16384], std::default_delete<char[]>());
 
                 int recv,tries=0,chunklen=0;
